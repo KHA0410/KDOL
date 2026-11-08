@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KDOL - Báo Giá Dịch Vụ VNPT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        vnpt: { blue: '#0055A5', light: '#E6F0FA', red: '#ED1C24' }
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #0055A5; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        [v-cloak] { display: none; }
+        /* Tắt bôi đen text khi nhấn giữ trên mobile/desktop */
+        .no-select { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen flex flex-col font-sans">
+    <div id="app" v-cloak class="flex flex-col h-full overflow-hidden">
+        <!-- Header -->
+        <header class="bg-vnpt-blue text-white shadow-md p-3 md:p-4 flex justify-between items-center z-10">
+            <h1 class="text-xl md:text-2xl font-bold tracking-wider flex items-center">
+                KDOL <span class="hidden md:inline text-sm font-normal opacity-80 pl-2 ml-2 border-l border-white/30">Công cụ tra cứu giá cước nhanh</span>
+            </h1>
+        </header>
+
+        <!-- Loading -->
+        <div v-if="isLoading" class="flex-1 flex flex-col items-center justify-center bg-white">
+            <div class="loader mb-4"></div>
+            <p class="text-gray-500 font-medium">Đang tải dữ liệu từ máy chủ...</p>
+        </div>
+
+        <!-- Main Layout -->
+        <div v-else class="flex-1 flex flex-col md:flex-row overflow-hidden">
+            
+            <!-- Cột 1: Danh mục -->
+            <div class="w-full md:w-1/4 bg-white border-b md:border-b-0 md:border-r border-gray-200 flex flex-col flex-shrink-0">
+                <div class="p-2 md:p-3 bg-gray-50 border-b font-semibold text-gray-700 uppercase text-xs hidden md:block">Danh mục Dịch vụ</div>
+                <ul class="flex md:flex-col overflow-x-auto md:overflow-y-auto hide-scrollbar bg-white">
+                    <li v-for="cat in categories" :key="cat.id" @click="selectCategory(cat)"
+                        :class="['flex-shrink-0 px-4 py-3 md:p-4 cursor-pointer hover:bg-vnpt-light transition-colors md:border-b whitespace-nowrap md:whitespace-normal text-sm md:text-base', 
+                        activeCategory?.id === cat.id ? 'bg-vnpt-light text-vnpt-blue border-b-2 md:border-b-0 md:border-l-4 border-vnpt-blue font-semibold' : 'text-gray-700']">
+                        {{ cat.name }}
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Cột 2: Dịch vụ -->
+            <div class="w-full md:w-1/4 bg-gray-50 border-b md:border-b-0 md:border-r border-gray-200 flex flex-col flex-shrink-0">
+                <div class="p-2 md:p-3 bg-gray-100 border-b font-semibold text-gray-700 uppercase text-xs hidden md:block">Sản phẩm chi tiết</div>
+                <ul v-if="activeCategory" class="flex md:flex-col overflow-x-auto md:overflow-y-auto hide-scrollbar bg-gray-50">
+                    <li v-for="srv in activeCategory.services" :key="srv.id" @click="selectService(srv)"
+                        :class="['flex-shrink-0 px-4 py-2 md:p-4 cursor-pointer hover:bg-white transition-colors md:border-b whitespace-nowrap md:whitespace-normal text-sm md:text-base', 
+                        activeService?.id === srv.id ? 'bg-white text-vnpt-blue font-medium shadow-sm md:shadow-none' : 'text-gray-600']">
+                        {{ srv.name }}
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Cột 3: Bảng giá -->
+            <div class="w-full md:w-2/4 bg-white p-3 md:p-6 overflow-y-auto flex-1 relative">
+                <div v-if="activeService?.id === 'smartca'">
+                    <h2 class="text-xl md:text-2xl font-bold text-vnpt-blue mb-3 md:mb-4">VNPT SmartCA</h2>
+                    
+                    <!-- Tabs Đối tượng -->
+                    <div class="flex overflow-x-auto hide-scrollbar border-b border-gray-300 mb-4 md:mb-5">
+                        <button v-for="tab in smartCaData" :key="tab.type" @click="activeSmartCaTab = tab.type"
+                            :class="['flex-shrink-0 px-3 md:px-4 py-2 text-sm md:text-base font-medium focus:outline-none whitespace-nowrap', 
+                            activeSmartCaTab === tab.type ? 'border-b-2 border-vnpt-blue text-vnpt-blue' : 'text-gray-500 hover:text-gray-700']">
+                            {{ tab.name }}
+                        </button>
+                    </div>
+
+                    <!-- Bảng điều khiển -->
+                    <div class="flex flex-col bg-vnpt-light p-3 md:p-4 rounded-lg mb-4 md:mb-6 border border-blue-100 gap-3">
+                        <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+                            <div>
+                                <p class="font-semibold text-gray-800 text-sm md:text-base">Cấu hình gói:</p>
+                                <div v-if="activeSmartCaTab !== '1lan'">
+                                    <p class="text-xs md:text-sm text-gray-600 mt-1" v-if="!isAdvanced">Tốc độ: 01 lượt/s - Tối đa: 500 lượt/24h</p>
+                                    <p class="text-xs md:text-sm text-vnpt-red font-medium mt-1" v-else>Tốc độ: 20 lượt/s - Tối đa: 10.000 lượt/24h</p>
+                                </div>
+                                <div v-else>
+                                    <p class="text-xs md:text-sm text-gray-600 mt-1">Tốc độ: 01 lượt/s - Tối đa: 10 lượt/30 ngày</p>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col sm:flex-row gap-2 w-full xl:w-auto">
+                                <div v-if="activeSmartCaTab !== '1lan'" class="flex items-center bg-white p-1 rounded-md shadow-sm border w-full sm:w-auto">
+                                    <button @click="isAdvanced = false" :class="['flex-1 sm:flex-none px-3 py-1.5 rounded text-xs md:text-sm font-medium', !isAdvanced ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Cơ bản</button>
+                                    <button @click="isAdvanced = true" :class="['flex-1 sm:flex-none px-3 py-1.5 rounded text-xs md:text-sm font-medium', isAdvanced ? 'bg-vnpt-red text-white' : 'text-gray-500 hover:bg-gray-50']">Nâng cao</button>
+                                </div>
+                                <div class="flex items-center bg-white p-1 rounded-md shadow-sm border w-full sm:w-auto">
+                                    <button @click="vatRate = 10" :class="['flex-1 sm:flex-none px-3 py-1.5 rounded text-xs md:text-sm font-medium', vatRate === 10 ? 'bg-gray-800 text-white' : 'text-gray-500 hover:bg-gray-50']">VAT 10%</button>
+                                    <button @click="vatRate = 8" :class="['flex-1 sm:flex-none px-3 py-1.5 rounded text-xs md:text-sm font-medium', vatRate === 8 ? 'bg-green-600 text-white' : 'text-gray-500 hover:bg-gray-50']">VAT 8%</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Dòng bộ lọc Chiết khấu -->
+                        <div class="flex items-center bg-white p-1 rounded-md shadow-sm border w-full xl:w-max self-end mt-1">
+                            <span class="text-xs text-gray-500 font-medium px-2 whitespace-nowrap">Chiết khấu:</span>
+                            <button v-for="rate in [0, 10, 20, 30]" :key="rate" @click="discountRate = rate" 
+                                :class="['flex-1 px-3 py-1.5 rounded text-xs md:text-sm font-medium transition-colors', discountRate === rate ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50']">
+                                {{ rate }}%
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Bảng giá -->
+                    <div class="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 rounded-lg select-none">
+                        <table class="min-w-full divide-y divide-gray-300">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="py-2.5 md:py-3.5 pl-4 pr-3 text-left text-xs md:text-sm font-semibold text-gray-900 w-1/2">Thời gian (Tháng)</th>
+                                    <th class="px-3 py-2.5 md:py-3.5 text-right text-xs md:text-sm font-semibold text-gray-900 w-1/2">Giá cước (VNĐ)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 bg-white">
+                                <tr v-for="plan in currentSmartCaPlans" :key="plan.months" 
+                                    class="hover:bg-gray-50 transition-colors no-select cursor-pointer"
+                                    :class="holdingPlan === plan.months ? 'bg-blue-100/50' : ''"
+                                    @pointerdown="startHold(plan)"
+                                    @pointerup="endHold"
+                                    @pointerleave="cancelHold"
+                                    @contextmenu.prevent>
+                                    
+                                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 pointer-events-none">
+                                        {{ plan.months }} tháng
+                                    </td>
+                                    
+                                    <td class="whitespace-nowrap px-3 py-3 text-right pointer-events-none relative">
+                                        <!-- Hiển thị Giá Gốc bị gạch đi nếu có chiết khấu -->
+                                        <div v-if="discountRate > 0" class="text-xs text-gray-400 line-through mb-0.5">
+                                            {{ formatPrice(calculateOriginalPrice(plan.price)) }}
+                                        </div>
+                                        <!-- Giá cuối cùng hiển thị to -->
+                                        <div class="font-bold text-vnpt-blue text-base md:text-xl transition-all"
+                                             :class="discountRate > 0 ? 'text-orange-600' : 'text-vnpt-blue'">
+                                            {{ formatPrice(calculateFinalPrice(plan.price)) }}
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="mt-3 md:mt-4 text-xs md:text-sm text-vnpt-red italic">
+                        * Hướng dẫn: Nhấn giữ vào dòng giá tiền để Copy.<br>
+                        * Giá trên đã được tính toán bao gồm {{ vatRate }}% VAT.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Toast -->
+        <div v-if="toastMessage" class="fixed top-4 md:top-auto md:bottom-6 right-4 md:right-6 bg-gray-800 text-white px-5 py-3 rounded-lg shadow-xl transition-opacity z-50 text-sm font-medium border border-gray-700">
+            {{ toastMessage }}
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://aqzglanxpnvilfscfbhz.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxemdsYW54cG52aWxmc2NmYmh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQxNDI2NTIsImV4cCI6MjEwOTcxODY1Mn0.LBSKKYHO334uY6x0OkO0G9a7o6UDXE1JeonDeto97cY';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const { createApp } = Vue
+
+        createApp({
+            data() {
+                return {
+                    isLoading: true,
+                    toastMessage: '',
+                    categories: [],
+                    smartCaData: [],
+                    activeCategory: null,
+                    activeService: null,
+                    activeSmartCaTab: 'canhan',
+                    isAdvanced: false,
+                    vatRate: 10,
+                    discountRate: 0,
+                    holdTimer: null,
+                    holdingPlan: null
+                }
+            },
+            computed: {
+                currentSmartCaPlans() {
+                    const tab = this.smartCaData.find(t => t.type === this.activeSmartCaTab)
+                    return tab ? tab.plans : []
+                }
+            },
+            async mounted() {
+                await this.fetchData();
+            },
+            methods: {
+                async fetchData() {
+                    try {
+                        const { data: dbCategories } = await supabaseClient.from('categories').select('*').order('sort_order');
+                        const { data: dbServices } = await supabaseClient.from('services').select('*').order('sort_order');
+                        this.categories = dbCategories.map(cat => ({
+                            id: cat.id, name: cat.name, services: dbServices.filter(srv => srv.category_id === cat.id)
+                        }));
+                        const { data: dbPlans } = await supabaseClient.from('plans').select('*');
+                        const smartcaPlansRaw = dbPlans.filter(p => p.service_id === 'smartca');
+                        const groupedSmartCa = {};
+                        
+                        smartcaPlansRaw.forEach(p => {
+                            if (!groupedSmartCa[p.plan_group]) groupedSmartCa[p.plan_group] = { type: p.plan_group, name: p.group_name, plans: [] };
+                            groupedSmartCa[p.plan_group].plans.push({ months: p.duration_text, price: p.price });
+                        });
+                        this.smartCaData = ['canhan', 'nhanvien', 'doanhnghiep', '1lan'].map(type => groupedSmartCa[type]).filter(group => group !== undefined);
+                        if(this.categories.length > 0 && !this.activeCategory) this.selectCategory(this.categories[0]);
+                    } catch (error) {
+                        this.showToast('Không thể kết nối máy chủ.');
+                    } finally {
+                        this.isLoading = false;
+                    }
+                },
+                selectCategory(cat) { this.activeCategory = cat; this.activeService = null; },
+                selectService(srv) {
+                    this.activeService = srv;
+                    if(srv.id === 'smartca') {
+                        this.activeSmartCaTab = 'canhan'; this.isAdvanced = false; this.vatRate = 10; this.discountRate = 0;
+                    }
+                },
+                // Tính giá gốc theo VAT hiện tại (Chưa có chiết khấu)
+                calculateOriginalPrice(basePrice) {
+                    let price = basePrice;
+                    if(this.activeSmartCaTab !== '1lan' && this.isAdvanced) price *= 1.5;
+                    return Math.round((price / 1.1) * (1 + this.vatRate / 100));
+                },
+                // Tính giá cuối cùng (Đã trừ chiết khấu)
+                calculateFinalPrice(basePrice) {
+                    let original = this.calculateOriginalPrice(basePrice);
+                    return Math.round(original * (1 - this.discountRate / 100));
+                },
+                formatPrice(value) { return new Intl.NumberFormat('vi-VN').format(value) + ' đ'; },
+                
+                // Logic Nhấn giữ để Copy
+                startHold(plan) {
+                    this.holdingPlan = plan.months;
+                    // Chờ 400ms mới kích hoạt copy (Nhấn giữ)
+                    this.holdTimer = setTimeout(() => {
+                        this.executeCopy(plan);
+                        this.holdingPlan = null;
+                    }, 400);
+                },
+                endHold() {
+                    // Nếu nhả chuột ra trước 400ms (tức là chỉ click bình thường), vẫn cho copy để đỡ gây ức chế
+                    if(this.holdingPlan !== null) {
+                        clearTimeout(this.holdTimer);
+                        const planToCopy = this.currentSmartCaPlans.find(p => p.months === this.holdingPlan);
+                        this.executeCopy(planToCopy);
+                        this.holdingPlan = null;
+                    }
+                },
+                cancelHold() {
+                    // Hủy khi di chuột ra khỏi dòng
+                    clearTimeout(this.holdTimer);
+                    this.holdingPlan = null;
+                },
+                executeCopy(plan) {
+                    const typeName = this.smartCaData.find(t => t.type === this.activeSmartCaTab).name;
+                    const level = this.activeSmartCaTab === '1lan' ? '' : (this.isAdvanced ? '(Nâng cao)' : '(Cơ bản)');
+                    const finalPriceFormatted = this.formatPrice(this.calculateFinalPrice(plan.price));
+                    
+                    let discountText = this.discountRate > 0 ? `Đã giảm ${this.discountRate}% - ` : '';
+                    const textToCopy = `VNPT SmartCA ${typeName} ${level} - Gói ${plan.months} tháng: ${finalPriceFormatted} (${discountText}Bao gồm ${this.vatRate}% VAT)`.replace(/\s+/g, ' ').trim();
+                    
+                    navigator.clipboard.writeText(textToCopy).then(() => {
+                        this.showToast('Đã copy: ' + finalPriceFormatted);
+                    });
+                },
+                showToast(msg) {
+                    this.toastMessage = msg;
+                    setTimeout(() => this.toastMessage = '', 2000);
+                }
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html>
