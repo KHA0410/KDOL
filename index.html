@@ -193,7 +193,7 @@
 
                     <div class="flex overflow-x-auto hide-scrollbar border-b border-gray-300 mb-4">
                         <button v-for="tab in [{id: 'doclap', name: 'Chỉ Kê khai BHXH'}, {id: 'tichhop', name: 'Tích hợp BHXH + Chữ ký số'}]" :key="tab.id" 
-                            @click="activeBhxhGroup = tab.id; discountBhxh = 0; activeBhxhVan = '';"
+                            @click="activeBhxhGroup = tab.id; discountBhxh = 0; activeBhxhVan = tab.id === 'doclap' && activeBhxhVan === '' ? '_100' : activeBhxhVan;"
                             :class="['flex-shrink-0 px-3 md:px-4 py-2 text-sm md:text-base font-medium focus:outline-none whitespace-nowrap', 
                             activeBhxhGroup === tab.id ? 'border-b-2 border-vnpt-blue text-vnpt-blue' : 'text-gray-500 hover:text-gray-700']">
                             {{ tab.name }}
@@ -294,7 +294,7 @@
                     </div>
                 </div>
 
-                <!-- GIAO DIỆN INTERNET -->
+                <!-- GIAO DIỆN INTERNET CÁP QUANG ĐƯỢC CHỈNH MÀU SẮC PHÂN BIỆT -->
                 <div v-else-if="activeService?.id === 'internet'">
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-xl md:text-2xl font-bold text-vnpt-blue">Gói cước Internet VNPT</h2>
@@ -319,13 +319,14 @@
                             <button @click="activeIntMesh = '2mesh'" :class="['flex-1 sm:flex-none px-3 py-1.5 rounded text-xs md:text-sm font-medium', activeIntMesh === '2mesh' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">+2 Mesh 6</button>
                         </div>
                     </div>
+                    
                     <div class="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 rounded-lg">
                         <table class="min-w-full divide-y divide-gray-300">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="py-2.5 md:py-3.5 pl-4 pr-3 text-left text-xs md:text-sm font-semibold text-gray-900 w-1/3">Tên Gói Cước</th>
+                                    <th class="py-2.5 md:py-3.5 pl-4 pr-3 text-left text-xs md:text-sm font-semibold text-gray-900" :class="activeIntGroup !== 'mobile' ? 'w-1/3' : 'w-1/2'">Tên Gói Cước</th>
                                     <th v-if="activeIntGroup !== 'mobile'" class="px-3 py-2.5 md:py-3.5 text-left text-xs md:text-sm font-semibold text-gray-900 w-1/3">Tích hợp</th>
-                                    <th class="px-3 py-2.5 md:py-3.5 text-right text-xs md:text-sm font-semibold text-gray-900 w-1/3">Giá cước / Tháng</th>
+                                    <th class="px-3 py-2.5 md:py-3.5 text-right text-xs md:text-sm font-semibold text-gray-900" :class="activeIntGroup !== 'mobile' ? 'w-1/3' : 'w-1/2'">Giá cước / Tháng</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200 bg-white">
@@ -335,15 +336,28 @@
                                 <tr v-for="plan in currentIntPlans" :key="plan.duration_text" class="hover:bg-gray-50 transition-colors">
                                     <td class="py-4 pl-4 pr-3 text-sm font-medium text-gray-900">
                                         {{ plan.duration_text.split('(')[0] }}
-                                        <div class="text-xs text-gray-500 mt-0.5">Tốc độ: {{ plan.duration_text.split('(')[1] ? plan.duration_text.split('(')[1].replace(')','') : '' }}</div>
-                                        <div v-if="plan.note && activeIntGroup === 'mobile'" class="text-xs text-vnpt-red font-normal mt-1.5 whitespace-normal max-w-sm">🌟 {{ plan.note }}</div>
-                                        <!-- Note KM đặc biệt của gói Home Mesh -->
-                                        <div v-if="plan.note && activeIntGroup !== 'mobile' && plan.note.includes('KM:')" class="text-xs text-vnpt-red font-normal mt-1.5 whitespace-normal max-w-sm">🌟 {{ plan.note }}</div>
+                                        <div class="text-xs text-gray-500 mt-0.5 font-normal">Tốc độ: {{ plan.duration_text.split('(')[1] ? plan.duration_text.split('(')[1].replace(')','') : '' }}</div>
+                                        
+                                        <!-- Hiển thị Tích hợp Di động (cho gói Mobile) - Màu Xanh -->
+                                        <div v-if="plan.note && activeIntGroup === 'mobile'" class="text-xs text-blue-600 font-medium mt-1.5 whitespace-normal max-w-sm">
+                                            📱 Tích hợp: {{ plan.note }}
+                                        </div>
+                                        
+                                        <!-- Note Khuyến Mãi đặc biệt - Màu Đỏ -->
+                                        <div v-if="plan.note && plan.note.includes('KM:')" class="text-xs text-vnpt-red font-medium mt-1.5 whitespace-normal max-w-sm">
+                                            🎁 {{ plan.note }}
+                                        </div>
                                     </td>
                                     
-                                    <td v-if="activeIntGroup !== 'mobile'" class="px-3 py-3 text-xs text-gray-600 align-middle">
-                                        <span v-if="plan.note && !plan.note.includes('KM:')">{{ plan.note }}</span>
-                                        <span v-else-if="!plan.note.includes('KM:')">Family Safe / GreenNet</span>
+                                    <!-- Cột Tích hợp (Camera, Truyền hình...) - Màu Xanh Lá -->
+                                    <td v-if="activeIntGroup !== 'mobile'" class="px-3 py-3 text-xs align-middle">
+                                        <div class="text-green-600 font-medium flex items-start gap-1">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                            </svg>
+                                            <span v-if="plan.note && !plan.note.includes('KM:')">{{ plan.note }}</span>
+                                            <span v-else-if="!plan.note.includes('KM:')">Family Safe / GreenNet</span>
+                                        </div>
                                     </td>
 
                                     <td class="whitespace-nowrap px-3 py-3 align-middle">
@@ -357,6 +371,15 @@
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                    <div class="mt-3 md:mt-4 text-xs md:text-sm text-gray-600 bg-gray-50 p-3 rounded border">
+                        <p class="font-semibold text-vnpt-red mb-1">Quy định chung:</p>
+                        <ul class="list-disc pl-5 space-y-1">
+                            <li>Phí hòa mạng: <span class="font-bold">300.000đ/lần</span> (Áp dụng cho mọi gói).</li>
+                            <li>Tốc độ gói 500ULM tối thiểu là 500Mbps, tối đa có thể lên 1000Mbps.</li>
+                            <li>Gói HOME CAM tặng kèm 1 Camera Indoor và Cloud lưu trữ 3 ngày.</li>
+                            <li>Giá báo trên đã bao gồm VAT.</li>
+                        </ul>
                     </div>
                 </div>
 
@@ -524,6 +547,7 @@
                     </div>
                 </div>
 
+                <!-- DỊCH VỤ CHƯA CÓ BẢNG GIÁ -->
                 <div v-else-if="activeService" class="text-center mt-10 md:mt-20">
                     <h2 class="text-lg md:text-xl font-semibold text-gray-500">{{ activeService.name }}</h2>
                     <p class="text-sm text-gray-400 mt-2">Dịch vụ này chưa có bảng giá trên hệ thống.</p>
@@ -854,7 +878,6 @@
                     
                     let textToCopy = `Internet VNPT (${region}) - Gói ${plan.duration_text}${meshTxt}${integrationText}: ${formattedPrice}/tháng (Đã gồm VAT). Phí hòa mạng 300K.`;
                     
-                    // Nếu có KM đặc biệt hoặc là gói Mobile thì nối thêm note
                     if(plan.note && (this.activeIntGroup === 'mobile' || plan.note.includes('KM:'))) {
                          textToCopy += ` Ưu đãi: ${plan.note}`;
                     }
