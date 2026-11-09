@@ -607,7 +607,7 @@
                     
                     // State BHXH
                     activeBhxhGroup: 'doclap',
-                    activeBhxhVan: '',
+                    activeBhxhVan: '_100',
                     activeBhxhType: 'moi',
                     activeBhxhRegion: 'tt',
                     discountBhxh: 0,
@@ -629,12 +629,20 @@
             },
             computed: {
                 bhxhVanOptions() {
-                    return [
-                        {id: '', label: '1 - 10 LĐ'}, 
-                        {id: '_100', label: '11 - 100 LĐ'}, 
-                        {id: '_1000', label: '101 - 1.000 LĐ'}, 
-                        {id: '_max', label: 'Không giới hạn'}
-                    ];
+                    if(this.activeBhxhGroup === 'doclap') {
+                        return [
+                            {id: '_100', label: 'Đến 100 LĐ'}, 
+                            {id: '_1000', label: 'Đến 1.000 LĐ'}, 
+                            {id: '_max', label: 'Không giới hạn'}
+                        ];
+                    } else {
+                        return [
+                            {id: '', label: '1 - 10 LĐ'}, 
+                            {id: '_100', label: '11 - 100 LĐ'}, 
+                            {id: '_1000', label: '101 - 1.000 LĐ'}, 
+                            {id: '_max', label: 'Không giới hạn'}
+                        ];
+                    }
                 },
                 currentInbotPlans() {
                     const group = this.inbotData.find(g => g.type === 'inbot_goi');
@@ -772,7 +780,7 @@
                     } else if (srv.id === 'vnptca') {
                         this.activeVnptCaTab = 'doanhnghiep'; this.activeVnptCaType = 'moi';
                     } else if (srv.id === 'bhxh') {
-                        this.activeBhxhGroup = 'doclap'; this.activeBhxhVan = ''; this.activeBhxhType = 'moi'; this.discountBhxh = 0;
+                        this.activeBhxhGroup = 'doclap'; this.activeBhxhVan = '_100'; this.activeBhxhType = 'moi'; this.discountBhxh = 0;
                         this.vatRate = 8;
                     } else if (srv.id === 'inbot') {
                         this.activeInbotGroup = 'goi'; this.activeInbotType = 'moi'; this.discountInbot = 0; this.inbotMaxAmount = '';
