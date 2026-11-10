@@ -1,0 +1,340 @@
+/*
+ * KDOL: biến dùng chung → tiện ích → thành phần → responsive.
+ * Quy ước và ví dụ: CSS-CONVENTIONS.md.
+ * Tailwind tiếp tục cung cấp reset, tiện ích bố cục và màu trạng thái trong Vue.
+ */
+
+:root {
+    --kdol-color-primary: #0055a5;
+    --kdol-color-primary-light: #e6f0fa;
+    --kdol-color-danger: #ed1c24;
+    --kdol-color-border: #e5e7eb;
+    --kdol-color-border-light: #dbeafe;
+    --kdol-color-surface: #ffffff;
+    --kdol-color-surface-muted: #f9fafb;
+    --kdol-color-table-heading: #102776;
+    --kdol-color-table-border: #c7cfdf;
+    --kdol-radius-sm: 0.25rem;
+    --kdol-radius-md: 0.375rem;
+    --kdol-radius-lg: 0.5rem;
+    --kdol-transition-duration: 150ms;
+    --kdol-transition-easing: cubic-bezier(0.4, 0, 0.2, 1);
+    --kdol-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --kdol-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+
+/* Tiện ích và trạng thái khởi tạo. */
+[v-cloak] { display: none; }
+
+.kdol-hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.kdol-hide-scrollbar::-webkit-scrollbar { display: none; }
+
+.kdol-loader {
+    border: 4px solid #f3f3f3;
+    border-top-color: var(--kdol-color-primary);
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: kdol-spin 1s linear infinite;
+}
+
+@keyframes kdol-spin { to { transform: rotate(360deg); } }
+
+/* Tiêu đề và khung cấu hình dùng chung giữa các dịch vụ. */
+.kdol-service-title {
+    color: var(--kdol-color-primary);
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    font-weight: 700;
+}
+
+.kdol-config-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--kdol-color-border-light);
+    border-radius: var(--kdol-radius-lg);
+    background-color: var(--kdol-color-primary-light);
+}
+
+/* Nút: class nền chỉ quy định hình dạng, Vue quyết định màu trạng thái. */
+.kdol-choice-group {
+    display: flex;
+    align-items: center;
+    padding: 0.25rem;
+    border: 1px solid var(--kdol-color-border);
+    border-radius: var(--kdol-radius-md);
+    background-color: var(--kdol-color-surface);
+    box-shadow: var(--kdol-shadow-sm);
+}
+
+.kdol-choice {
+    padding: 0.375rem 0.75rem;
+    border-radius: var(--kdol-radius-sm);
+    font-size: 0.75rem;
+    line-height: 1rem;
+    font-weight: 500;
+}
+
+.kdol-choice--fluid { flex: 1 1 0%; }
+.kdol-choice--compact { padding: 0.25rem 0.625rem; }
+
+.kdol-tabs {
+    display: flex;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #d1d5db;
+    border-color: #d1d5db;
+}
+
+.kdol-tab {
+    flex-shrink: 0;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.kdol-tab:focus { outline: 2px solid transparent; outline-offset: 2px; }
+
+.kdol-copy-button {
+    padding: 0.375rem;
+    border-radius: 9999px;
+    color: #9ca3af;
+    transition: color var(--kdol-transition-duration) var(--kdol-transition-easing),
+        background-color var(--kdol-transition-duration) var(--kdol-transition-easing);
+}
+
+.kdol-copy-button:hover { color: var(--kdol-color-primary); background-color: #eff6ff; }
+
+.kdol-primary-button {
+    padding: 0.5rem 1.5rem;
+    border-radius: var(--kdol-radius-sm);
+    background-color: var(--kdol-color-primary);
+    color: #ffffff;
+    font-weight: 700;
+    box-shadow: var(--kdol-shadow);
+    transition: color var(--kdol-transition-duration) var(--kdol-transition-easing),
+        background-color var(--kdol-transition-duration) var(--kdol-transition-easing),
+        border-color var(--kdol-transition-duration) var(--kdol-transition-easing),
+        text-decoration-color var(--kdol-transition-duration) var(--kdol-transition-easing),
+        fill var(--kdol-transition-duration) var(--kdol-transition-easing),
+        stroke var(--kdol-transition-duration) var(--kdol-transition-easing);
+}
+
+.kdol-primary-button:hover { background-color: #1d4ed8; }
+
+/* Bảng giá: giữ các tiện ích width/alignment riêng tại nơi sử dụng. */
+.kdol-table-wrap {
+    overflow-x: auto;
+    border-radius: var(--kdol-radius-lg);
+    box-shadow: 0 0 0 1px rgb(0 0 0 / 0.05), var(--kdol-shadow);
+}
+
+.kdol-table-heading {
+    padding: 0.625rem 0.75rem;
+    color: #111827;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    font-weight: 600;
+}
+
+.kdol-table-heading--label { padding-left: 1rem; }
+
+.kdol-empty-state {
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+    color: #9ca3af;
+    text-align: center;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-style: italic;
+}
+
+.kdol-price {
+    font-size: 1rem;
+    line-height: 1.5rem;
+    font-weight: 700;
+    transition: all var(--kdol-transition-duration) var(--kdol-transition-easing);
+}
+
+/* Bộ chọn dùng chung cho các cấu hình gói. */
+.kdol-select {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: var(--kdol-radius-sm);
+    background-color: var(--kdol-color-surface);
+    color: #111827;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+}
+
+.kdol-select:focus {
+    border-color: var(--kdol-color-primary);
+    outline: 2px solid var(--kdol-color-primary-light);
+    outline-offset: 2px;
+}
+
+/* Thanh chiết khấu và kết quả báo giá. */
+.kdol-discount-slider {
+    width: 100%;
+    height: 0.5rem;
+    border-radius: var(--kdol-radius-lg);
+    background-color: var(--kdol-color-border);
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+}
+
+/* Áp dụng cho cả thanh BHXH đang giữ giao diện range mặc định. */
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--kdol-color-primary);
+    cursor: pointer;
+}
+
+.kdol-quote-card {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: var(--kdol-radius-lg);
+    background-color: var(--kdol-color-surface-muted);
+    box-shadow: 0 0 0 1px rgb(0 0 0 / 0.05), var(--kdol-shadow);
+}
+
+.kdol-quote-result {
+    padding: 1rem;
+    border: 1px solid var(--kdol-color-border);
+    border-radius: var(--kdol-radius-sm);
+    background-color: var(--kdol-color-surface);
+}
+
+.kdol-quote-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.5rem;
+    margin-top: 0.5rem;
+    border-top: 1px solid var(--kdol-color-border);
+}
+
+/* Bảng tổng hợp Internet và bộ tính giá theo tháng. */
+.kdol-internet-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    padding: 1rem;
+    margin-bottom: 1.25rem;
+    border: 1px solid var(--kdol-color-border-light);
+    border-radius: var(--kdol-radius-lg);
+    background-color: var(--kdol-color-surface);
+    box-shadow: var(--kdol-shadow-sm);
+}
+
+.kdol-internet-controls { display: grid; gap: 1rem; align-items: end; }
+.kdol-internet-terms {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    overflow: hidden;
+    border: 1px solid var(--kdol-color-table-border);
+    border-radius: var(--kdol-radius-sm);
+}
+
+.kdol-internet-term {
+    padding: 0.5rem 0.375rem;
+    border-right: 1px solid var(--kdol-color-table-border);
+    background-color: var(--kdol-color-surface);
+    color: var(--kdol-color-table-heading);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.kdol-internet-term:last-child { border-right: 0; }
+.kdol-internet-term:hover { background-color: var(--kdol-color-primary-light); }
+.kdol-internet-term--active,
+.kdol-internet-term--active:hover { color: #ffffff; background-color: var(--kdol-color-table-heading); }
+.kdol-internet-term:focus-visible { outline: 2px solid var(--kdol-color-primary); outline-offset: -3px; }
+
+.kdol-internet-calculation,
+.kdol-internet-footnote { color: #64748b; font-size: 0.75rem; line-height: 1.125rem; }
+.kdol-internet-options { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1rem; margin-top: 0.75rem; }
+.kdol-internet-toggle { display: inline-flex; align-items: center; gap: 0.5rem; color: #334155; font-size: 0.8125rem; line-height: 1.25rem; cursor: pointer; }
+.kdol-internet-toggle__input { width: 1rem; height: 1rem; accent-color: var(--kdol-color-primary); }
+.kdol-internet-footnote { margin-top: 0.5rem; }
+.kdol-internet-scroll-hint { margin-bottom: 0.75rem; color: #64748b; font-size: 0.75rem; line-height: 1.125rem; }
+.kdol-internet-section-title { margin-bottom: 0.75rem; color: var(--kdol-color-table-heading); font-size: 1rem; line-height: 1.5rem; font-weight: 700; }
+
+.kdol-internet-table {
+    width: 100%;
+    min-width: 620px;
+    table-layout: fixed;
+    border-collapse: collapse;
+    color: #243754;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    text-align: center;
+}
+
+.kdol-internet-col--package { width: 22%; }
+.kdol-internet-col--benefits { width: 27%; }
+.kdol-internet-col--price,
+.kdol-internet-col--integration { width: 17%; }
+.kdol-internet-table--mobile .kdol-internet-col--benefits { width: 40%; }
+.kdol-internet-table--mobile .kdol-internet-col--price { width: 21%; }
+.kdol-internet-table--compact { min-width: 420px; }
+.kdol-internet-table--compact .kdol-internet-col--package { width: 28%; }
+.kdol-internet-table--compact .kdol-internet-col--price { width: 24%; }
+.kdol-internet-table--mobile.kdol-internet-table--compact { min-width: 520px; }
+.kdol-internet-table--mobile.kdol-internet-table--compact .kdol-internet-col--benefits { width: 45%; }
+.kdol-internet-table--mobile.kdol-internet-table--compact .kdol-internet-col--price { width: 27%; }
+
+.kdol-internet-table th,
+.kdol-internet-table td { padding: 0.5rem 0.375rem; border: 1px solid var(--kdol-color-table-border); vertical-align: middle; }
+.kdol-internet-table thead th { background-color: var(--kdol-color-table-heading); color: #ffffff; font-weight: 600; }
+.kdol-internet-table thead tr:first-child > th:first-child { position: sticky; left: 0; z-index: 2; }
+.kdol-internet-table tbody .kdol-internet-package { position: sticky; left: 0; z-index: 1; background-color: inherit; font-weight: 600; }
+.kdol-internet-speed { display: block; margin-top: 0.125rem; color: #64748b; font-size: 0.6875rem; line-height: 1rem; font-weight: 400; white-space: nowrap; }
+.kdol-internet-table .kdol-internet-benefits { white-space: pre-line; }
+.kdol-internet-table--mobile .kdol-internet-benefits { text-align: left; }
+.kdol-internet-row--home,
+.kdol-internet-row--mobile { background-color: var(--kdol-color-surface); }
+.kdol-internet-row--tv,
+.kdol-internet-row--mobile:nth-child(even) { background-color: #edf1f7; }
+.kdol-internet-row--cam { background-color: #f4f0f7; }
+.kdol-internet-row--promotion { background-color: #fff8e6; }
+.kdol-internet-promotion { display: block; width: fit-content; margin: 0.25rem auto 0; padding: 0.0625rem 0.375rem; border-radius: var(--kdol-radius-sm); background-color: #fef3c7; color: #92400e; font-size: 0.625rem; }
+.kdol-internet-table .kdol-internet-price-cell { padding: 0; }
+.kdol-internet-price { display: block; width: 100%; padding: 0.75rem 0.25rem; color: var(--kdol-color-table-heading); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.kdol-internet-unavailable { color: #94a3b8; }
+
+/* Cùng breakpoint sm, md và xl với Tailwind hiện tại. */
+@media (min-width: 640px) {
+    .kdol-choice--fluid { flex: none; }
+    .kdol-internet-controls { grid-template-columns: minmax(9rem, 1fr) minmax(0, 2fr); }
+}
+
+@media (min-width: 768px) {
+    .kdol-service-title { font-size: 1.5rem; line-height: 2rem; }
+    .kdol-config-panel { padding: 1rem; margin-bottom: 1.5rem; }
+    .kdol-choice:not(.kdol-choice--compact) { font-size: 0.875rem; line-height: 1.25rem; }
+    .kdol-tab { padding-left: 1rem; padding-right: 1rem; font-size: 1rem; line-height: 1.5rem; }
+    .kdol-tabs--spaced { margin-bottom: 1.25rem; }
+    .kdol-table-heading { padding-top: 0.875rem; padding-bottom: 0.875rem; font-size: 0.875rem; line-height: 1.25rem; }
+    .kdol-price { font-size: 1.25rem; line-height: 1.75rem; }
+    .kdol-quote-card { padding: 1.5rem; }
+}
+
+@media (min-width: 1280px) {
+    .kdol-layout--internet .kdol-sidebar { width: 16%; }
+    .kdol-layout--internet .kdol-detail { width: 68%; }
+    .kdol-internet-scroll-hint { display: none; }
+}
