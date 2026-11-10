@@ -1021,8 +1021,6 @@
                 <!-- 5. DỊCH VỤ INTERNET CÁP QUANG -->
                 <section v-else-if="activeService?.id === 'internet'" aria-labelledby="internet-title">
                     <h2 id="internet-title" class="kdol-service-title mb-2">Internet cáp quang VNPT</h2>
-                    <p class="text-sm text-gray-600 mb-4">So sánh các gói và cấu hình Mesh.</p>
-
                     <div v-if="internetData.length" class="kdol-internet-toolbar">
                         <div class="kdol-internet-controls">
                             <div>
@@ -1047,10 +1045,6 @@
                                 <input type="checkbox" v-model="showInternetIntegration" class="kdol-internet-toggle__input">
                                 Hiện cột tích hợp
                             </label>
-                            <p class="kdol-internet-calculation" aria-live="polite">
-                                {{ internetMonths === 1 ? 'Đang hiển thị giá theo tháng.' : 'Toàn bộ bảng đang hiển thị giá ' + internetMonths + ' tháng = giá tháng × ' + internetMonths + '.' }}
-                                Chưa áp dụng ưu đãi trả trước.
-                            </p>
                         </div>
                     </div>
 
@@ -1058,7 +1052,7 @@
                     <div v-if="!internetMatrixRows.length && !internetMobileRows.length" class="kdol-empty-state">Chưa có bảng giá Internet cho lựa chọn này.</div>
 
                     <div v-if="internetMatrixRows.length" class="mb-6">
-                        <h3 class="kdol-internet-section-title">Gói Internet gia đình · {{ internetRegionName }}</h3>
+                        <h3 class="kdol-internet-section-title">Gói Internet · {{ internetRegionName }}</h3>
                         <div class="kdol-table-wrap">
                             <table class="kdol-internet-table" :class="{ 'kdol-internet-table--compact': !showInternetIntegration }">
                                 <caption class="sr-only">Bảng giá Internet gia đình {{ internetRegionName }}, kỳ {{ internetMonths }} tháng</caption>
@@ -1098,7 +1092,6 @@
                                 </tbody>
                             </table>
                         </div>
-                        <p class="kdol-internet-footnote">Mặc định: theo cấu hình của từng gói. Gói ưu đãi có thể đã kèm Mesh; xem quyền lợi trước khi tư vấn.</p>
                     </div>
 
                     <div v-if="internetMobileRows.length">
