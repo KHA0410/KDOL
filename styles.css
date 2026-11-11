@@ -226,10 +226,10 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 /* Bảng tổng hợp Internet và bộ tính giá theo tháng. */
-.kdol-internet-toolbar {
-    position: sticky;
-    top: 0;
-    z-index: 10;
+.kdol-internet-region,
+.kdol-internet-toolbar,
+.kdol-mytv-toolbar,
+.kdol-camera-toolbar {
     padding: 1rem;
     margin-bottom: 1.25rem;
     border: 1px solid var(--kdol-color-border-light);
@@ -238,16 +238,31 @@ input[type="range"]::-webkit-slider-thumb {
     box-shadow: var(--kdol-shadow-sm);
 }
 
-.kdol-internet-controls { display: grid; gap: 1rem; align-items: end; }
-.kdol-internet-terms {
+.kdol-internet-region { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 0.75rem 1.5rem; }
+.kdol-internet-region-field { flex: 1 1 14rem; max-width: 28rem; }
+.kdol-internet-toolbar,
+.kdol-mytv-toolbar,
+.kdol-camera-toolbar { position: sticky; top: 0; z-index: 10; }
+.kdol-internet-terms,
+.kdol-mytv-terms,
+.kdol-mesh-modes,
+.kdol-camera-terms,
+.kdol-camera-modes {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     overflow: hidden;
     border: 1px solid var(--kdol-color-table-border);
     border-radius: var(--kdol-radius-sm);
 }
+.kdol-mytv-terms { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.kdol-mesh-modes,
+.kdol-camera-modes { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 1rem; }
 
-.kdol-internet-term {
+.kdol-internet-term,
+.kdol-mytv-term,
+.kdol-mesh-mode,
+.kdol-camera-term,
+.kdol-camera-mode {
     padding: 0.5rem 0.375rem;
     border-right: 1px solid var(--kdol-color-table-border);
     background-color: var(--kdol-color-surface);
@@ -258,15 +273,35 @@ input[type="range"]::-webkit-slider-thumb {
     white-space: nowrap;
 }
 
-.kdol-internet-term:last-child { border-right: 0; }
-.kdol-internet-term:hover { background-color: var(--kdol-color-primary-light); }
+.kdol-internet-term:last-child,
+.kdol-mytv-term:last-child,
+.kdol-mesh-mode:last-child,
+.kdol-camera-term:last-child,
+.kdol-camera-mode:last-child { border-right: 0; }
+.kdol-internet-term:hover,
+.kdol-mytv-term:hover,
+.kdol-mesh-mode:hover,
+.kdol-camera-term:hover,
+.kdol-camera-mode:hover { background-color: var(--kdol-color-primary-light); }
 .kdol-internet-term--active,
-.kdol-internet-term--active:hover { color: #ffffff; background-color: var(--kdol-color-table-heading); }
-.kdol-internet-term:focus-visible { outline: 2px solid var(--kdol-color-primary); outline-offset: -3px; }
+.kdol-internet-term--active:hover,
+.kdol-mytv-term--active,
+.kdol-mytv-term--active:hover,
+.kdol-mesh-mode--active,
+.kdol-mesh-mode--active:hover,
+.kdol-camera-term--active,
+.kdol-camera-term--active:hover,
+.kdol-camera-mode--active,
+.kdol-camera-mode--active:hover { color: #ffffff; background-color: var(--kdol-color-table-heading); }
+.kdol-internet-term:focus-visible,
+.kdol-mytv-term:focus-visible,
+.kdol-mesh-mode:focus-visible,
+.kdol-camera-term:focus-visible,
+.kdol-camera-mode:focus-visible { outline: 2px solid var(--kdol-color-primary); outline-offset: -3px; }
 
 .kdol-internet-calculation,
 .kdol-internet-footnote { color: #64748b; font-size: 0.75rem; line-height: 1.125rem; }
-.kdol-internet-options { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1rem; margin-top: 0.75rem; }
+.kdol-internet-options { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1rem; }
 .kdol-internet-toggle { display: inline-flex; align-items: center; gap: 0.5rem; color: #334155; font-size: 0.8125rem; line-height: 1.25rem; cursor: pointer; }
 .kdol-internet-toggle__input { width: 1rem; height: 1rem; accent-color: var(--kdol-color-primary); }
 .kdol-internet-footnote { margin-top: 0.5rem; }
@@ -316,10 +351,99 @@ input[type="range"]::-webkit-slider-thumb {
 .kdol-internet-price { display: block; width: 100%; padding: 0.75rem 0.25rem; color: var(--kdol-color-table-heading); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .kdol-internet-unavailable { color: #94a3b8; }
 
+/* MyTV: bảng so sánh gói và tra cứu kênh theo tài liệu. */
+.kdol-mytv-intro,
+.kdol-mytv-footnote { color: #64748b; font-size: 0.75rem; line-height: 1.25rem; }
+.kdol-mytv-intro { margin-bottom: 1rem; }
+.kdol-mytv-footnote { margin-top: 0.5rem; }
+.kdol-mytv-search { margin-bottom: 1rem; }
+.kdol-mytv-result { margin-top: 0.5rem; color: var(--kdol-color-primary); font-size: 0.8125rem; }
+.kdol-mytv-table,
+.kdol-mesh-table,
+.kdol-camera-table { width: 100%; min-width: 480px; border-collapse: collapse; font-size: 0.8125rem; line-height: 1.5; text-align: center; }
+.kdol-mytv-table th,
+.kdol-mytv-table td,
+.kdol-mesh-table th,
+.kdol-mesh-table td,
+.kdol-camera-table th,
+.kdol-camera-table td { padding: 0.5rem 0.75rem; border: 1px solid var(--kdol-color-table-border); }
+.kdol-mytv-table thead th,
+.kdol-mesh-table thead th,
+.kdol-camera-table thead th { background-color: var(--kdol-color-table-heading); color: #ffffff; font-weight: 600; white-space: nowrap; }
+.kdol-mytv-table thead th:first-child,
+.kdol-mesh-table thead th:first-child,
+.kdol-camera-table thead th:first-child { position: sticky; left: 0; z-index: 2; }
+.kdol-mytv-table tbody tr,
+.kdol-mesh-table tbody tr,
+.kdol-camera-table tbody tr { background-color: var(--kdol-color-surface); }
+.kdol-mytv-table tbody th,
+.kdol-mesh-table tbody th,
+.kdol-camera-table tbody th { position: sticky; left: 0; z-index: 1; background-color: inherit; }
+.kdol-mytv-table tbody tr:nth-child(even),
+.kdol-mesh-table tbody tr:nth-child(even),
+.kdol-camera-table tbody tr:nth-child(even) { background-color: var(--kdol-color-surface-muted); }
+.kdol-mytv-table tbody .kdol-mytv-row--selected { background-color: var(--kdol-color-primary-light); }
+.kdol-mytv-package { display: block; width: 100%; padding: 0.25rem; color: var(--kdol-color-primary); font-weight: 700; white-space: nowrap; }
+.kdol-mytv-package:focus-visible { outline: 2px solid var(--kdol-color-primary); outline-offset: 2px; }
+.kdol-mytv-highlights { text-align: left; white-space: pre-line; }
+.kdol-mytv-price { min-width: 6rem; white-space: nowrap; color: var(--kdol-color-primary); font-weight: 600; }
+.kdol-mytv-detail { margin-top: 1.5rem; }
+.kdol-mytv-detail-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.5rem 1rem; margin-bottom: 0.5rem; }
+.kdol-mytv-detail-heading .kdol-internet-section-title { margin-bottom: 0; }
+.kdol-mytv-source,
+.kdol-mesh-source,
+.kdol-camera-source { color: var(--kdol-color-primary); font-size: 0.75rem; text-decoration: underline; text-underline-offset: 0.125rem; }
+.kdol-mytv-summary { display: grid; gap: 0.75rem; padding: 0.75rem; margin-bottom: 1rem; border: 1px solid var(--kdol-color-border-light); border-radius: var(--kdol-radius-md); background-color: var(--kdol-color-primary-light); font-size: 0.75rem; line-height: 1.25rem; }
+.kdol-mytv-summary dt { color: #64748b; }
+.kdol-mytv-summary dd { color: #1e3a5f; font-weight: 600; }
+.kdol-mytv-channel-groups { display: grid; align-items: start; gap: 0.75rem; }
+.kdol-mytv-channel-group { min-width: 0; border: 1px solid var(--kdol-color-border); border-radius: var(--kdol-radius-md); overflow: hidden; }
+.kdol-mytv-channel-group summary { padding: 0.625rem 0.75rem; background-color: var(--kdol-color-surface-muted); color: var(--kdol-color-table-heading); font-size: 0.8125rem; font-weight: 600; cursor: pointer; }
+.kdol-mytv-channel-group summary span { color: #64748b; font-weight: 400; }
+.kdol-mytv-channels { padding: 0.25rem 0.75rem; }
+.kdol-mytv-channels li { display: flex; align-items: baseline; gap: 0.5rem; padding: 0.375rem 0; font-size: 0.75rem; line-height: 1.125rem; }
+.kdol-mytv-channels li + li { border-top: 1px solid #f1f5f9; }
+.kdol-mytv-channel-number { flex: 0 0 2rem; color: #64748b; font-variant-numeric: tabular-nums; }
+
+/* Mesh: tra cứu add-on và tính tiền mua thiết bị. */
+.kdol-mesh-heading,
+.kdol-camera-heading { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem 1rem; margin-bottom: 1rem; color: #64748b; font-size: 0.75rem; line-height: 1.25rem; }
+.kdol-mesh-specs,
+.kdol-camera-specs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; padding: 0.75rem; margin-bottom: 1rem; border: 1px solid var(--kdol-color-border-light); border-radius: var(--kdol-radius-md); background-color: var(--kdol-color-primary-light); font-size: 0.75rem; line-height: 1.25rem; }
+.kdol-mesh-specs dt,
+.kdol-mesh-note { color: #64748b; font-size: 0.75rem; font-weight: 400; }
+.kdol-mesh-specs dd,
+.kdol-camera-specs dd { color: #1e3a5f; font-weight: 600; }
+.kdol-mesh-table { min-width: 620px; white-space: nowrap; }
+.kdol-mesh-table tbody .kdol-mesh-row--restricted { background-color: #fff8e6; }
+.kdol-mesh-eligibility { margin-top: 0.75rem; color: #92400e; font-size: 0.75rem; line-height: 1.25rem; }
+.kdol-mesh-purchase { padding: 1rem; border: 1px solid var(--kdol-color-border-light); border-radius: var(--kdol-radius-lg); }
+.kdol-mesh-unit-price,
+.kdol-mesh-total { color: var(--kdol-color-primary); font-size: 1.5rem; line-height: 2rem; font-weight: 700; }
+.kdol-mesh-unit-price span { margin-left: 0.25rem; color: #64748b; font-size: 0.875rem; font-weight: 400; }
+.kdol-mesh-purchase-calculator { display: flex; flex-wrap: wrap; align-items: end; gap: 1rem 3rem; margin-top: 1rem; }
+.kdol-mesh-quantity { max-width: 8rem; }
+.kdol-mesh-error { margin-top: 0.5rem; color: #b91c1c; font-size: 0.75rem; }
+
+/* Camera: tên gói và thành phần cùng cột, phí lắp tách khỏi giá cước. */
+.kdol-camera-term { padding: 0.5rem 0.125rem; font-size: 0.75rem; }
+.kdol-camera-specs dt,
+.kdol-camera-note { color: #64748b; font-size: 0.75rem; line-height: 1.25rem; }
+.kdol-camera-table { min-width: 560px; }
+.kdol-camera-table--purchase { min-width: 480px; }
+.kdol-camera-package { width: 38%; min-width: 11rem; max-width: 17rem; text-align: left; color: var(--kdol-color-table-heading); font-weight: 600; }
+.kdol-camera-description { display: block; margin-top: 0.25rem; color: #64748b; font-size: 0.6875rem; line-height: 1rem; font-weight: 400; }
+.kdol-camera-table td { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.kdol-camera-total { color: var(--kdol-color-primary); font-weight: 700; }
+.kdol-camera-free { color: #15803d; }
+
 /* Cùng breakpoint sm, md và xl với Tailwind hiện tại. */
 @media (min-width: 640px) {
     .kdol-choice--fluid { flex: none; }
-    .kdol-internet-controls { grid-template-columns: minmax(9rem, 1fr) minmax(0, 2fr); }
+    .kdol-mytv-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .kdol-mytv-channel-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .kdol-mesh-specs,
+    .kdol-camera-specs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
 @media (min-width: 768px) {
@@ -334,7 +458,8 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 @media (min-width: 1280px) {
-    .kdol-layout--internet .kdol-sidebar { width: 16%; }
-    .kdol-layout--internet .kdol-detail { width: 68%; }
+    .kdol-layout--wide .kdol-sidebar { width: 16%; }
+    .kdol-layout--wide .kdol-detail { width: 68%; }
     .kdol-internet-scroll-hint { display: none; }
+    .kdol-mytv-channel-groups { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }

@@ -14,6 +14,9 @@
     </script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="mytv-data.js"></script>
+    <script src="mesh-data.js"></script>
+    <script src="camera-data.js"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-gray-100 h-screen flex flex-col font-sans">
@@ -29,7 +32,7 @@
             <p class="text-gray-500 font-medium">Đang tải dữ liệu từ máy chủ...</p>
         </div>
 
-        <div v-else class="flex-1 flex flex-col md:flex-row overflow-hidden" :class="{ 'kdol-layout--internet': activeService?.id === 'internet' }">
+        <div v-else class="flex-1 flex flex-col md:flex-row overflow-hidden" :class="{ 'kdol-layout--wide': ['internet', 'mytv', 'mesh', 'camera'].includes(activeService?.id) }">
             <!-- Cột 1: Danh mục -->
             <div class="kdol-sidebar w-full md:w-1/4 bg-white border-b md:border-b-0 md:border-r border-gray-200 flex flex-col flex-shrink-0">
                 <div class="p-2 md:p-3 bg-gray-50 border-b font-semibold text-gray-700 uppercase text-xs hidden md:block">Danh mục Dịch vụ</div>
@@ -1021,24 +1024,12 @@
                 <!-- 5. DỊCH VỤ INTERNET CÁP QUANG -->
                 <section v-else-if="activeService?.id === 'internet'" aria-labelledby="internet-title">
                     <h2 id="internet-title" class="kdol-service-title mb-2">Internet cáp quang VNPT</h2>
-                    <div v-if="internetData.length" class="kdol-internet-toolbar">
-                        <div class="kdol-internet-controls">
-                            <div>
-                                <label for="internet-region" class="block text-sm font-semibold text-gray-800 mb-2">Khu vực</label>
-                                <select id="internet-region" v-model="activeInternetRegion" @change="syncInternetFilters" class="kdol-select">
-                                    <option v-for="region in internetRegionOptions" :key="region.id" :value="region.id">{{ region.name }}</option>
-                                </select>
-                            </div>
-                            <div role="group" aria-labelledby="internet-term-label">
-                                <span id="internet-term-label" class="block text-sm font-semibold text-gray-800 mb-2">Tính giá nhanh</span>
-                                <div class="kdol-internet-terms">
-                                    <button v-for="months in [1, 3, 6, 12]" :key="months" type="button"
-                                        class="kdol-internet-term" :class="{ 'kdol-internet-term--active': internetMonths === months }"
-                                        :aria-pressed="internetMonths === months" @click="internetMonths = months">
-                                        {{ months }} tháng
-                                    </button>
-                                </div>
-                            </div>
+                    <div v-if="internetData.length" class="kdol-internet-region">
+                        <div class="kdol-internet-region-field">
+                            <label for="internet-region" class="block text-sm font-semibold text-gray-800 mb-2">Khu vực</label>
+                            <select id="internet-region" v-model="activeInternetRegion" @change="syncInternetFilters" class="kdol-select">
+                                <option v-for="region in internetRegionOptions" :key="region.id" :value="region.id">{{ region.name }}</option>
+                            </select>
                         </div>
                         <div class="kdol-internet-options">
                             <label class="kdol-internet-toggle">
@@ -1046,6 +1037,21 @@
                                 Hiện cột tích hợp
                             </label>
                         </div>
+                    </div>
+
+                    <div v-if="internetData.length" class="kdol-internet-toolbar" role="group" aria-labelledby="internet-term-label">
+                        <span id="internet-term-label" class="block text-sm font-semibold text-gray-800 mb-2">Tính giá nhanh</span>
+                        <div class="kdol-internet-terms">
+                            <button v-for="months in [1, 3, 6, 12]" :key="months" type="button"
+                                class="kdol-internet-term" :class="{ 'kdol-internet-term--active': internetMonths === months }"
+                                :aria-pressed="internetMonths === months" @click="internetMonths = months">
+                                {{ months }} tháng
+                            </button>
+                        </div>
+                        <label class="kdol-internet-toggle mt-3" title="Phí lắp đặt được cộng một lần vào tổng tiền của kỳ đang chọn.">
+                            <input type="checkbox" v-model="includeInternetSetupFee" class="kdol-internet-toggle__input">
+                            Cộng {{ formatPrice(internetSetupFee) }} phí lắp đặt
+                        </label>
                     </div>
 
                     <div v-if="!internetMatrixRows.length && !internetMobileRows.length" class="kdol-empty-state">Chưa có bảng giá Internet cho lựa chọn này.</div>
@@ -1131,6 +1137,203 @@
                         </div>
                     </div>
                 </section>
+
+                <!-- CAMERA: GIÁ CƯỚC VÀ PHÍ LẮP THEO TỪNG THIẾT BỊ -->
+                <section v-else-if="activeService?.id === 'camera'" aria-labelledby="camera-title">
+                    <h2 id="camera-title" class="kdol-service-title mb-2">AI Camera VNPT</h2>
+                    <template v-if="cameraCatalog">
+                        <div class="kdol-camera-heading">
+                            <p>IN: trong nhà · OUT: ngoài trời. Lưu trữ Cloud hoặc thẻ nhớ.</p>
+                            <a :href="cameraCatalog.poster" target="_blank" rel="noopener noreferrer" class="kdol-camera-source">Xem bảng giá gốc ↗</a>
+                        </div>
+                        <dl class="kdol-camera-specs">
+                            <div v-for="spec in cameraCatalog.specifications" :key="spec.label"><dt>{{ spec.label }}</dt><dd>{{ spec.value }}</dd></div>
+                        </dl>
+                        <div class="kdol-camera-modes" role="group" aria-label="Hình thức sử dụng Camera">
+                            <button type="button" class="kdol-camera-mode" :class="{ 'kdol-camera-mode--active': cameraMode === 'addon' }" :aria-pressed="cameraMode === 'addon'" @click="cameraMode = 'addon'">Gói Camera add-on</button>
+                            <button type="button" class="kdol-camera-mode" :class="{ 'kdol-camera-mode--active': cameraMode === 'purchase' }" :aria-pressed="cameraMode === 'purchase'" @click="cameraMode = 'purchase'">Mua đứt (TTN)</button>
+                        </div>
+
+                        <div v-if="cameraMode === 'addon'">
+                            <div class="kdol-camera-toolbar">
+                                <p id="camera-term-label" class="text-sm font-semibold text-gray-800 mb-2">Tính giá nhanh</p>
+                                <div class="kdol-camera-terms" role="group" aria-labelledby="camera-term-label">
+                                    <button v-for="period in cameraCatalog.periods" :key="period.id" type="button" class="kdol-camera-term" :class="{ 'kdol-camera-term--active': activeCameraTermId === period.id }" :aria-pressed="activeCameraTermId === period.id" @click="activeCameraTermId = period.id">{{ period.label }}</button>
+                                </div>
+                                <p class="kdol-camera-note mt-2" aria-live="polite">{{ selectedCameraPeriod.freeInstallation ? 'Miễn phí lắp đặt cho kỳ đang chọn.' : 'Tổng tiền đã cộng phí lắp một lần cho từng camera.' }}</p>
+                            </div>
+                            <h3 class="kdol-internet-section-title">Gói Camera add-on · {{ selectedCameraPeriod.label }}</h3>
+                            <div class="kdol-table-wrap">
+                                <table class="kdol-camera-table">
+                                    <caption class="sr-only">Giá gói Camera, phí lắp đặt một lần và tổng tiền theo kỳ đang chọn</caption>
+                                    <thead><tr><th scope="col">Gói / Thành phần</th><th scope="col">Giá cước</th><th scope="col">Phí lắp</th><th scope="col">Tổng tiền</th></tr></thead>
+                                    <tbody>
+                                        <tr v-for="row in cameraQuoteRows" :key="row.id">
+                                            <th scope="row" class="kdol-camera-package">{{ row.name }}<span class="kdol-camera-description">{{ row.description }}</span></th>
+                                            <td>{{ formatPrice(row.price) }}</td>
+                                            <td :class="{ 'kdol-camera-free': row.installationFee === 0 }">{{ row.installationFee === 0 ? 'Miễn phí' : formatPrice(row.installationFee) }}</td>
+                                            <td class="kdol-camera-total">{{ formatPrice(row.total) }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p class="kdol-camera-note mt-3">Giá cước đã gồm VAT. Phí lắp: {{ formatPrice(cameraCatalog.installation.indoor) }}/Cam IN, {{ formatPrice(cameraCatalog.installation.outdoor) }}/Cam OUT; chỉ thu một lần. Miễn phí lắp khi chọn 6 tháng hoặc 12–13 tháng.</p>
+                        </div>
+
+                        <div v-else>
+                            <h3 class="kdol-internet-section-title">Mua thiết bị · Miễn phí lắp đặt</h3>
+                            <div class="kdol-table-wrap">
+                                <table class="kdol-camera-table kdol-camera-table--purchase">
+                                    <caption class="sr-only">Giá mua đứt thiết bị Camera, đã gồm VAT và miễn phí lắp đặt</caption>
+                                    <thead><tr><th scope="col">Thiết bị</th><th scope="col">Giá mua / thiết bị</th><th scope="col">Phí lắp</th></tr></thead>
+                                    <tbody>
+                                        <tr v-for="device in cameraCatalog.purchases" :key="device.id">
+                                            <th scope="row" class="kdol-camera-package">{{ device.name }}<span class="kdol-camera-description">{{ device.description }}</span></th>
+                                            <td class="kdol-camera-total">{{ formatPrice(device.price) }}</td>
+                                            <td class="kdol-camera-free">Miễn phí</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p class="kdol-camera-note mt-3">Thanh toán một lần, đã gồm VAT và miễn phí lắp đặt.</p>
+                        </div>
+                    </template>
+                    <p v-else class="kdol-empty-state">Chưa có bảng giá Camera.</p>
+                </section>
+
+                <!-- 7. WIFI MESH -->
+                <section v-else-if="activeService?.id === 'mesh'" aria-labelledby="mesh-title">
+                    <h2 id="mesh-title" class="kdol-service-title mb-2">WiFi Mesh VNPT</h2>
+                    <template v-if="meshCatalog">
+                        <div class="kdol-mesh-heading">
+                            <p>{{ meshCatalog.deviceName }} · Phù hợp nhà nhiều phòng, nhiều tầng.</p>
+                            <a :href="meshCatalog.poster" target="_blank" rel="noopener noreferrer" class="kdol-mesh-source">Xem bảng giá gốc ↗</a>
+                        </div>
+                        <dl class="kdol-mesh-specs">
+                            <div v-for="spec in meshCatalog.specifications" :key="spec.label"><dt>{{ spec.label }}</dt><dd>{{ spec.value }}</dd></div>
+                        </dl>
+                        <div class="kdol-mesh-modes" role="group" aria-label="Hình thức sử dụng Mesh">
+                            <button type="button" class="kdol-mesh-mode" :class="{ 'kdol-mesh-mode--active': meshMode === 'addon' }" :aria-pressed="meshMode === 'addon'" @click="meshMode = 'addon'">Gói Mesh add-on</button>
+                            <button type="button" class="kdol-mesh-mode" :class="{ 'kdol-mesh-mode--active': meshMode === 'purchase' }" :aria-pressed="meshMode === 'purchase'" @click="meshMode = 'purchase'">Mua thiết bị</button>
+                        </div>
+
+                        <div v-if="meshMode === 'addon'">
+                            <h3 class="kdol-internet-section-title">Giá Mesh add-on <span class="kdol-mesh-note">(đã bao gồm VAT)</span></h3>
+                            <div class="kdol-table-wrap">
+                                <table class="kdol-mesh-table">
+                                    <caption class="sr-only">Bảng giá Mesh add-on theo số thiết bị và kỳ cước</caption>
+                                    <thead>
+                                        <tr><th scope="col">Gói</th><th scope="col">Số Mesh</th><th v-for="period in meshCatalog.periods" :key="period.id" scope="col">{{ period.label }}</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="plan in meshCatalog.plans" :key="plan.id" :class="{ 'kdol-mesh-row--restricted': plan.restricted }">
+                                            <th scope="row">{{ plan.name }}</th>
+                                            <td>{{ plan.quantity }}</td>
+                                            <td v-for="(price, index) in plan.prices" :key="meshCatalog.periods[index].id">{{ formatPrice(price) }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p class="kdol-mesh-eligibility">{{ meshCatalog.eligibility }}</p>
+                        </div>
+
+                        <div v-else class="kdol-mesh-purchase">
+                            <h3 class="kdol-internet-section-title">Mua {{ meshCatalog.deviceName }}</h3>
+                            <p class="kdol-mesh-unit-price">{{ formatPrice(meshCatalog.devicePrice) }}<span>/thiết bị</span></p>
+                            <div class="kdol-mesh-purchase-calculator">
+                                <div>
+                                    <label for="mesh-purchase-quantity" class="block text-sm font-semibold text-gray-800 mb-2">Số thiết bị</label>
+                                    <input id="mesh-purchase-quantity" v-model.number="meshPurchaseQuantity" type="number" min="1" step="1" inputmode="numeric" class="kdol-select kdol-mesh-quantity" :aria-invalid="meshPurchaseTotal === null" aria-describedby="mesh-purchase-error">
+                                </div>
+                                <div>
+                                    <p class="kdol-mesh-note">Tổng mua thiết bị</p>
+                                    <p class="kdol-mesh-total" aria-live="polite">{{ meshPurchaseTotal === null ? '—' : formatPrice(meshPurchaseTotal) }}</p>
+                                </div>
+                            </div>
+                            <p id="mesh-purchase-error" v-if="meshPurchaseTotal === null" class="kdol-mesh-error" role="alert">Nhập số thiết bị là số nguyên từ 1 trở lên.</p>
+                        </div>
+                    </template>
+                    <p v-else class="kdol-empty-state">Chưa có bảng giá WiFi Mesh.</p>
+                </section>
+
+                <!-- 6. TRUYỀN HÌNH MYTV -->
+                <section v-else-if="activeService?.id === 'mytv'" aria-labelledby="mytv-title">
+                    <h2 id="mytv-title" class="kdol-service-title mb-2">Truyền hình MyTV</h2>
+                    <p class="kdol-mytv-intro">Các gói dành cho khách hàng sử dụng mạng VNPT.</p>
+
+                    <div class="kdol-mytv-search">
+                        <label for="mytv-channel-search" class="block text-sm font-semibold text-gray-800 mb-2">Tìm kênh để chọn gói</label>
+                        <input id="mytv-channel-search" v-model="mytvQuery" type="search" class="kdol-select" placeholder="HBO, VTV3, ON Football hoặc số kênh…" autocomplete="off">
+                        <p v-if="mytvQuery.trim()" class="kdol-mytv-result" role="status">{{ filteredMytvPackages.length }} gói có kênh phù hợp.</p>
+                    </div>
+
+                    <div class="kdol-mytv-toolbar" role="group" aria-labelledby="mytv-term-label">
+                        <span id="mytv-term-label" class="block text-sm font-semibold text-gray-800 mb-2">Tính giá nhanh</span>
+                        <div class="kdol-mytv-terms">
+                            <button v-for="term in mytvTermOptions" :key="term.id" type="button"
+                                class="kdol-mytv-term" :class="{ 'kdol-mytv-term--active': activeMytvTermId === term.id }"
+                                :aria-pressed="activeMytvTermId === term.id" @click="activeMytvTermId = term.id">
+                                {{ term.label }}
+                            </button>
+                        </div>
+                        <label class="kdol-internet-toggle mt-3" title="Cộng giá một thiết bị STB, không nhân theo số tháng của gói.">
+                            <input type="checkbox" v-model="includeMytvStb" class="kdol-internet-toggle__input">
+                            Thêm 1 STB (+{{ formatPrice(mytvStbPrice) }})
+                        </label>
+                        <p v-if="selectedMytvTerm.bonusMonths" class="kdol-mytv-footnote" role="status">Thanh toán 12 tháng, sử dụng 14 tháng.</p>
+                    </div>
+
+                    <div class="kdol-table-wrap">
+                        <table class="kdol-mytv-table">
+                            <caption class="sr-only">So sánh các gói MyTV theo danh sách kênh được cung cấp</caption>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Gói</th>
+                                    <th scope="col">Số kênh*</th>
+                                    <th scope="col">Nổi bật</th>
+                                    <th scope="col">{{ mytvPriceHeading }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-if="!filteredMytvPackages.length">
+                                    <td colspan="4" class="kdol-empty-state">Không tìm thấy gói có kênh phù hợp.</td>
+                                </tr>
+                                <tr v-for="pkg in filteredMytvPackages" :key="pkg.id" :class="{ 'kdol-mytv-row--selected': selectedMytvPackage?.id === pkg.id }">
+                                    <th scope="row">
+                                        <button type="button" class="kdol-mytv-package" :aria-pressed="selectedMytvPackage?.id === pkg.id" @click="activeMytvPackageId = pkg.id">{{ pkg.name }}</button>
+                                    </th>
+                                    <td>{{ pkg.channelCount }}</td>
+                                    <td class="kdol-mytv-highlights">{{ pkg.highlights }}</td>
+                                    <td class="kdol-mytv-price"><span v-if="pkg.monthlyPrice !== null">{{ formatPrice(calculateMytvTotal(pkg.monthlyPrice)) }}</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="kdol-mytv-footnote">* Số kênh công bố theo tờ giới thiệu; danh sách tra cứu gồm các kênh được liệt kê trong ảnh. Chọn tên gói để xem chi tiết.</p>
+
+                    <div v-if="selectedMytvPackage" class="kdol-mytv-detail">
+                        <div class="kdol-mytv-detail-heading">
+                            <h3 class="kdol-internet-section-title">Kênh của gói {{ selectedMytvPackage.name }}</h3>
+                            <a :href="selectedMytvPackage.poster" target="_blank" rel="noopener noreferrer" class="kdol-mytv-source">Xem tờ kênh gốc ↗</a>
+                        </div>
+                        <dl class="kdol-mytv-summary">
+                            <div><dt>Phim Galaxy</dt><dd>{{ selectedMytvPackage.galaxy }}</dd></div>
+                            <div><dt>Thiết bị</dt><dd>Đăng nhập 5 · Xem đồng thời 2</dd></div>
+                            <div><dt>Xem lại</dt><dd>Tối đa 72 giờ, tùy kênh</dd></div>
+                        </dl>
+                        <div class="kdol-mytv-channel-groups">
+                            <details v-for="group in groupedMytvChannels" :key="selectedMytvPackage.id + '-' + group.id" class="kdol-mytv-channel-group" :open="Boolean(mytvQuery.trim()) || group.id !== 'local'">
+                                <summary>{{ group.name }} <span>({{ group.channels.length }})</span></summary>
+                                <ul class="kdol-mytv-channels">
+                                    <li v-for="channel in group.channels" :key="channel.number">
+                                        <span class="kdol-mytv-channel-number">{{ channel.number }}</span>
+                                        <span>{{ channel.name }}</span>
+                                    </li>
+                                </ul>
+                            </details>
+                        </div>
+                    </div>
+                </section>
             </div>
         </div>
         
@@ -1163,9 +1366,24 @@
                     invoiceData: [],
                     econtractData: [],
                     internetData: [],
+                    cameraCatalog: window.KDOL_CAMERA || null,
+                    cameraMode: 'addon',
+                    activeCameraTermId: 'monthly',
+                    meshCatalog: window.KDOL_MESH || null,
+                    meshMode: 'addon',
+                    meshPurchaseQuantity: 1,
+                    mytvPackages: window.KDOL_MYTV?.packages || [],
+                    mytvGroups: window.KDOL_MYTV?.groups || [],
+                    mytvQuery: '',
+                    activeMytvPackageId: 's',
+                    activeMytvTermId: 'monthly',
+                    includeMytvStb: false,
+                    mytvStbPrice: 50000,
 
                     activeInternetRegion: 'noi',
                     internetMonths: 1,
+                    includeInternetSetupFee: false,
+                    internetSetupFee: 300000,
                     showInternetIntegration: false,
                     internetFamilyBenefit: 'Family Safe / GreenNet',
                     
@@ -1223,6 +1441,53 @@
                 }
             },
             computed: {
+                selectedCameraPeriod() {
+                    return this.cameraCatalog?.periods.find(period => period.id === this.activeCameraTermId) || this.cameraCatalog?.periods[0] || null;
+                },
+                cameraQuoteRows() {
+                    if (!this.cameraCatalog || !this.selectedCameraPeriod) return [];
+                    const periodIndex = this.cameraCatalog.periods.indexOf(this.selectedCameraPeriod);
+                    return this.cameraCatalog.plans.map(plan => {
+                        const price = plan.prices[periodIndex];
+                        const installationFee = this.selectedCameraPeriod.freeInstallation ? 0
+                            : plan.indoor * this.cameraCatalog.installation.indoor + plan.outdoor * this.cameraCatalog.installation.outdoor;
+                        return { ...plan, price, installationFee, total: price + installationFee };
+                    });
+                },
+                meshPurchaseTotal() {
+                    const quantity = Number(this.meshPurchaseQuantity);
+                    const total = quantity * this.meshCatalog?.devicePrice;
+                    return Number.isSafeInteger(quantity) && quantity > 0 && Number.isSafeInteger(total) ? total : null;
+                },
+                mytvTermOptions() {
+                    return [
+                        { id: 'monthly', label: '1 tháng', paidMonths: 1, bonusMonths: 0 },
+                        { id: 'six-months', label: '6 tháng', paidMonths: 6, bonusMonths: 0 },
+                        { id: 'annual', label: '12+2 tháng', paidMonths: 12, bonusMonths: 2 }
+                    ];
+                },
+                selectedMytvTerm() {
+                    return this.mytvTermOptions.find(term => term.id === this.activeMytvTermId) || this.mytvTermOptions[0];
+                },
+                mytvPriceHeading() {
+                    if (this.includeMytvStb) return `Tổng ${this.selectedMytvTerm.label} (đ)`;
+                    return this.selectedMytvTerm.id === 'monthly' ? 'Giá tháng (đ)' : `Giá ${this.selectedMytvTerm.label} (đ)`;
+                },
+                filteredMytvPackages() {
+                    const query = this.normalizeMytvSearch(this.mytvQuery);
+                    return query ? this.mytvPackages.filter(pkg => pkg.channels.some(channel => this.matchesMytvChannel(channel, query))) : this.mytvPackages;
+                },
+                selectedMytvPackage() {
+                    return this.filteredMytvPackages.find(pkg => pkg.id === this.activeMytvPackageId) || this.filteredMytvPackages[0] || null;
+                },
+                groupedMytvChannels() {
+                    const channels = this.selectedMytvPackage?.channels || [];
+                    const query = this.normalizeMytvSearch(this.mytvQuery);
+                    return this.mytvGroups.map(group => ({
+                        ...group,
+                        channels: channels.filter(channel => channel.group === group.id && (!query || this.matchesMytvChannel(channel, query)))
+                    })).filter(group => group.channels.length);
+                },
                 internetRegionOptions() {
                     return [{ id: 'noi', name: 'Nội thành' }, { id: 'nt', name: 'Ngoại thành' }]
                         .filter(region => this.internetData.some(group => group.type.startsWith(`${region.id}_`)));
@@ -1238,6 +1503,7 @@
                     ];
                 },
                 internetPriceHeading() {
+                    if (this.includeInternetSetupFee) return `Tổng ${this.internetMonths} tháng (đ)`;
                     return this.internetMonths === 1 ? 'Giá gói (đ/tháng)' : `Giá ${this.internetMonths} tháng (đ)`;
                 },
                 internetMatrixRows() {
@@ -1251,7 +1517,8 @@
                             const key = `${bundle}_${plan.duration_text}`;
                             if (!rows.has(key)) rows.set(key, { key, bundle, ...this.splitInternetPlanLabel(plan.duration_text), variants: {}, promotion: false });
                             const row = rows.get(key);
-                            row.variants[configuration] = plan;
+                            const defaultPromotion = /^KM:/i.test(plan.note || '') && ['Home 1_M', 'Home Slay_M'].includes(row.name);
+                            row.variants[defaultPromotion ? 'none' : configuration] = plan;
                             if (/^KM:/i.test(plan.note || '')) row.promotion = true;
                         });
                     });
@@ -1358,8 +1625,13 @@
                     try {
                         const { data: dbCategories } = await supabaseClient.from('categories').select('*').order('sort_order');
                         const { data: dbServices } = await supabaseClient.from('services').select('*').order('sort_order');
+                        const services = [...dbServices];
+                        if (this.meshCatalog?.service && !services.some(service => service.id === this.meshCatalog.service.id)) {
+                            services.push(this.meshCatalog.service);
+                        }
                         this.categories = dbCategories.map(cat => ({
-                            id: cat.id, name: cat.name, services: dbServices.filter(srv => srv.category_id === cat.id)
+                            id: cat.id, name: cat.name,
+                            services: services.filter(srv => srv.category_id === cat.id).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
                         }));
                         
                         const { data: dbPlans } = await supabaseClient.from('plans').select('*');
@@ -1477,9 +1749,30 @@
                         this.activeInternetRegion = 'noi';
                         this.internetMonths = 1;
                         this.syncInternetFilters();
+                    } else if (srv.id === 'mytv') {
+                        this.mytvQuery = '';
+                        this.activeMytvPackageId = 's';
+                        this.activeMytvTermId = 'monthly';
+                    } else if (srv.id === 'mesh') {
+                        this.meshMode = 'addon';
+                        this.meshPurchaseQuantity = 1;
+                    } else if (srv.id === 'camera') {
+                        this.cameraMode = 'addon';
+                        this.activeCameraTermId = 'monthly';
                     }
                 },
 
+                calculateMytvTotal(monthlyPrice) {
+                    if (monthlyPrice === null) return null;
+                    const stbPrice = this.includeMytvStb ? this.mytvStbPrice : 0;
+                    return Math.round(Number(monthlyPrice) * this.selectedMytvTerm.paidMonths + stbPrice);
+                },
+                normalizeMytvSearch(value) {
+                    return String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/[^a-z0-9]/g, '');
+                },
+                matchesMytvChannel(channel, query) {
+                    return /^\d+$/.test(query) ? channel.number === query : this.normalizeMytvSearch(channel.name).includes(query);
+                },
                 syncInternetFilters() {
                     if (!this.internetData.length) return;
                     if (!this.internetRegionOptions.some(region => region.id === this.activeInternetRegion)) {
@@ -1528,7 +1821,8 @@
                         .trim();
                 },
                 calculateInternetTotal(monthlyPrice) {
-                    return Math.round(Number(monthlyPrice) * this.internetMonths);
+                    const setupFee = this.includeInternetSetupFee ? this.internetSetupFee : 0;
+                    return Math.round(Number(monthlyPrice) * this.internetMonths + setupFee);
                 },
                 formatInternetAmount(monthlyPrice) {
                     return new Intl.NumberFormat('vi-VN').format(this.calculateInternetTotal(monthlyPrice));
