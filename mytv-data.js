@@ -1,4 +1,4 @@
-/* Danh sách MyTV và giá theo thông tin/ảnh người dùng cung cấp. Gói S chờ giá. */
+/* Danh sách MyTV và giá theo thông tin/ảnh người dùng cung cấp. */
 window.KDOL_MYTV = (() => {
     const groups = [
         { id: 'vtv', name: 'VTV' },
@@ -77,7 +77,7 @@ window.KDOL_MYTV = (() => {
     const basic = { vtv, htv, entertainment: entertainmentBasic, education: educationBasic, news: newsBasic, essential, local };
     const extended = { vtv, htv, movies, entertainment: entertainmentExtended, kids, education: educationExtended, news: newsExtended, essential, local };
     const specifications = [
-        { id: 's', name: 'S', channelCount: '109', highlights: 'VTV · HTV · Địa phương', galaxy: 'Galaxy VIP vào thứ 7 hằng tuần', lineup: basic },
+        { id: 's', name: 'S', channelCount: '109', monthlyPrice: 30000, highlights: 'VTV · HTV · Địa phương', galaxy: 'Galaxy VIP vào thứ 7 hằng tuần', lineup: basic },
         { id: 's1', name: 'S1', channelCount: '130', monthlyPrice: 30000, highlights: 'VTVcab · HBO', galaxy: 'Galaxy VIP vào thứ 7 hằng tuần', lineup: { ...basic, vtvcab, movies: [movies[0]] } },
         { id: 's2', name: 'S2', channelCount: '131', monthlyPrice: 30000, highlights: 'SCTV · HBO', galaxy: 'Galaxy VIP vào thứ 7 hằng tuần', lineup: { ...basic, sctv, movies: [movies[0]] } },
         { id: 'film', name: 'Film', channelCount: 'Gần 120', monthlyPrice: 65000, highlights: '2 kênh thể thao SPOTV độc quyền\nMiễn phí Galaxy VIP\nKho nội dung VOD giải trí phong phú (không quảng cáo)', galaxy: 'Galaxy VIP', lineup: { ...extended, vtv: [vtv[0], vtv[4]], sports } },

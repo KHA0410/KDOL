@@ -34,7 +34,7 @@ Người dùng bổ sung giá và ảnh so sánh gói ngày 2026-11-11:
 
 | Gói | Giá tháng | Cách hiển thị |
 | --- | ---: | --- |
-| S | Chưa cung cấp | Ô giá trống (`monthlyPrice: null`) |
+| S | 30.000đ | Giá người dùng xác nhận bổ sung |
 | S1, S2 | 30.000đ | Giá người dùng xác nhận |
 | Film, Film+, Flexi 1, Flexi 2 | 65.000đ | Bỏ chữ "Từ" theo yêu cầu cập nhật của người dùng |
 
@@ -42,11 +42,11 @@ Cột nổi bật của bốn gói 65.000đ được cập nhật theo ảnh so 
 
 Giá được lưu trong `monthlyPrice` của từng gói ở phần `specifications` của `mytv-data.js`. Không tự áp dụng VAT hoặc ưu đãi ngoài thông tin người dùng cung cấp.
 
-Thanh tính giá nhanh MyTV có các kỳ 1 tháng, 6 tháng và 12+2 tháng, cập nhật toàn bộ cột giá. Kỳ 6 tháng tính 6 tháng tiền cước; kỳ 12+2 thanh toán 12 tháng và được dùng 14 tháng. Với bốn gói 65.000đ: 6 tháng = 390.000đ, 12+2 = 780.000đ, đúng các mức người dùng cung cấp. S1/S2 dùng giá tháng 30.000đ nên tương ứng 180.000đ và 360.000đ. Gói S chưa có giá vẫn để trống ở mọi kỳ.
+Thanh tính giá nhanh MyTV có các kỳ 1 tháng, 6 tháng và 12+2 tháng, cập nhật toàn bộ cột giá. Kỳ 6 tháng tính 6 tháng tiền cước; kỳ 12+2 thanh toán 12 tháng và được dùng 14 tháng. Với bốn gói 65.000đ: 6 tháng = 390.000đ, 12+2 = 780.000đ, đúng các mức người dùng cung cấp. S/S1/S2 dùng giá tháng 30.000đ nên tương ứng 180.000đ và 360.000đ.
 
 Kỳ MyTV được giữ khi tìm kênh hoặc chọn gói, đặt lại 1 tháng khi chọn lại dịch vụ. Phép tính MyTV tách biệt với kỳ giá và phí lắp đặt của Internet.
 
-Người dùng xác nhận TV không phải Smart TV cần thêm STB, giá 50.000đ mỗi thiết bị. Ô chọn "Thêm 1 STB (+50.000đ)" trong thanh tính giá nhanh mặc định tắt; khi bật, mọi giá gói có dữ liệu được cộng một lần 50.000đ cho một thiết bị (`giá tháng × số tháng thanh toán + 50000`). Không nhân giá STB theo kỳ gói hoặc theo hai tháng được tặng. Ví dụ gói 65.000đ: 1 tháng kèm STB = 115.000đ, 6 tháng = 440.000đ, 12+2 tháng = 830.000đ. Khi bỏ chọn, bảng trở về giá không kèm thiết bị. Gói S vẫn để trống khi chưa biết giá cước; tiêu đề giá chuyển thành tổng tiền khi có STB.
+Người dùng xác nhận TV không phải Smart TV cần thêm STB, giá 50.000đ mỗi thiết bị. Ô chọn "Thêm 1 STB (+50.000đ)" trong thanh tính giá nhanh mặc định tắt; khi bật, mọi giá gói có dữ liệu được cộng một lần 50.000đ cho một thiết bị (`giá tháng × số tháng thanh toán + 50000`). Không nhân giá STB theo kỳ gói hoặc theo hai tháng được tặng. Ví dụ gói 65.000đ: 1 tháng kèm STB = 115.000đ, 6 tháng = 440.000đ, 12+2 tháng = 830.000đ. S/S1/S2 kèm STB lần lượt là 80.000đ, 230.000đ và 410.000đ. Khi bỏ chọn, bảng trở về giá không kèm thiết bị; tiêu đề giá chuyển thành tổng tiền khi có STB.
 
 Chưa thêm bản ghi MyTV vào bảng Supabase `plans`, chưa thay đổi schema, RLS hoặc dữ liệu online. Không ghép giá các combo Internet + MyTV thành giá gói MyTV riêng.
 
