@@ -17,7 +17,8 @@
     --kdol-radius-sm: 0.25rem;
     --kdol-radius-md: 0.375rem;
     --kdol-radius-lg: 0.5rem;
-    --kdol-transition-duration: 150ms;
+    --kdol-transition-duration: 160ms;
+    --kdol-transition-content-duration: 180ms;
     --kdol-transition-easing: cubic-bezier(0.4, 0, 0.2, 1);
     --kdol-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --kdol-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
@@ -158,7 +159,8 @@
     font-size: 1rem;
     line-height: 1.5rem;
     font-weight: 700;
-    transition: all var(--kdol-transition-duration) var(--kdol-transition-easing);
+    font-variant-numeric: tabular-nums;
+    transition: color var(--kdol-transition-duration) var(--kdol-transition-easing);
 }
 
 /* Bộ chọn dùng chung cho các cấu hình gói. */
@@ -437,6 +439,78 @@ input[type="range"]::-webkit-slider-thumb {
 .kdol-camera-total { color: var(--kdol-color-primary); font-weight: 700; }
 .kdol-camera-free { color: #15803d; }
 
+/* Tương tác: phản hồi ngắn, chỉ chuyển màu hoặc hiệu ứng không đổi bố cục. */
+.kdol-detail {
+    min-width: 0;
+    min-height: 0;
+    scrollbar-gutter: stable;
+    overscroll-behavior-y: contain;
+}
+
+.kdol-nav-list,
+.kdol-tabs,
+.kdol-table-wrap { scroll-behavior: smooth; overscroll-behavior-x: contain; }
+
+.kdol-nav-item { flex-shrink: 0; }
+.kdol-nav-button {
+    position: relative;
+    display: block;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    color: #374151;
+    font-weight: 500;
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+}
+.kdol-nav-button--service { padding-top: 0.5rem; padding-bottom: 0.5rem; color: #4b5563; }
+.kdol-nav-button::after {
+    position: absolute;
+    inset: auto 0 0;
+    height: 2px;
+    background-color: var(--kdol-color-primary);
+    content: '';
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--kdol-transition-duration) var(--kdol-transition-easing);
+}
+.kdol-nav-button--active { background-color: var(--kdol-color-primary-light); color: var(--kdol-color-primary); }
+.kdol-nav-button--service.kdol-nav-button--active { background-color: var(--kdol-color-surface); }
+.kdol-nav-button--active::after { transform: scaleX(1); }
+
+.kdol-nav-button,
+.kdol-detail :is(button, summary) {
+    touch-action: manipulation;
+    transition: color var(--kdol-transition-duration) var(--kdol-transition-easing),
+        background-color var(--kdol-transition-duration) var(--kdol-transition-easing),
+        border-color var(--kdol-transition-duration) var(--kdol-transition-easing),
+        box-shadow var(--kdol-transition-duration) var(--kdol-transition-easing),
+        transform var(--kdol-transition-duration) var(--kdol-transition-easing);
+}
+.kdol-detail :is(input:not([type="range"]), select) {
+    transition: border-color var(--kdol-transition-duration) var(--kdol-transition-easing),
+        box-shadow var(--kdol-transition-duration) var(--kdol-transition-easing),
+        outline-color var(--kdol-transition-duration) var(--kdol-transition-easing);
+}
+.kdol-nav-button:focus-visible,
+.kdol-detail :is(button, summary):focus-visible { outline: 2px solid var(--kdol-color-primary); outline-offset: -3px; }
+.kdol-detail button:active { transform: translateY(1px); }
+.kdol-mytv-table tbody tr { transition: background-color var(--kdol-transition-duration) var(--kdol-transition-easing); }
+
+.kdol-service-view { animation: kdol-content-in var(--kdol-transition-content-duration) var(--kdol-transition-easing); }
+@keyframes kdol-content-in { from { opacity: 0.65; } to { opacity: 1; } }
+
+.kdol-toast-enter-active,
+.kdol-toast-leave-active { transition: opacity var(--kdol-transition-duration) var(--kdol-transition-easing), transform var(--kdol-transition-duration) var(--kdol-transition-easing); }
+.kdol-toast-enter-from,
+.kdol-toast-leave-to { opacity: 0; transform: translateY(6px); }
+
+@media (hover: hover) and (pointer: fine) {
+    .kdol-nav-button:hover { background-color: var(--kdol-color-primary-light); }
+    .kdol-nav-button--service:hover { background-color: var(--kdol-color-surface); }
+    .kdol-copy-button:hover { transform: translateY(-1px); }
+}
+
 /* Cùng breakpoint sm, md và xl với Tailwind hiện tại. */
 @media (min-width: 640px) {
     .kdol-choice--fluid { flex: none; }
@@ -447,6 +521,10 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 @media (min-width: 768px) {
+    .kdol-nav-item { border-bottom: 1px solid var(--kdol-color-border); }
+    .kdol-nav-button { padding: 1rem; white-space: normal; }
+    .kdol-nav-button::after { inset: 0 auto 0 0; width: 3px; height: auto; transform: scaleY(0); transform-origin: top; }
+    .kdol-nav-button--active::after { transform: scaleY(1); }
     .kdol-service-title { font-size: 1.5rem; line-height: 2rem; }
     .kdol-config-panel { padding: 1rem; margin-bottom: 1.5rem; }
     .kdol-choice:not(.kdol-choice--compact) { font-size: 0.875rem; line-height: 1.25rem; }
@@ -462,4 +540,23 @@ input[type="range"]::-webkit-slider-thumb {
     .kdol-layout--wide .kdol-detail { width: 68%; }
     .kdol-internet-scroll-hint { display: none; }
     .kdol-mytv-channel-groups { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* Tôn trọng cài đặt giảm chuyển động, giữ loader nhưng tắt hiệu ứng trang. */
+@media (prefers-reduced-motion: reduce) {
+    .kdol-detail,
+    .kdol-nav-list,
+    .kdol-tabs,
+    .kdol-table-wrap { scroll-behavior: auto; }
+    .kdol-service-view { animation: none; }
+    .kdol-nav-button,
+    .kdol-nav-button::after,
+    .kdol-detail :is(button, summary, input, select),
+    .kdol-mytv-table tbody tr,
+    .kdol-toast-enter-active,
+    .kdol-toast-leave-active { transition-duration: 0s; }
+    .kdol-detail button:active,
+    .kdol-copy-button:hover,
+    .kdol-toast-enter-from,
+    .kdol-toast-leave-to { transform: none; }
 }
