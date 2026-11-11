@@ -182,6 +182,18 @@
 }
 
 /* Thanh chiết khấu và kết quả báo giá. */
+.kdol-smartca-custom {
+    padding-top: 0.625rem;
+    border-top: 1px solid var(--kdol-color-border-light);
+}
+
+.kdol-smartca-custom > summary {
+    color: var(--kdol-color-primary);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
 .kdol-discount-slider {
     width: 100%;
     height: 0.5rem;
@@ -231,6 +243,7 @@ input[type="range"]::-webkit-slider-thumb {
 .kdol-internet-region,
 .kdol-internet-toolbar,
 .kdol-mytv-toolbar,
+.kdol-mesh-toolbar,
 .kdol-camera-toolbar {
     padding: 1rem;
     margin-bottom: 1.25rem;
@@ -244,9 +257,11 @@ input[type="range"]::-webkit-slider-thumb {
 .kdol-internet-region-field { flex: 1 1 14rem; max-width: 28rem; }
 .kdol-internet-toolbar,
 .kdol-mytv-toolbar,
+.kdol-mesh-toolbar,
 .kdol-camera-toolbar { position: sticky; top: 0; z-index: 10; }
 .kdol-internet-terms,
 .kdol-mytv-terms,
+.kdol-mesh-terms,
 .kdol-mesh-modes,
 .kdol-camera-terms,
 .kdol-camera-modes {
@@ -262,6 +277,7 @@ input[type="range"]::-webkit-slider-thumb {
 
 .kdol-internet-term,
 .kdol-mytv-term,
+.kdol-mesh-term,
 .kdol-mesh-mode,
 .kdol-camera-term,
 .kdol-camera-mode {
@@ -277,11 +293,13 @@ input[type="range"]::-webkit-slider-thumb {
 
 .kdol-internet-term:last-child,
 .kdol-mytv-term:last-child,
+.kdol-mesh-term:last-child,
 .kdol-mesh-mode:last-child,
 .kdol-camera-term:last-child,
 .kdol-camera-mode:last-child { border-right: 0; }
 .kdol-internet-term:hover,
 .kdol-mytv-term:hover,
+.kdol-mesh-term:hover,
 .kdol-mesh-mode:hover,
 .kdol-camera-term:hover,
 .kdol-camera-mode:hover { background-color: var(--kdol-color-primary-light); }
@@ -289,6 +307,8 @@ input[type="range"]::-webkit-slider-thumb {
 .kdol-internet-term--active:hover,
 .kdol-mytv-term--active,
 .kdol-mytv-term--active:hover,
+.kdol-mesh-term--active,
+.kdol-mesh-term--active:hover,
 .kdol-mesh-mode--active,
 .kdol-mesh-mode--active:hover,
 .kdol-camera-term--active,
@@ -297,6 +317,7 @@ input[type="range"]::-webkit-slider-thumb {
 .kdol-camera-mode--active:hover { color: #ffffff; background-color: var(--kdol-color-table-heading); }
 .kdol-internet-term:focus-visible,
 .kdol-mytv-term:focus-visible,
+.kdol-mesh-term:focus-visible,
 .kdol-mesh-mode:focus-visible,
 .kdol-camera-term:focus-visible,
 .kdol-camera-mode:focus-visible { outline: 2px solid var(--kdol-color-primary); outline-offset: -3px; }
@@ -416,7 +437,10 @@ input[type="range"]::-webkit-slider-thumb {
 .kdol-mesh-note { color: #64748b; font-size: 0.75rem; font-weight: 400; }
 .kdol-mesh-specs dd,
 .kdol-camera-specs dd { color: #1e3a5f; font-weight: 600; }
-.kdol-mesh-table { min-width: 620px; white-space: nowrap; }
+.kdol-mesh-term { padding: 0.5rem 0.125rem; font-size: 0.75rem; white-space: normal; }
+.kdol-mesh-table { min-width: 0; table-layout: fixed; white-space: nowrap; }
+.kdol-mesh-table thead th { white-space: normal; }
+.kdol-mesh-price { color: var(--kdol-color-primary); font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
 .kdol-mesh-table tbody .kdol-mesh-row--restricted { background-color: #fff8e6; }
 .kdol-mesh-eligibility { margin-top: 0.75rem; color: #92400e; font-size: 0.75rem; line-height: 1.25rem; }
 .kdol-mesh-purchase { padding: 1rem; border: 1px solid var(--kdol-color-border-light); border-radius: var(--kdol-radius-lg); }

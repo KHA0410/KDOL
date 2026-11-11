@@ -83,12 +83,21 @@ window.KDOL_MYTV = (() => {
         { id: 'film', name: 'Film', channelCount: 'Gần 120', monthlyPrice: 65000, highlights: '2 kênh thể thao SPOTV độc quyền\nMiễn phí Galaxy VIP\nKho nội dung VOD giải trí phong phú (không quảng cáo)', galaxy: 'Galaxy VIP', lineup: { ...extended, vtv: [vtv[0], vtv[4]], sports } },
         { id: 'film-plus', name: 'Film+', channelCount: 'Gần 130', monthlyPrice: 65000, highlights: 'Miễn phí Galaxy VIP\nKho nội dung VOD giải trí phong phú (không quảng cáo)', galaxy: 'Galaxy VIP', lineup: extended },
         { id: 'flexi-1', name: 'Flexi 1', channelCount: 'Gần 150', monthlyPrice: 65000, highlights: 'Chùm 20 kênh VTVcab\nMiễn phí Galaxy Play cao cấp\nKho nội dung VOD giải trí phong phú', galaxy: 'Galaxy Play cao cấp', lineup: { ...extended, vtvcab } },
-        { id: 'flexi-2', name: 'Flexi 2', channelCount: 'Gần 150', monthlyPrice: 65000, highlights: 'Chùm 21 kênh SCTV\nMiễn phí Galaxy Play cao cấp\nKho nội dung VOD giải trí phong phú', galaxy: 'Galaxy Play cao cấp', lineup: { ...extended, sctv } }
+        { id: 'flexi-2', name: 'Flexi 2', channelCount: 'Gần 150', monthlyPrice: 65000, highlights: 'Chùm 21 kênh SCTV\nMiễn phí Galaxy Play cao cấp\nKho nội dung VOD giải trí phong phú', galaxy: 'Galaxy Play cao cấp', lineup: { ...extended, sctv } },
+        {
+            id: 'vip', name: 'MyTV VIP', channelCount: 'Gần 170', monthlyPrice: 95000,
+            highlights: 'Chùm kênh SCTV và VTVcab\n2 kênh thể thao SPOTV độc quyền\nMiễn phí Galaxy VIP\nKho nội dung VOD giải trí phong phú (không quảng cáo)',
+            galaxy: 'Galaxy VIP', lineup: { vtv, htv, vtvcab, sctv, sports },
+            channelNote: 'Danh sách tra cứu hiện gồm các chùm VTV, HTV, VTVcab, SCTV và 2 kênh SPOTV. Chưa có danh sách đầy đủ gần 170 kênh của gói VIP.',
+            poster: null, deviceSummary: null, replaySummary: null
+        }
     ];
     const packages = specifications.map(({ lineup, ...specification }) => ({
+        poster: `assets/mytv/${specification.id}.jpg`,
+        deviceSummary: 'Đăng nhập 5 · Xem đồng thời 2',
+        replaySummary: 'Tối đa 72 giờ, tùy kênh',
         ...specification,
         monthlyPrice: specification.monthlyPrice ?? null,
-        poster: `assets/mytv/${specification.id}.jpg`,
         channels: groups.flatMap(group => (lineup[group.id] || []).map(([number, name]) => ({ number: String(number), name, group: group.id })))
     }));
     return { groups, packages };

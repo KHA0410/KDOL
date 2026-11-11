@@ -17,6 +17,8 @@
     <script src="mytv-data.js"></script>
     <script src="mesh-data.js"></script>
     <script src="camera-data.js"></script>
+    <script src="vnptca-data.js"></script>
+    <script src="bhxh-data.js"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-gray-100 h-screen flex flex-col font-sans">
@@ -68,12 +70,12 @@
                     </div>
                     
                     <div class="flex border-b border-gray-300 mb-4 bg-gray-50 p-1 rounded-t-lg">
-                        <button @click="activeCksSubTab = 'token'; discountRate = 0;" 
+                        <button @click="activeCksSubTab = 'token'; discountVnptCa = 0;"
                             :class="['flex-1 py-2 text-sm font-semibold rounded-md transition-colors text-center', 
                             activeCksSubTab === 'token' ? 'bg-vnpt-blue text-white shadow' : 'text-gray-600 hover:text-gray-900']">
                             Chữ ký số Token (VNPT-CA)
                         </button>
-                        <button @click="activeCksSubTab = 'smartca'; discountRate = 0;" 
+                        <button @click="activeCksSubTab = 'smartca'; smartCaDiscountMode = 'none'; discountRate = 0;"
                             :class="['flex-1 py-2 text-sm font-semibold rounded-md transition-colors text-center', 
                             activeCksSubTab === 'smartca' ? 'bg-vnpt-blue text-white shadow' : 'text-gray-600 hover:text-gray-900']">
                             Ký số từ xa (SmartCA)
@@ -92,11 +94,21 @@
                         </div>
 
                         <div class="kdol-config-panel">
+                            <div v-if="activeVnptCaTab !== 'device'" class="kdol-choice-group w-full sm:w-max" role="group" aria-label="Loại gói VNPT-CA">
+                                <button v-for="tier in [{ id: 'standard', name: 'Gói thường' }, { id: 'pro', name: 'Gói Pro' }]" :key="tier.id"
+                                    type="button" @click="activeVnptCaTier = tier.id" :aria-pressed="activeVnptCaTier === tier.id"
+                                    :class="['kdol-choice kdol-choice--fluid', activeVnptCaTier === tier.id ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">
+                                    {{ tier.name }}
+                                </button>
+                            </div>
+                            <p v-if="vnptCaFeatures.length" class="text-xs text-gray-700">
+                                <span class="font-semibold">Chức năng:</span> {{ vnptCaFeatures.join(' · ') }}
+                            </p>
                             <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
                                 <div>
                                     <p class="font-semibold text-gray-800 text-sm md:text-base">Tùy chọn gói:</p>
                                     <p v-if="activeVnptCaType === 'moi' && activeVnptCaTab !== 'device'" class="text-xs text-vnpt-red font-medium mt-1">
-                                        Đã bao gồm phí Token: {{ activeVnptCaTab === 'doanhnghiep' ? (vatRate === 10 ? '550.000đ' : '540.000đ') : (vatRate === 10 ? '165.000đ' : '162.000đ') }}
+                                        Giá đã gồm Token. Chiết khấu chỉ áp dụng phí dịch vụ, không giảm giá Token.
                                     </p>
                                     <p v-else-if="activeVnptCaTab === 'device'" class="text-xs text-gray-600 mt-1">Gói cước dành riêng cho thiết bị/Server</p>
                                     <p v-else class="text-xs text-gray-600 mt-1">Chỉ tính phí gia hạn dịch vụ (Không kèm Token)</p>
@@ -112,16 +124,26 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="flex flex-col w-full self-end mt-1 gap-1">
-                                <div class="kdol-choice-group xl:w-max xl:self-end">
-                                    <span class="text-xs text-gray-500 font-medium px-2 whitespace-nowrap">Chiết khấu:</span>
-                                    <button v-for="rate in [0, 10, 20, 30]" :key="rate" @click="discountRate = rate" 
-                                        :class="['flex-1 px-3 py-1.5 rounded text-xs md:text-sm font-medium transition-colors', discountRate === rate ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50']">
-                                        {{ rate }}%
-                                    </button>
+                            <div class="flex flex-col gap-2 mt-1">
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                    <label for="vnptca-contract-size" class="text-sm font-semibold text-gray-700">Số chữ ký số trên 1 hợp đồng:</label>
+                                    <select id="vnptca-contract-size" v-model="vnptCaContractSize" class="kdol-select w-full sm:w-auto">
+                                        <option value="under100">Dưới 100 chữ ký số — tối đa 50%</option>
+                                        <option value="100plus">Từ 100 chữ ký số — tối đa 60%</option>
+                                    </select>
+                                </div>
+                                <div class="flex items-center justify-between gap-2">
+                                    <label for="vnptca-discount" class="text-sm font-semibold text-gray-700">Chiết khấu phí dịch vụ:</label>
+                                    <span class="text-sm font-bold text-orange-600">{{ vnptCaDiscount }}%</span>
+                                </div>
+                                <input id="vnptca-discount" type="range" min="0" :max="maxVnptCaDiscount" step="1" v-model.number="discountVnptCa" class="kdol-discount-slider">
+                                <div class="flex justify-between text-xs text-gray-500">
+                                    <span>0%</span>
+                                    <span>Tối đa {{ maxVnptCaDiscount }}%</span>
                                 </div>
                                 <div class="bg-white/70 p-2 rounded border border-blue-100 text-xs text-gray-600 mt-1">
-                                    <span class="font-semibold text-orange-600">Đ.Kiện (Tối đa {{discountRate}}%):</span> {{ discountRoles[discountRate] }}
+                                    <p>Chỉ chiết khấu cước dịch vụ; giá Token không áp dụng chiết khấu. Giá trong bảng tính cho 1 chữ ký số.</p>
+                                    <p class="mt-1">Ngoài mức phân cấp: đơn vị bán hàng gửi đề xuất chi tiết, đầy đủ cơ sở phân tích về Phòng Điều hành để gửi Tổng Công ty xem xét quyết định.</p>
                                 </div>
                             </div>
                         </div>
@@ -144,10 +166,13 @@
                                         </td>
                                     </tr>
                                     <tr v-for="plan in currentVnptCaPlans" :key="plan.duration_text" class="hover:bg-gray-50 transition-colors">
-                                        <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">{{ plan.duration_text }} tháng</td>
+                                        <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">
+                                            <span v-if="vnptCaProProduct" class="block text-xs text-gray-500 mb-1">{{ vnptCaProProduct.name }}</span>
+                                            {{ plan.duration_text }} tháng
+                                        </td>
                                         <td v-if="activeVnptCaTab === 'doanhnghiep'" class="whitespace-nowrap px-3 py-3 text-right">
-                                            <div class="text-sm text-gray-400 line-through mb-0.5" v-if="discountRate > 0">{{ formatPrice(calculateGeneralPrice(plan.invoice_price, 0)) }}</div>
-                                            <div class="text-sm font-semibold text-gray-700">{{ formatPrice(calculateGeneralPrice(plan.invoice_price, discountRate)) }}</div>
+                                            <div class="text-sm text-gray-400 line-through mb-0.5" v-if="vnptCaDiscount > 0">{{ formatPrice(calculateVnptCaPrice(plan.invoice_price, 0)) }}</div>
+                                            <div class="text-sm font-semibold text-gray-700">{{ formatPrice(calculateVnptCaPrice(plan.invoice_price)) }}</div>
                                         </td>
                                         <td class="whitespace-nowrap px-3 py-3">
                                             <div class="flex items-center justify-end gap-3">
@@ -155,8 +180,11 @@
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                                                 </button>
                                                 <div class="text-right">
-                                                    <div v-if="discountRate > 0" class="text-xs text-gray-400 line-through mb-0.5">{{ formatPrice(calculateGeneralPrice(plan.price, 0)) }}</div>
-                                                    <div class="kdol-price" :class="discountRate > 0 ? 'text-orange-600' : 'text-vnpt-blue'">{{ formatPrice(calculateGeneralPrice(plan.price, discountRate)) }}</div>
+                                                    <div v-if="vnptCaDiscount > 0" class="text-xs text-gray-400 line-through mb-0.5">{{ formatPrice(calculateVnptCaPrice(plan.price, 0)) }}</div>
+                                                    <div v-if="vnptCaTokenBasePrice > 0" class="text-xs text-vnpt-red font-medium mb-0.5" title="Đã gồm trong tổng tiền bên dưới; giá Token không áp dụng chiết khấu.">
+                                                        + Token: {{ formatPrice(vnptCaTokenPrice) }}
+                                                    </div>
+                                                    <div class="kdol-price" :class="vnptCaDiscount > 0 ? 'text-orange-600' : 'text-vnpt-blue'">{{ formatPrice(calculateVnptCaPrice(plan.price)) }}</div>
                                                 </div>
                                             </div>
                                         </td>
@@ -197,17 +225,37 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="flex flex-col w-full self-end mt-1 gap-1">
-                                <div class="kdol-choice-group xl:w-max xl:self-end">
-                                    <span class="text-xs text-gray-500 font-medium px-2 whitespace-nowrap">Chiết khấu:</span>
-                                    <button v-for="rate in [0, 10, 20, 30]" :key="rate" @click="discountRate = rate" 
-                                        :class="['flex-1 px-3 py-1.5 rounded text-xs md:text-sm font-medium transition-colors', discountRate === rate ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50']">
-                                        {{ rate }}%
-                                    </button>
+                            <div class="flex flex-col gap-2 mt-1">
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <span class="text-sm font-semibold text-gray-700">Ưu đãi:</span>
+                                    <div class="kdol-choice-group" role="group" aria-label="Áp dụng ưu đãi SmartCA">
+                                        <button type="button" @click="smartCaDiscountMode = 'none'" :aria-pressed="smartCaDiscountMode === 'none'"
+                                            :class="['kdol-choice', smartCaDiscountMode === 'none' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Giá gốc</button>
+                                        <button type="button" @click="smartCaDiscountMode === 'none' && (smartCaDiscountMode = 'auto')" :aria-pressed="smartCaDiscountMode !== 'none'"
+                                            :class="['kdol-choice', smartCaDiscountMode !== 'none' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50']">Áp dụng ưu đãi</button>
+                                    </div>
                                 </div>
-                                <div class="bg-white/70 p-2 rounded border border-blue-100 text-xs text-gray-600 mt-1">
-                                    <span class="font-semibold text-orange-600">Đ.Kiện (Tối đa {{discountRate}}%):</span> {{ discountRoles[discountRate] }}
-                                </div>
+                                <p v-if="smartCaDiscountMode !== 'none'" class="text-xs text-gray-600">
+                                    {{ smartCaDiscountMode === 'custom' ? `Chọn giảm ${discountRate}%, tự giới hạn theo từng gói.` : 'Tự áp dụng mức giảm phù hợp cho từng gói.' }}
+                                </p>
+                                <p v-if="smartCaDiscountMode !== 'none' && selectedSmartCaCondition.id !== 'term'" class="text-xs font-medium text-vnpt-blue">{{ selectedSmartCaCondition.label }}</p>
+                                <details v-if="smartCaDiscountMode !== 'none'" class="kdol-smartca-custom">
+                                    <summary>Tùy chỉnh ưu đãi</summary>
+                                    <div class="flex flex-col gap-2 mt-3">
+                                        <label for="smartca-customer-condition" class="text-xs font-semibold text-gray-700">Khách hàng có điều kiện riêng?</label>
+                                        <select id="smartca-customer-condition" v-model="smartCaCustomerType" class="kdol-select">
+                                            <option v-for="condition in smartCaCustomerConditions" :key="condition.id" :value="condition.id">{{ condition.label }}</option>
+                                        </select>
+                                        <div class="kdol-choice-group w-full sm:w-max" role="group" aria-label="Mức giảm SmartCA">
+                                            <button type="button" @click="smartCaDiscountMode = 'auto'" :aria-pressed="smartCaDiscountMode === 'auto'"
+                                                :class="['kdol-choice', smartCaDiscountMode === 'auto' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50']">Tự động</button>
+                                            <button v-for="rate in [0, 10, 20, 30]" :key="rate" type="button" @click="smartCaDiscountMode = 'custom'; discountRate = rate"
+                                                :disabled="rate > maxSmartCaDiscount" :aria-pressed="smartCaDiscountMode === 'custom' && discountRate === rate"
+                                                :class="['kdol-choice kdol-choice--fluid disabled:opacity-40 disabled:cursor-not-allowed', smartCaDiscountMode === 'custom' && discountRate === rate ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50']">{{ rate }}%</button>
+                                        </div>
+                                        <p class="text-xs text-gray-600">Theo thời hạn: 1–3 tháng / 1 lần giảm tối đa 10%; 6 tháng 20%; từ 12 tháng 30%. Điều kiện khách hàng riêng có thể cho phép mức cao hơn.</p>
+                                    </div>
+                                </details>
                             </div>
                         </div>
 
@@ -233,10 +281,11 @@
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                                                 </button>
                                                 <div class="text-right">
-                                                    <div v-if="discountRate > 0" class="text-xs text-gray-400 line-through mb-0.5">{{ formatPrice(calculateOriginalPrice(plan.price)) }}</div>
-                                                    <div class="kdol-price" :class="discountRate > 0 ? 'text-orange-600' : 'text-vnpt-blue'">
-                                                        {{ formatPrice(calculateFinalPrice(plan.price)) }}
+                                                    <div v-if="getSmartCaDiscount(plan) > 0" class="text-xs text-gray-400 line-through mb-0.5">{{ formatPrice(calculateOriginalPrice(plan.price)) }}</div>
+                                                    <div class="kdol-price" :class="getSmartCaDiscount(plan) > 0 ? 'text-orange-600' : 'text-vnpt-blue'">
+                                                        {{ formatPrice(calculateFinalPrice(plan)) }}
                                                     </div>
+                                                    <div v-if="getSmartCaDiscount(plan) > 0" class="text-xs text-gray-600 mt-1" :title="getSmartCaDiscountReason(plan)">Giảm {{ getSmartCaDiscount(plan) }}%</div>
                                                 </div>
                                             </div>
                                         </td>
@@ -288,15 +337,23 @@
                         </div>
                         
                         <div class="mt-2 pt-3 border-t border-blue-200">
-                            <div class="flex justify-between items-center mb-1">
-                                <span class="text-sm font-semibold text-gray-700">Mức chiết khấu đại lý:</span>
-                                <span class="text-sm font-bold text-orange-600">{{ discountBhxh }}%</span>
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                                <label for="bhxh-region" class="text-sm font-semibold text-gray-700">Địa bàn áp dụng:</label>
+                                <select id="bhxh-region" v-model="bhxhRegion" class="kdol-select w-full sm:w-auto">
+                                    <option value="other">Các địa bàn còn lại</option>
+                                    <option value="major">Hà Nội, Đà Nẵng, TP.HCM</option>
+                                </select>
                             </div>
-                            <input type="range" min="0" :max="maxBhxhDiscount" step="1" v-model="discountBhxh" class="kdol-discount-slider">
+                            <div class="flex justify-between items-center mb-1">
+                                <label for="bhxh-discount" class="text-sm font-semibold text-gray-700">Chiết khấu dịch vụ:</label>
+                                <span class="text-sm font-bold text-orange-600">{{ bhxhDiscount }}%</span>
+                            </div>
+                            <input id="bhxh-discount" type="range" min="0" :max="maxBhxhDiscount" step="1" v-model.number="discountBhxh" class="kdol-discount-slider">
                             <div class="flex justify-between text-xs text-gray-500 mt-1">
                                 <span>0%</span>
                                 <span>Tối đa: {{ maxBhxhDiscount }}%</span>
                             </div>
+                            <p class="text-xs text-gray-600 mt-1">Trần tính chung khuyến mại, chiết khấu, chăm sóc khách hàng và thù lao đại lý.</p>
                             <p class="text-xs text-vnpt-red italic mt-1" v-if="activeBhxhGroup === 'tichhop'">* Lưu ý: Chiết khấu chỉ áp dụng trên giá cước, không áp dụng cho phí Token USB.</p>
                         </div>
                     </div>
@@ -306,7 +363,7 @@
                             <thead class="bg-gray-50">
                                 <tr>
                                     <th class="kdol-table-heading kdol-table-heading--label text-left w-1/3">Thời hạn</th>
-                                    <th class="kdol-table-heading text-right w-1/3">Gói cước (C.Khấu {{ discountBhxh }}%)</th>
+                                    <th class="kdol-table-heading text-right w-1/3">Phí dịch vụ (giảm {{ bhxhDiscount }}%)</th>
                                     <th class="kdol-table-heading text-right w-1/3">Thanh Toán Cuối</th>
                                 </tr>
                             </thead>
@@ -318,11 +375,11 @@
                                     <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">{{ plan.duration_text }} tháng</td>
                                     
                                     <td class="whitespace-nowrap px-3 py-3 text-right">
-                                        <div class="text-sm text-gray-400 line-through mb-0.5" v-if="discountBhxh > 0">
-                                            {{ formatPrice(calculateGeneralPrice(plan.price, 0)) }}
+                                        <div class="text-sm text-gray-400 line-through mb-0.5" v-if="bhxhDiscount > 0">
+                                            {{ formatPrice(calculateBhxhServicePrice(plan.price, 0)) }}
                                         </div>
                                         <div class="text-sm font-semibold text-gray-700">
-                                            {{ formatPrice(calculateGeneralPrice(plan.price, discountBhxh)) }}
+                                            {{ formatPrice(calculateBhxhServicePrice(plan.price)) }}
                                         </div>
                                     </td>
 
@@ -333,9 +390,9 @@
                                             </button>
                                             <div class="text-right">
                                                 <div v-if="hasToken()" class="text-xs text-vnpt-red font-medium mb-0.5">
-                                                    + Token: {{ vatRate === 10 ? '550.000đ' : '540.000đ' }}
+                                                    + Token: {{ formatPrice(bhxhTokenPrice) }}
                                                 </div>
-                                                <div class="kdol-price" :class="discountBhxh > 0 ? 'text-orange-600' : 'text-vnpt-blue'">
+                                                <div class="kdol-price" :class="bhxhDiscount > 0 ? 'text-orange-600' : 'text-vnpt-blue'">
                                                     {{ formatPrice(calculateBhxhTotal(plan.price)) }}
                                                 </div>
                                             </div>
@@ -1046,13 +1103,20 @@
                             <button v-for="months in [1, 3, 6, 12]" :key="months" type="button"
                                 class="kdol-internet-term" :class="{ 'kdol-internet-term--active': internetMonths === months }"
                                 :aria-pressed="internetMonths === months" @click="internetMonths = months">
-                                {{ months }} tháng
+                                {{ months === 12 ? '12-13' : months }} tháng
                             </button>
                         </div>
-                        <label class="kdol-internet-toggle mt-3" title="Phí lắp đặt được cộng một lần vào tổng tiền của kỳ đang chọn.">
-                            <input type="checkbox" v-model="includeInternetSetupFee" class="kdol-internet-toggle__input">
-                            Cộng {{ formatPrice(internetSetupFee) }} phí lắp đặt
-                        </label>
+                        <p v-if="internetMonths === 12" class="kdol-internet-footnote">Trả trước 12 tháng, tặng 1 tháng: sử dụng 13 tháng.</p>
+                        <div class="flex flex-wrap gap-x-6 gap-y-3 mt-3">
+                            <label class="kdol-internet-toggle" title="Phí lắp đặt được cộng một lần vào tổng tiền của kỳ đang chọn.">
+                                <input type="checkbox" v-model="includeInternetSetupFee" class="kdol-internet-toggle__input">
+                                Cộng {{ formatPrice(internetSetupFee) }} phí lắp đặt
+                            </label>
+                            <label class="kdol-internet-toggle" title="Cộng một lần cho gói Internet có Camera, cộng thêm vào phí lắp đặt Internet nếu cùng chọn.">
+                                <input type="checkbox" v-model="includeInternetCameraSetupFee" class="kdol-internet-toggle__input">
+                                + Phí lắp cam {{ formatPrice(internetCameraSetupFee) }} (chỉ gói có cam)
+                            </label>
+                        </div>
                     </div>
 
                     <div v-if="!internetMatrixRows.length && !internetMobileRows.length" class="kdol-empty-state">Chưa có bảng giá Internet cho lựa chọn này.</div>
@@ -1061,7 +1125,7 @@
                         <h3 class="kdol-internet-section-title">Gói Internet · {{ internetRegionName }}</h3>
                         <div class="kdol-table-wrap">
                             <table class="kdol-internet-table" :class="{ 'kdol-internet-table--compact': !showInternetIntegration }">
-                                <caption class="sr-only">Bảng giá Internet gia đình {{ internetRegionName }}, kỳ {{ internetMonths }} tháng</caption>
+                                <caption class="sr-only">Bảng giá Internet gia đình {{ internetRegionName }}, kỳ {{ internetTermLabel }}</caption>
                                 <colgroup>
                                     <col class="kdol-internet-col kdol-internet-col--package">
                                     <col v-if="showInternetIntegration" class="kdol-internet-col kdol-internet-col--benefits">
@@ -1090,7 +1154,7 @@
                                             <span v-if="row.variants[configuration.id]" class="kdol-internet-price"
                                                 :data-plan-id="row.variants[configuration.id].id"
                                                 :title="row.variants[configuration.id].note || ''">
-                                                {{ formatInternetAmount(row.variants[configuration.id].price) }}
+                                                {{ formatInternetAmount(row.variants[configuration.id].price, row.bundle) }}
                                             </span>
                                             <span v-else class="kdol-internet-unavailable" aria-label="Chưa có giá cho cấu hình này">—</span>
                                         </td>
@@ -1104,7 +1168,7 @@
                         <h3 class="kdol-internet-section-title">Gói Internet + Di động · {{ internetRegionName }}</h3>
                         <div class="kdol-table-wrap">
                             <table class="kdol-internet-table kdol-internet-table--mobile" :class="{ 'kdol-internet-table--compact': !showInternetIntegration }">
-                                <caption class="sr-only">Bảng giá Internet kèm di động {{ internetRegionName }}, kỳ {{ internetMonths }} tháng</caption>
+                                <caption class="sr-only">Bảng giá Internet kèm di động {{ internetRegionName }}, kỳ {{ internetTermLabel }}</caption>
                                 <colgroup>
                                     <col class="kdol-internet-col kdol-internet-col--package">
                                     <col v-if="showInternetIntegration" class="kdol-internet-col kdol-internet-col--integration">
@@ -1219,18 +1283,32 @@
                         </div>
 
                         <div v-if="meshMode === 'addon'">
+                            <div class="kdol-mesh-toolbar" role="group" aria-labelledby="mesh-term-label">
+                                <span id="mesh-term-label" class="block text-sm font-semibold text-gray-800 mb-2">Tính giá nhanh</span>
+                                <div class="kdol-mesh-terms">
+                                    <button v-for="period in meshCatalog.periods" :key="period.id" type="button"
+                                        class="kdol-mesh-term" :class="{ 'kdol-mesh-term--active': activeMeshTermId === period.id }"
+                                        :aria-pressed="activeMeshTermId === period.id" @click="activeMeshTermId = period.id">
+                                        {{ period.label }}
+                                    </button>
+                                </div>
+                            </div>
                             <h3 class="kdol-internet-section-title">Giá Mesh add-on <span class="kdol-mesh-note">(đã bao gồm VAT)</span></h3>
                             <div class="kdol-table-wrap">
                                 <table class="kdol-mesh-table">
-                                    <caption class="sr-only">Bảng giá Mesh add-on theo số thiết bị và kỳ cước</caption>
+                                    <caption class="sr-only">Bảng giá Mesh add-on theo số thiết bị, kỳ {{ selectedMeshPeriod?.label }}</caption>
                                     <thead>
-                                        <tr><th scope="col">Gói</th><th scope="col">Số Mesh</th><th v-for="period in meshCatalog.periods" :key="period.id" scope="col">{{ period.label }}</th></tr>
+                                        <tr>
+                                            <th scope="col" class="w-2/5">Gói</th>
+                                            <th scope="col" class="w-1/5">Số Mesh</th>
+                                            <th scope="col" class="w-2/5 text-right">Giá {{ selectedMeshPeriod?.label }} (đ)</th>
+                                        </tr>
                                     </thead>
                                     <tbody>
-                                        <tr v-for="plan in meshCatalog.plans" :key="plan.id" :class="{ 'kdol-mesh-row--restricted': plan.restricted }">
-                                            <th scope="row">{{ plan.name }}</th>
+                                        <tr v-for="plan in meshQuoteRows" :key="plan.id" :class="{ 'kdol-mesh-row--restricted': plan.restricted }">
+                                            <th scope="row" :title="plan.restricted ? meshCatalog.eligibility : undefined">{{ plan.name }}</th>
                                             <td>{{ plan.quantity }}</td>
-                                            <td v-for="(price, index) in plan.prices" :key="meshCatalog.periods[index].id">{{ formatPrice(price) }}</td>
+                                            <td class="kdol-mesh-price">{{ formatPrice(plan.price) }}</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -1315,13 +1393,14 @@
                     <div v-if="selectedMytvPackage" class="kdol-mytv-detail">
                         <div class="kdol-mytv-detail-heading">
                             <h3 class="kdol-internet-section-title">Kênh của gói {{ selectedMytvPackage.name }}</h3>
-                            <a :href="selectedMytvPackage.poster" target="_blank" rel="noopener noreferrer" class="kdol-mytv-source">Xem tờ kênh gốc ↗</a>
+                            <a v-if="selectedMytvPackage.poster" :href="selectedMytvPackage.poster" target="_blank" rel="noopener noreferrer" class="kdol-mytv-source">Xem tờ kênh gốc ↗</a>
                         </div>
                         <dl class="kdol-mytv-summary">
                             <div><dt>Phim Galaxy</dt><dd>{{ selectedMytvPackage.galaxy }}</dd></div>
-                            <div><dt>Thiết bị</dt><dd>Đăng nhập 5 · Xem đồng thời 2</dd></div>
-                            <div><dt>Xem lại</dt><dd>Tối đa 72 giờ, tùy kênh</dd></div>
+                            <div v-if="selectedMytvPackage.deviceSummary"><dt>Thiết bị</dt><dd>{{ selectedMytvPackage.deviceSummary }}</dd></div>
+                            <div v-if="selectedMytvPackage.replaySummary"><dt>Xem lại</dt><dd>{{ selectedMytvPackage.replaySummary }}</dd></div>
                         </dl>
+                        <p v-if="selectedMytvPackage.channelNote" class="kdol-mytv-footnote mb-3">{{ selectedMytvPackage.channelNote }}</p>
                         <div class="kdol-mytv-channel-groups">
                             <details v-for="group in groupedMytvChannels" :key="selectedMytvPackage.id + '-' + group.id" class="kdol-mytv-channel-group" :open="Boolean(mytvQuery.trim()) || group.id !== 'local'">
                                 <summary>{{ group.name }} <span>({{ group.channels.length }})</span></summary>
@@ -1365,7 +1444,9 @@
                     
                     smartCaData: [],
                     vnptCaData: [],
+                    vnptCaProCatalog: window.KDOL_VNPTCA_PRO || null,
                     bhxhData: [],
+                    bhxhCatalog: window.KDOL_BHXH || null,
                     inbotData: [],
                     invoiceData: [],
                     econtractData: [],
@@ -1375,6 +1456,7 @@
                     activeCameraTermId: 'monthly',
                     meshCatalog: window.KDOL_MESH || null,
                     meshMode: 'addon',
+                    activeMeshTermId: 'one',
                     meshPurchaseQuantity: 1,
                     mytvPackages: window.KDOL_MYTV?.packages || [],
                     mytvGroups: window.KDOL_MYTV?.groups || [],
@@ -1388,6 +1470,8 @@
                     internetMonths: 1,
                     includeInternetSetupFee: false,
                     internetSetupFee: 300000,
+                    includeInternetCameraSetupFee: false,
+                    internetCameraSetupFee: 100000,
                     showInternetIntegration: false,
                     internetFamilyBenefit: 'Family Safe / GreenNet',
                     
@@ -1395,13 +1479,16 @@
                     activeService: null,
                     vatRate: 10,
                     discountRate: 0,
+                    smartCaDiscountMode: 'none',
                     
-                    discountRoles: {
-                        0: 'Khách hàng mới thông thường (Không áp dụng ưu đãi).',
-                        10: 'Khách hiện hữu còn lại của VNPT / KH sử dụng 1-3 tháng / Gói dùng 1 lần.',
-                        20: 'KH hiện hữu có doanh thu 10 triệu đến dưới 30 triệu/tháng / Mua gói 6 tháng.',
-                        30: 'KH cạnh tranh giá đối thủ / Doanh thu từ 30 triệu/tháng / Mua gói từ 12 tháng.'
-                    },
+                    smartCaCustomerType: 'term',
+                    smartCaCustomerConditions: [
+                        { id: 'term', label: 'Chỉ xét thời hạn gói', maxDiscount: 0 },
+                        { id: 'existing', label: 'Khách hàng hiện hữu còn lại của VNPT · tối đa 10%', maxDiscount: 10 },
+                        { id: 'revenue10to30', label: 'KH hiện hữu, doanh thu từ 10 đến dưới 30 triệu/tháng · tối đa 20%', maxDiscount: 20 },
+                        { id: 'largeExisting', label: 'KH lớn hiện hữu, doanh thu từ 30 triệu/tháng · tối đa 30%', maxDiscount: 30 },
+                        { id: 'competition', label: 'Khách hàng có cạnh tranh về giá của đối thủ · tối đa 30%', maxDiscount: 30 }
+                    ],
                     
                     activeCksSubTab: 'token',
                     activeHddtMainTab: 'invoice',
@@ -1435,12 +1522,16 @@
                     activeBhxhGroup: 'doclap',
                     activeBhxhVan: '', 
                     activeBhxhType: 'moi',
+                    bhxhRegion: 'other',
                     discountBhxh: 0,
                     
                     activeSmartCaTab: 'canhan',
                     isAdvanced: false,
                     
                     activeVnptCaTab: 'doanhnghiep',
+                    activeVnptCaTier: 'standard',
+                    vnptCaContractSize: 'under100',
+                    discountVnptCa: 0,
                     activeVnptCaType: 'moi'
                 }
             },
@@ -1457,6 +1548,14 @@
                             : plan.indoor * this.cameraCatalog.installation.indoor + plan.outdoor * this.cameraCatalog.installation.outdoor;
                         return { ...plan, price, installationFee, total: price + installationFee };
                     });
+                },
+                selectedMeshPeriod() {
+                    return this.meshCatalog?.periods.find(period => period.id === this.activeMeshTermId) || this.meshCatalog?.periods[0] || null;
+                },
+                meshQuoteRows() {
+                    if (!this.meshCatalog || !this.selectedMeshPeriod) return [];
+                    const periodIndex = this.meshCatalog.periods.indexOf(this.selectedMeshPeriod);
+                    return this.meshCatalog.plans.map(plan => ({ ...plan, price: plan.prices[periodIndex] }));
                 },
                 meshPurchaseTotal() {
                     const quantity = Number(this.meshPurchaseQuantity);
@@ -1506,9 +1605,12 @@
                         { id: '2mesh', name: '+2 Mesh 6' }
                     ];
                 },
+                internetTermLabel() {
+                    return `${this.internetMonths === 12 ? '12-13' : this.internetMonths} tháng`;
+                },
                 internetPriceHeading() {
-                    if (this.includeInternetSetupFee) return `Tổng ${this.internetMonths} tháng (đ)`;
-                    return this.internetMonths === 1 ? 'Giá gói (đ/tháng)' : `Giá ${this.internetMonths} tháng (đ)`;
+                    if (this.includeInternetSetupFee || this.includeInternetCameraSetupFee) return `Tổng ${this.internetTermLabel} (đ)`;
+                    return this.internetMonths === 1 ? 'Giá gói (đ/tháng)' : `Giá ${this.internetTermLabel} (đ)`;
                 },
                 internetMatrixRows() {
                     const rows = new Map();
@@ -1521,7 +1623,7 @@
                             const key = `${bundle}_${plan.duration_text}`;
                             if (!rows.has(key)) rows.set(key, { key, bundle, ...this.splitInternetPlanLabel(plan.duration_text), variants: {}, promotion: false });
                             const row = rows.get(key);
-                            const defaultPromotion = /^KM:/i.test(plan.note || '') && ['Home 1_M', 'Home Slay_M'].includes(row.name);
+                            const defaultPromotion = /^KM:/i.test(plan.note || '') && row.name === 'Home Slay_M';
                             row.variants[defaultPromotion ? 'none' : configuration] = plan;
                             if (/^KM:/i.test(plan.note || '')) row.promotion = true;
                         });
@@ -1588,7 +1690,46 @@
                     const tab = this.smartCaData.find(t => t.type === this.activeSmartCaTab);
                     return tab ? tab.plans : [];
                 },
+                selectedSmartCaCondition() {
+                    return this.smartCaCustomerConditions.find(condition => condition.id === this.smartCaCustomerType) || this.smartCaCustomerConditions[0];
+                },
+                maxSmartCaDiscount() {
+                    return Math.max(0, ...this.currentSmartCaPlans.map(plan => this.getSmartCaMaxDiscount(plan)));
+                },
+                maxVnptCaDiscount() {
+                    return this.vnptCaContractSize === '100plus' ? 60 : 50;
+                },
+                vnptCaDiscount() {
+                    return Math.min(this.maxVnptCaDiscount, Math.max(0, Number(this.discountVnptCa) || 0));
+                },
+                isVnptCaPro() {
+                    return this.activeVnptCaTier === 'pro' && ['canhan', 'nhanvien', 'doanhnghiep'].includes(this.activeVnptCaTab);
+                },
+                vnptCaProProduct() {
+                    return this.isVnptCaPro ? this.vnptCaProCatalog?.[this.activeVnptCaTab] || null : null;
+                },
+                vnptCaFeatures() {
+                    if (this.activeVnptCaTab === 'device') return [];
+                    const features = ['Ký số'];
+                    if (this.activeVnptCaTab !== 'doanhnghiep' || this.isVnptCaPro) features.push('Bảo vệ Email');
+                    if (this.isVnptCaPro) features.push('Xác thực người dùng');
+                    return features;
+                },
+                vnptCaTokenBasePrice() {
+                    if (this.activeVnptCaType !== 'moi' || this.activeVnptCaTab === 'device') return 0;
+                    return this.activeVnptCaTab === 'doanhnghiep' ? 550000 : 165000;
+                },
+                vnptCaTokenPrice() {
+                    return this.calculateGeneralPrice(this.vnptCaTokenBasePrice, 0);
+                },
                 currentVnptCaPlans() {
+                    if (this.isVnptCaPro) {
+                        return (this.vnptCaProProduct?.servicePrices || []).map((servicePrice, index) => ({
+                            duration_text: String((index + 1) * 12),
+                            price: servicePrice + this.vnptCaTokenBasePrice,
+                            invoice_price: servicePrice + this.vnptCaTokenBasePrice
+                        }));
+                    }
                     let target = '';
                     if (this.activeVnptCaTab === 'device') {
                         target = 'device';
@@ -1608,13 +1749,32 @@
                     }
                     
                     const group = this.bhxhData.find(g => g.type === groupCode);
-                    return group ? group.plans : [];
+                    return group ? group.plans.map(plan => ({
+                        ...plan,
+                        price: this.bhxhCatalog?.priceOverrides[groupCode]?.[plan.duration_text] ?? plan.price
+                    })) : [];
                 },
                 maxBhxhDiscount() {
-                    return this.activeBhxhGroup === 'doclap' ? 65 : 55;
+                    if (this.bhxhRegion === 'major') return this.activeBhxhGroup === 'doclap' ? 65 : 55;
+                    return this.activeBhxhGroup === 'doclap' ? 50 : 45;
+                },
+                bhxhDiscount() {
+                    return Math.min(this.maxBhxhDiscount, Math.max(0, Number(this.discountBhxh) || 0));
+                },
+                bhxhRegionName() {
+                    return this.bhxhRegion === 'major' ? 'Hà Nội, Đà Nẵng, TP.HCM' : 'Các địa bàn còn lại';
+                },
+                bhxhTokenPrice() {
+                    return this.hasToken() ? Math.round(550000 * (100 + this.vatRate) / 110) : 0;
                 }
             },
             watch: {
+                maxSmartCaDiscount(newMax) {
+                    if (this.discountRate > newMax) this.discountRate = newMax;
+                },
+                maxVnptCaDiscount(newMax) {
+                    if (this.discountVnptCa > newMax) this.discountVnptCa = newMax;
+                },
                 maxBhxhDiscount(newMax) {
                     if (this.discountBhxh > newMax) {
                         this.discountBhxh = newMax;
@@ -1725,13 +1885,19 @@
                     this.vatRate = 10;
                     
                     if(srv.id === 'cks') {
+                        this.smartCaCustomerType = 'term';
+                        this.smartCaDiscountMode = 'none';
                         this.activeCksSubTab = 'token';
                         this.activeVnptCaTab = 'doanhnghiep'; 
+                        this.activeVnptCaTier = 'standard';
+                        this.vnptCaContractSize = 'under100';
+                        this.discountVnptCa = 0;
                         this.activeVnptCaType = 'moi';
                     } else if (srv.id === 'bhxh') {
                         this.activeBhxhGroup = 'doclap'; 
                         this.activeBhxhVan = ''; 
                         this.activeBhxhType = 'moi'; 
+                        this.bhxhRegion = 'other';
                         this.discountBhxh = 0;
                         this.vatRate = 8;
                     } else if (srv.id === 'hddt') {
@@ -1764,6 +1930,7 @@
                         this.activeMytvTermId = 'monthly';
                     } else if (srv.id === 'mesh') {
                         this.meshMode = 'addon';
+                        this.activeMeshTermId = 'one';
                         this.meshPurchaseQuantity = 1;
                     } else if (srv.id === 'camera') {
                         this.cameraMode = 'addon';
@@ -1829,12 +1996,13 @@
                         .replace(/\.?\s*Miễn phí gọi nhóm\s*\(tối đa (\d+) TV\)/i, '\nGọi nhóm miễn phí · tối đa $1 thành viên')
                         .trim();
                 },
-                calculateInternetTotal(monthlyPrice) {
+                calculateInternetTotal(monthlyPrice, bundle = '') {
                     const setupFee = this.includeInternetSetupFee ? this.internetSetupFee : 0;
-                    return Math.round(Number(monthlyPrice) * this.internetMonths + setupFee);
+                    const cameraSetupFee = this.includeInternetCameraSetupFee && bundle === 'cam' ? this.internetCameraSetupFee : 0;
+                    return Math.round(Number(monthlyPrice) * this.internetMonths + setupFee + cameraSetupFee);
                 },
-                formatInternetAmount(monthlyPrice) {
-                    return new Intl.NumberFormat('vi-VN').format(this.calculateInternetTotal(monthlyPrice));
+                formatInternetAmount(monthlyPrice, bundle = '') {
+                    return new Intl.NumberFormat('vi-VN').format(this.calculateInternetTotal(monthlyPrice, bundle));
                 },
                 
                 formatPrice(value) { return new Intl.NumberFormat('vi-VN').format(Math.round(value)) + ' đ'; },
@@ -1943,13 +2111,12 @@
 
                 // --- TÍNH TOÁN BHXH ---
                 hasToken() { return this.activeBhxhGroup === 'tichhop' && this.activeBhxhType === 'moi'; },
+                calculateBhxhServicePrice(basePrice, appliedDiscount = this.bhxhDiscount) {
+                    const discount = Math.min(this.maxBhxhDiscount, Math.max(0, Number(appliedDiscount) || 0));
+                    return Math.round(Number(basePrice) * (100 + this.vatRate) * (100 - discount) / 11000);
+                },
                 calculateBhxhTotal(basePrice) {
-                    let servicePrice = this.calculateGeneralPrice(basePrice, this.discountBhxh);
-                    if(this.hasToken()) {
-                        let tokenPrice = this.vatRate === 10 ? 550000 : 540000;
-                        return servicePrice + tokenPrice;
-                    }
-                    return servicePrice;
+                    return this.calculateBhxhServicePrice(basePrice) + this.bhxhTokenPrice;
                 },
 
                 executeBhxhCopy(plan) {
@@ -1957,9 +2124,9 @@
                     let groupName = this.activeBhxhGroup === 'doclap' ? 'Độc lập' : `Tích hợp ${this.activeBhxhType === 'moi' ? '(Mới)' : '(Gia hạn)'}`;
                     const totalPrice = this.calculateBhxhTotal(plan.price);
                     const formattedTotal = this.formatPrice(totalPrice);
-                    let tokenTxt = this.hasToken() ? ` (+ Thiết bị Token)` : '';
-                    let ckTxt = this.discountBhxh > 0 ? ` (Đã CK ${this.discountBhxh}% dịch vụ)` : '';
-                    let textToCopy = `VNPT-BHXH ${groupName} - Gói ${vanLabel} (${plan.duration_text} tháng)${tokenTxt}: Thanh toán ${formattedTotal}${ckTxt}. Đã bao gồm ${this.vatRate}% VAT.`;
+                    const tokenTxt = this.hasToken() ? ` (+ Token ${this.formatPrice(this.bhxhTokenPrice)}, không chiết khấu)` : '';
+                    const ckTxt = this.bhxhDiscount > 0 ? ` (Đã CK ${this.bhxhDiscount}% dịch vụ)` : '';
+                    const textToCopy = `VNPT-BHXH ${groupName} - Gói ${vanLabel} (${plan.duration_text} tháng)${tokenTxt}: Thanh toán ${formattedTotal}${ckTxt}. Địa bàn: ${this.bhxhRegionName}. Đã bao gồm ${this.vatRate}% VAT.`;
                     navigator.clipboard.writeText(textToCopy).then(() => this.showToast('Đã copy: ' + formattedTotal));
                 },
 
@@ -2028,23 +2195,54 @@
                     if(this.activeSmartCaTab !== '1lan' && this.isAdvanced) price *= 1.5;
                     return Math.round((price / 1.1) * (1 + this.vatRate / 100));
                 },
-                calculateFinalPrice(basePrice) {
-                    return Math.round(this.calculateOriginalPrice(basePrice) * (1 - this.discountRate / 100));
+                getSmartCaTermDiscount(plan) {
+                    if (this.activeSmartCaTab === '1lan') return 10;
+                    const months = Number(plan?.duration_text);
+                    if (months >= 12) return 30;
+                    if (months === 6) return 20;
+                    return [1, 2, 3].includes(months) ? 10 : 0;
+                },
+                getSmartCaMaxDiscount(plan) {
+                    return Math.max(this.getSmartCaTermDiscount(plan), this.selectedSmartCaCondition.maxDiscount);
+                },
+                getSmartCaDiscount(plan) {
+                    const maxDiscount = this.getSmartCaMaxDiscount(plan);
+                    if (this.smartCaDiscountMode === 'auto') return maxDiscount;
+                    if (this.smartCaDiscountMode === 'custom') return Math.min(maxDiscount, Math.max(0, Number(this.discountRate) || 0));
+                    return 0;
+                },
+                getSmartCaDiscountReason(plan) {
+                    if (this.selectedSmartCaCondition.maxDiscount > this.getSmartCaTermDiscount(plan)) return this.selectedSmartCaCondition.label;
+                    return this.activeSmartCaTab === '1lan' ? 'Gói dùng 1 lần' : `Thời hạn gói ${plan.duration_text} tháng`;
+                },
+                calculateFinalPrice(plan) {
+                    const multiplier = this.activeSmartCaTab !== '1lan' && this.isAdvanced ? 1.5 : 1;
+                    // Tính VAT và chiết khấu trước khi làm tròn, tránh lệch 1đ do làm tròn hai lần.
+                    return Math.round(Number(plan.price) * multiplier * (100 + this.vatRate) * (100 - this.getSmartCaDiscount(plan)) / 11000);
+                },
+
+                calculateVnptCaPrice(basePrice, appliedDiscount = this.vnptCaDiscount) {
+                    // Giá đầu vào đã gồm Token và VAT 10%; chỉ chiết khấu phần dịch vụ.
+                    const discount = Math.min(this.maxVnptCaDiscount, Math.max(0, Number(appliedDiscount) || 0));
+                    const servicePrice = Number(basePrice) - this.vnptCaTokenBasePrice;
+                    return Math.round(servicePrice * (100 + this.vatRate) * (100 - discount) / 11000 + this.vnptCaTokenPrice);
                 },
 
                 executeCaCopy(plan) {
                     let tabNameObj = [{id: 'canhan', name: 'Cá nhân'}, {id: 'nhanvien', name: 'Nhân viên'}, {id: 'doanhnghiep', name: 'Doanh nghiệp (OID)'}, {id: 'device', name: 'Thiết bị'}].find(t => t.id === this.activeVnptCaTab);
-                    const tabName = tabNameObj ? tabNameObj.name : '';
+                    const tabName = this.vnptCaProProduct?.name || (tabNameObj ? tabNameObj.name : '');
                     const typeName = this.activeVnptCaTab === 'device' ? '' : (this.activeVnptCaType === 'moi' ? '(Đăng ký mới)' : '(Gia hạn)');
-                    const payPrice = this.formatPrice(this.calculateGeneralPrice(plan.price, this.discountRate));
-                    let discountText = this.discountRate > 0 ? `Đã giảm ${this.discountRate}% - ` : '';
+                    const payPrice = this.formatPrice(this.calculateVnptCaPrice(plan.price));
+                    const discountText = this.vnptCaDiscount > 0 ? `Đã giảm ${this.vnptCaDiscount}% phí dịch vụ - ` : '';
+                    const tokenText = this.vnptCaTokenBasePrice > 0 ? `Đã gồm Token ${this.formatPrice(this.vnptCaTokenPrice)} (không chiết khấu) - ` : '';
+                    const featureText = this.vnptCaFeatures.length ? `Chức năng: ${this.vnptCaFeatures.join(', ')} - ` : '';
                     
                     let textToCopy = '';
                     if(this.activeVnptCaTab === 'doanhnghiep') {
-                        const invPrice = this.formatPrice(this.calculateGeneralPrice(plan.invoice_price, this.discountRate));
-                        textToCopy = `Chữ ký số Token VNPT-CA ${tabName} ${typeName} - Gói ${plan.duration_text} tháng: Thanh toán ${payPrice} (Xuất HĐ: ${invPrice} - ${discountText}Bao gồm ${this.vatRate}% VAT)`.replace(/\s+/g, ' ').trim();
+                        const invPrice = this.formatPrice(this.calculateVnptCaPrice(plan.invoice_price));
+                        textToCopy = `Chữ ký số Token VNPT-CA ${tabName} ${typeName} - Gói ${plan.duration_text} tháng: Thanh toán ${payPrice} (Xuất HĐ: ${invPrice} - ${tokenText}${discountText}${featureText}Bao gồm ${this.vatRate}% VAT)`.replace(/\s+/g, ' ').trim();
                     } else {
-                        textToCopy = `Chữ ký số Token VNPT-CA ${tabName} ${typeName} - Gói ${plan.duration_text} tháng: ${payPrice} (${discountText}Bao gồm ${this.vatRate}% VAT)`.replace(/\s+/g, ' ').trim();
+                        textToCopy = `Chữ ký số Token VNPT-CA ${tabName} ${typeName} - Gói ${plan.duration_text} tháng: ${payPrice} (${tokenText}${discountText}${featureText}Bao gồm ${this.vatRate}% VAT)`.replace(/\s+/g, ' ').trim();
                     }
                     navigator.clipboard.writeText(textToCopy).then(() => this.showToast('Đã copy: ' + payPrice));
                 },
@@ -2052,8 +2250,9 @@
                 executeCopy(plan) {
                     const typeName = this.smartCaData.find(t => t.type === this.activeSmartCaTab).name;
                     const level = this.activeSmartCaTab === '1lan' ? '' : (this.isAdvanced ? '(Nâng cao)' : '(Cơ bản)');
-                    const finalPriceFormatted = this.formatPrice(this.calculateFinalPrice(plan.price));
-                    let discountText = this.discountRate > 0 ? `Đã giảm ${this.discountRate}% - ` : '';
+                    const finalPriceFormatted = this.formatPrice(this.calculateFinalPrice(plan));
+                    const discount = this.getSmartCaDiscount(plan);
+                    const discountText = discount > 0 ? `Đã giảm ${discount}% (${this.getSmartCaDiscountReason(plan)}) - ` : '';
                     const textToCopy = `VNPT SmartCA ${typeName} ${level} - Gói ${plan.duration_text} tháng: ${finalPriceFormatted} (${discountText}Bao gồm ${this.vatRate}% VAT)`.replace(/\s+/g, ' ').trim();
                     navigator.clipboard.writeText(textToCopy).then(() => this.showToast('Đã copy: ' + finalPriceFormatted));
                 },

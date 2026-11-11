@@ -4,7 +4,7 @@ Mục tiêu: so sánh nhanh các gói và tìm kênh phù hợp khi tư vấn. D
 
 ## Nguồn
 
-Bảy ảnh do người dùng cung cấp từ thư mục `D:\MY VNPT\MyTV`, dành cho khách hàng sử dụng mạng VNPT. Dữ liệu là bản chép từ ảnh, chưa xác minh trực tiếp với danh mục MyTV đang phát sóng. Không tự suy diễn gói tên lớn hơn sẽ bao gồm toàn bộ kênh của gói trước.
+Bảy ảnh do người dùng cung cấp từ thư mục `D:\MY VNPT\MyTV`, dành cho khách hàng sử dụng mạng VNPT, cùng ảnh bảng giá và quyền lợi MyTV VIP bổ sung trong cuộc trò chuyện. Dữ liệu là bản chép từ ảnh, chưa xác minh trực tiếp với danh mục MyTV đang phát sóng. Không tự suy diễn gói tên lớn hơn sẽ bao gồm toàn bộ kênh của gói trước.
 
 | Gói | Ảnh nguồn | Số kênh công bố trong ảnh | Số mục được liệt kê và nhập để tra cứu |
 | --- | --- | --- | ---: |
@@ -15,6 +15,7 @@ Bảy ảnh do người dùng cung cấp từ thư mục `D:\MY VNPT\MyTV`, dàn
 | Film+ | `FILM PLUS.jpg` | Gần 130 | 104 |
 | Flexi 1 | `FLEXI 1.jpg` | Gần 150 | 124 |
 | Flexi 2 | `FLEXI 2.jpg` | Gần 150 | 125 |
+| MyTV VIP | Ảnh quyền lợi và bảng giá gửi trong cuộc trò chuyện | Gần 170 | 68 kênh thuộc các chùm đã xác nhận, chưa phải toàn bộ danh sách |
 
 Số kênh công bố trên tờ giới thiệu khác số mục được liệt kê trong ảnh. Giao diện giữ riêng số công bố và danh sách thực tế chép được; không tạo thêm kênh để bù vào tổng. Ảnh gốc có thể mở bằng liên kết "Xem tờ kênh gốc" khi chọn từng gói.
 
@@ -24,8 +25,9 @@ Số kênh công bố trên tờ giới thiệu khác số mục được liệt
 - S1: thêm chùm VTVcab và HBO. S2: thêm chùm SCTV và HBO.
 - Film: phần VTV trong ảnh chỉ liệt kê VTV1, VTV5; có SPOTV và SPOTV2. Film+ liệt kê đầy đủ chùm VTV, không liệt kê SPOTV. Hai gói đều có HBO, Box Hits, Cinemax, WarnerTV, nhóm thiếu nhi và khoa giáo mở rộng.
 - Flexi 1 có VTVcab; Flexi 2 có SCTV; cả hai có nhóm phim, thiếu nhi và khoa giáo mở rộng.
+- MyTV VIP có VTV/HTV, cả chùm VTVcab và SCTV, hai kênh SPOTV/SPOTV2, Galaxy VIP và VOD không quảng cáo. Ảnh mới chỉ mô tả các chùm kênh, không có danh sách đầy đủ; tra cứu VIP tạm dùng 68 kênh đã biết thuộc các chùm VTV, HTV, VTVcab, SCTV và SPOTV. Không tự ghép các kênh quốc tế/phim/địa phương chưa được xác nhận. Chi tiết gói có ghi chú về danh sách chưa đầy đủ.
 - S/S1/S2: trải nghiệm Galaxy VIP vào thứ 7 hằng tuần. Film/Film+: Galaxy VIP. Flexi 1/Flexi 2: Galaxy Play cao cấp (theo ảnh so sánh gói được cung cấp bổ sung).
-- Các ảnh cùng ghi 1 tài khoản đăng nhập 5 thiết bị, xem đồng thời 2 thiết bị; xem lại tối đa 72 giờ theo chính sách từng kênh.
+- Bảy ảnh gốc cùng ghi 1 tài khoản đăng nhập 5 thiết bị, xem đồng thời 2 thiết bị; xem lại tối đa 72 giờ theo chính sách từng kênh. Ảnh VIP bổ sung chưa xác nhận các thông số này nên không hiển thị cho VIP. VIP chưa có ảnh gốc cục bộ trong `assets/mytv/`, không tạo liên kết ảnh bị lỗi.
 - KBS World trong ảnh S/S1/S2 ghi HD; trong ảnh Film/Film+/Flexi 1/Flexi 2 ghi SD. Dữ liệu giữ tên kèm chất lượng theo từng ảnh.
 
 ## Giá và cập nhật
@@ -37,12 +39,15 @@ Người dùng bổ sung giá và ảnh so sánh gói ngày 2026-11-11:
 | S | 30.000đ | Giá người dùng xác nhận bổ sung |
 | S1, S2 | 30.000đ | Giá người dùng xác nhận |
 | Film, Film+, Flexi 1, Flexi 2 | 65.000đ | Bỏ chữ "Từ" theo yêu cầu cập nhật của người dùng |
+| MyTV VIP | 95.000đ | Đã gồm VAT; 6 tháng 570.000đ, thanh toán 12 tháng 1.140.000đ theo ảnh bảng giá bổ sung |
 
 Cột nổi bật của bốn gói 65.000đ được cập nhật theo ảnh so sánh mới: Film có 2 kênh thể thao SPOTV độc quyền, Galaxy VIP miễn phí và VOD không quảng cáo; Film+ có Galaxy VIP miễn phí và VOD không quảng cáo; Flexi 1 có chùm 20 kênh VTVcab, Flexi 2 có chùm 21 kênh SCTV, cả hai miễn phí Galaxy Play cao cấp và có kho VOD giải trí. Số kênh vẫn hiển thị ở cột riêng để tránh lặp lại trong nội dung nổi bật.
 
 Giá được lưu trong `monthlyPrice` của từng gói ở phần `specifications` của `mytv-data.js`. Không tự áp dụng VAT hoặc ưu đãi ngoài thông tin người dùng cung cấp.
 
 Thanh tính giá nhanh MyTV có các kỳ 1 tháng, 6 tháng và 12+2 tháng, cập nhật toàn bộ cột giá. Kỳ 6 tháng tính 6 tháng tiền cước; kỳ 12+2 thanh toán 12 tháng và được dùng 14 tháng. Với bốn gói 65.000đ: 6 tháng = 390.000đ, 12+2 = 780.000đ, đúng các mức người dùng cung cấp. S/S1/S2 dùng giá tháng 30.000đ nên tương ứng 180.000đ và 360.000đ.
+
+MyTV VIP dùng cùng bộ tính giá MyTV: 95.000đ, 570.000đ và 1.140.000đ cho các kỳ thanh toán 1/6/12 tháng. Khi chọn thêm một STB, các tổng lần lượt là 145.000đ, 620.000đ và 1.190.000đ; phí STB chỉ cộng một lần. Không tính thêm VAT vào giá đã gồm thuế.
 
 Kỳ MyTV được giữ khi tìm kênh hoặc chọn gói, đặt lại 1 tháng khi chọn lại dịch vụ. Phép tính MyTV tách biệt với kỳ giá và phí lắp đặt của Internet.
 

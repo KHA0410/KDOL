@@ -84,7 +84,7 @@ id,service_id,plan_group,group_name,duration_text,price,note,invoice_price
 6fbed5d2-83a6-4c16-a1f3-f12bdcef4162,internet,nt_home_1mesh,Chỉ Internet Ngoại thành,Home 1 (300Mbps),215000,Modem + 1 Mesh Wifi 6,
 7128653f-4e91-4bfd-a3cc-5c8d19956bd9,invoice,invoice_new,HĐĐT Thông tư 78,"HD 10,000 NEW",4680000,10.000 HĐ. Đơn giá: 468đ,
 7417af8a-6d60-4968-aac4-2a64371a3ae5,internet,nt_home_2mesh,Chỉ Internet Ngoại thành,Home 1 (300Mbps),220000,Modem + 2 Mesh Wifi 6,
-7493dd1b-303a-4b44-87c5-c0eb28f9b01f,bhxh,tichhop_giahan_100,Tích hợp Gia hạn - VAN 100,33,2695000,,
+7493dd1b-303a-4b44-87c5-c0eb28f9b01f,bhxh,tichhop_giahan_100,Tích hợp Gia hạn - VAN 100,33,2695100,,
 7499ce3e-b09a-4967-8694-5b6a271796cc,internet,nt_home_1mesh,Chỉ Internet Ngoại thành,Home 1_M (300Mbps),195000,KM: 300Mbps + 1 Mesh 6,
 751b9863-e4ca-41b4-8538-971b4875c130,internet,noi_tv_1mesh,Kèm MyTV Nội thành,HomeTV 2 (500ULM),280000,Tích hợp MyTV App + 1 Mesh 6,
 7a21e41a-86d7-4642-973d-1b3d4d313a49,internet,noi_tv_none,Kèm MyTV Nội thành,HomeTV VIP 1 (300Mbps),285000,Tích hợp MyTV VIP App,
