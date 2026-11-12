@@ -24,18 +24,18 @@ function readPlans(serviceIds = ['vnptca', 'smartca']) {
         .filter(plan => serviceIds.includes(plan.service_id));
 }
 
-function loadPricing() {
+function loadPricing(client = {}) {
     const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
     const script = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
         .filter(match => !/\bsrc\s*=/.test(match[1])).at(-1)[2];
     let options, copied = '';
     const sandbox = {
-        window: { supabase: { createClient: () => ({}) } },
+        window: { supabase: { createClient: () => client } },
         Vue: { createApp(value) { options = value; return { mount() {} }; } },
         navigator: { clipboard: { writeText(text) { copied = text; return Promise.resolve(); } } }
     };
     vm.createContext(sandbox);
-    for (const file of ['vnptca-data.js', 'bhxh-data.js', 'invoice-data.js', 'inbot-data.js', 'pos-data.js', 'econtract-data.js']) {
+    for (const file of ['vnptca-data.js', 'bhxh-data.js', 'invoice-data.js', 'inbot-data.js', 'pos-data.js', 'econtract-data.js', 'receipt-data.js']) {
         vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), sandbox);
     }
     vm.runInContext(script, sandbox);

@@ -23,6 +23,7 @@
     <script src="inbot-data.js"></script>
     <script src="pos-data.js"></script>
     <script src="econtract-data.js"></script>
+    <script src="receipt-data.js"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-gray-100 h-screen flex flex-col font-sans">
@@ -57,7 +58,7 @@
                 <ul v-if="activeCategory" class="kdol-nav-list flex md:flex-col overflow-x-auto md:overflow-y-auto kdol-hide-scrollbar bg-gray-50">
                     <li v-for="srv in activeCategory.services" :key="srv.id" class="kdol-nav-item">
                         <button type="button" @click="selectService(srv)" class="kdol-nav-button kdol-nav-button--service text-sm md:text-base" :class="{ 'kdol-nav-button--active': activeService?.id === srv.id }" :aria-pressed="activeService?.id === srv.id">
-                            {{ srv.name }}
+                            {{ srv.id === 'internet' ? 'Internet' : srv.id === 'bhxh' ? 'BHXH' : srv.name }}
                         </button>
                     </li>
                 </ul>
@@ -69,9 +70,7 @@
 
                 <!-- 1. DỊCH VỤ CHỮ KÝ SỐ -->
                 <div v-if="activeService?.id === 'cks'">
-                    <div class="flex items-center justify-between mb-2">
-                        <h2 class="kdol-service-title">Dịch vụ Chữ ký số VNPT</h2>
-                    </div>
+                    <h2 class="sr-only">Dịch vụ Chữ ký số VNPT</h2>
                     
                     <div class="flex border-b border-gray-300 mb-4 bg-gray-50 p-1 rounded-t-lg">
                         <button @click="activeCksSubTab = 'token'; discountVnptCa = 0;"
@@ -140,7 +139,7 @@
                                     <label for="vnptca-discount" class="text-sm font-semibold text-gray-700">Chiết khấu phí dịch vụ:</label>
                                     <span class="text-sm font-bold text-orange-600">{{ vnptCaDiscount }}%</span>
                                 </div>
-                                <input id="vnptca-discount" type="range" min="0" :max="maxVnptCaDiscount" step="1" v-model.number="discountVnptCa" class="kdol-discount-slider">
+                                <input id="vnptca-discount" type="range" min="0" :max="maxVnptCaDiscount" step="5" v-model.number="discountVnptCa" class="kdol-discount-slider">
                                 <div class="flex justify-between text-xs text-gray-500">
                                     <span>0%</span>
                                     <span>Tối đa {{ maxVnptCaDiscount }}%</span>
@@ -305,9 +304,7 @@
 
                 <!-- 2. DỊCH VỤ BẢO HIỂM XÃ HỘI (VNPT-BHXH) -->
                 <div v-else-if="activeService?.id === 'bhxh'">
-                    <div class="flex justify-between items-center mb-3">
-                        <h2 class="kdol-service-title">Dịch vụ VNPT-BHXH (IVAN)</h2>
-                    </div>
+                    <h2 class="sr-only">Dịch vụ VNPT-BHXH</h2>
 
                     <div class="kdol-tabs kdol-hide-scrollbar">
                         <button v-for="tab in [{id: 'doclap', name: 'Chỉ Kê khai BHXH'}, {id: 'tichhop', name: 'Tích hợp BHXH + Chữ ký số'}]" :key="tab.id" 
@@ -355,12 +352,11 @@
                                 <label for="bhxh-discount" class="text-sm font-semibold text-gray-700">Chiết khấu dịch vụ:</label>
                                 <span class="text-sm font-bold text-orange-600">{{ bhxhDiscount }}%</span>
                             </div>
-                            <input id="bhxh-discount" type="range" min="0" :max="maxBhxhDiscount" step="1" v-model.number="discountBhxh" class="kdol-discount-slider">
+                            <input id="bhxh-discount" type="range" min="0" :max="maxBhxhDiscount" step="5" v-model.number="discountBhxh" class="kdol-discount-slider">
                             <div class="flex justify-between text-xs text-gray-500 mt-1">
                                 <span>0%</span>
                                 <span>Tối đa: {{ maxBhxhDiscount }}%</span>
                             </div>
-                            <p class="text-xs text-gray-600 mt-1">Trần tính chung khuyến mại, chiết khấu, chăm sóc khách hàng và thù lao đại lý.</p>
                             <p class="text-xs text-vnpt-red italic mt-1" v-if="activeBhxhGroup === 'tichhop'">* Lưu ý: Chiết khấu chỉ áp dụng trên giá cước, không áp dụng cho phí Token USB.</p>
                         </div>
                     </div>
@@ -413,9 +409,7 @@
 
                 <!-- 3. DỊCH VỤ HÓA ĐƠN ĐIỆN TỬ: 3 TAB CHÍNH -->
                 <div v-else-if="activeService?.id === 'hddt'">
-                    <div class="flex items-center justify-between mb-2">
-                        <h2 class="kdol-service-title">Hóa đơn điện tử VNPT</h2>
-                    </div>
+                    <h2 class="sr-only">Hóa đơn điện tử VNPT</h2>
 
                     <!-- 3 TAB CHÍNH DUY NHẤT -->
                     <div class="flex border-b border-gray-300 mb-4 bg-gray-50 p-1 rounded-t-lg">
@@ -506,7 +500,7 @@
                                         <span class="text-sm font-semibold text-gray-700">Chiết khấu cước phần mềm (Tối đa 40%):</span>
                                         <span class="text-sm font-bold text-orange-600">{{ discountInvoice }}%</span>
                                     </div>
-                                    <input type="range" min="0" max="40" step="1" v-model="discountInvoice" class="kdol-discount-slider">
+                                    <input type="range" min="0" max="40" step="5" v-model="discountInvoice" class="kdol-discount-slider">
                                 </template>
                                 
                                 <div v-if="activeInvoiceType === 'moi' && activeInvoiceSetupStatus === 'thu'" class="mt-2.5">
@@ -514,7 +508,7 @@
                                         <span class="text-sm font-semibold text-gray-700">Chiết khấu cước Khởi tạo (1.000.000đ):</span>
                                         <span class="text-sm font-bold text-orange-600">{{ discountInvoiceSetup }}%</span>
                                     </div>
-                                    <input type="range" min="0" max="100" step="1" v-model="discountInvoiceSetup" class="kdol-discount-slider">
+                                    <input type="range" min="0" max="100" step="5" v-model="discountInvoiceSetup" class="kdol-discount-slider">
                                 </div>
 
                                 <div class="bg-white/70 p-2 rounded border border-blue-100 text-xs text-gray-600 mt-2">
@@ -681,7 +675,7 @@
                                         <template v-if="activeInbotType === 'moi' && inbotSetupDiscountMode !== 'none'">
                                             <label for="inbot-setup-discount" class="text-xs font-semibold text-gray-700">Giảm phí khởi tạo: {{ inbotSetupDiscountMode === 'auto' ? 'Tự động' : `${discountInbotSetup}% (có giới hạn từng gói)` }}</label>
                                             <button type="button" class="text-xs text-vnpt-blue text-left underline" @click="inbotSetupDiscountMode = 'auto'">Dùng mức tự động</button>
-                                            <input id="inbot-setup-discount" type="range" min="0" max="100" step="1" v-model.number="discountInbotSetup" @input="inbotSetupDiscountMode = 'custom'" class="kdol-discount-slider">
+                                            <input id="inbot-setup-discount" type="range" min="0" max="100" step="5" v-model.number="discountInbotSetup" @input="inbotSetupDiscountMode = 'custom'" class="kdol-discount-slider">
                                         </template>
                                         <p class="text-xs text-gray-600">Doanh thu gói sau chiết khấu, chưa VAT: trên 500.000đ được giảm khởi tạo tối đa 100%; từ 500.000đ trở xuống tối đa 50%.</p>
                                     </div>
@@ -801,9 +795,9 @@
                                     </select>
                                     <button type="button" @click="posDiscountMode = 'auto'" class="text-xs text-vnpt-blue text-left underline">Dùng mức tự động</button>
                                     <label for="pos-package-discount" class="text-xs font-semibold text-gray-700">Giảm giá gói: {{ posDiscountMode === 'auto' ? 'Tự động' : discountPosPackage + '%' }}</label>
-                                    <input id="pos-package-discount" type="range" min="0" max="40" step="1" v-model.number="discountPosPackage" @input="posDiscountMode = 'custom'" class="kdol-discount-slider">
+                                    <input id="pos-package-discount" type="range" min="0" max="40" step="5" v-model.number="discountPosPackage" @input="posDiscountMode = 'custom'" class="kdol-discount-slider">
                                     <label for="pos-maintenance-discount" class="text-xs font-semibold text-gray-700">Giảm duy trì: {{ posDiscountMode === 'auto' ? 'Tự động' : discountPosMaintenance + '%' }}</label>
-                                    <input id="pos-maintenance-discount" type="range" min="0" max="100" step="1" v-model.number="discountPosMaintenance" @input="posDiscountMode = 'custom'" class="kdol-discount-slider">
+                                    <input id="pos-maintenance-discount" type="range" min="0" max="100" step="5" v-model.number="discountPosMaintenance" @input="posDiscountMode = 'custom'" class="kdol-discount-slider">
                                     <p class="text-xs text-gray-600">Theo số HĐ: đến 10.000 giảm tối đa gói 10% / duy trì 20%; gói 50.000: 30% / 50%; từ 100.000: 40% / 100%. Điều kiện khách hàng riêng có thể cho phép mức cao hơn.</p>
                                 </div>
                             </details>
@@ -885,7 +879,7 @@
 
                 <!-- 4. DỊCH VỤ HỢP ĐỒNG ĐIỆN TỬ -->
                 <section v-else-if="activeService?.id === 'econtract'" aria-labelledby="econtract-title">
-                    <h2 id="econtract-title" class="kdol-service-title mb-3">Hợp đồng điện tử VNPT eContract</h2>
+                    <h2 id="econtract-title" class="sr-only">Hợp đồng điện tử VNPT eContract</h2>
                     <template v-if="econtractCatalog">
                         <div class="kdol-tabs kdol-hide-scrollbar">
                             <button v-for="mode in [{ id: 'econtract_saas', name: 'SaaS · Hạ tầng VNPT' }, { id: 'econtract_onprem', name: 'OnPremise · Hệ thống khách hàng' }, { id: 'econtract_ceca_tab', name: 'Ký dấu thời gian TSA CeCA' }]" :key="mode.id" type="button" @click="selectEcontractMode(mode.id)" :aria-pressed="activeEcontractGroup === mode.id" :class="['kdol-tab', activeEcontractGroup === mode.id ? 'border-b-2 border-vnpt-blue text-vnpt-blue' : 'text-gray-500 hover:text-gray-700']">{{ mode.name }}</button>
@@ -923,10 +917,10 @@
                                         <button type="button" @click="econtractDiscountMode = 'auto'" class="text-xs text-vnpt-blue text-left underline">Dùng mức tự động</button>
                                         <template v-if="activeEcontractGroup === 'econtract_saas'">
                                             <label for="econtract-service-discount" class="text-xs font-semibold text-gray-700">Giảm dịch vụ: {{ econtractDiscountMode === 'auto' ? 'Tự động' : discountEcontract + '%' }}</label>
-                                            <input id="econtract-service-discount" type="range" min="0" max="30" step="1" v-model.number="discountEcontract" @input="econtractDiscountMode = 'custom'" class="kdol-discount-slider">
+                                            <input id="econtract-service-discount" type="range" min="0" max="30" step="5" v-model.number="discountEcontract" @input="econtractDiscountMode = 'custom'" class="kdol-discount-slider">
                                         </template>
                                         <label for="econtract-setup-discount" class="text-xs font-semibold text-gray-700">Giảm khởi tạo/triển khai: {{ econtractDiscountMode === 'auto' ? 'Tự động' : discountEcontractSetup + '%' }}</label>
-                                        <input id="econtract-setup-discount" type="range" min="0" :max="activeEcontractGroup === 'econtract_onprem' ? selectedEcontractCondition.onpremSetupDiscount : 100" step="1" v-model.number="discountEcontractSetup" @input="econtractDiscountMode = 'custom'" class="kdol-discount-slider">
+                                        <input id="econtract-setup-discount" type="range" min="0" :max="activeEcontractGroup === 'econtract_onprem' ? selectedEcontractCondition.onpremSetupDiscount : 100" step="5" v-model.number="discountEcontractSetup" @input="econtractDiscountMode = 'custom'" class="kdol-discount-slider">
                                         <p v-if="activeEcontractGroup === 'econtract_saas'" class="text-xs text-gray-600">Theo số hợp đồng: dưới 2.000 giảm tối đa dịch vụ/khởi tạo 10%/10%; từ 2.000: 20%/50%; từ 5.000: 30%/100%. Điều kiện khách hàng riêng có thể cho phép mức cao hơn.</p>
                                         <p v-else class="text-xs text-gray-600">Cước triển khai giảm tối đa 10%/20%/30% theo điều kiện khách hàng. Cước sử dụng tính bằng 50% giá SaaS đã ban hành.</p>
                                     </div>
@@ -967,7 +961,7 @@
                                                     <input id="econtract-tsa-quantity" type="number" :min="addonCecaPackage === 'min' ? 1 : 50001" :max="addonCecaPackage === 'min' ? 4999 : undefined" step="1" inputmode="numeric" v-model.number="addonCecaAmount" class="kdol-select">
                                                 </template>
                                                 <label for="econtract-tsa-discount" class="text-xs font-semibold text-gray-700">Giảm TSA: {{ tsaDiscount }}% · tối đa {{ tsaDiscountLimit }}%</label>
-                                                <input id="econtract-tsa-discount" type="range" min="0" :max="tsaDiscountLimit" step="1" v-model.number="discountTsa" class="kdol-discount-slider">
+                                                <input id="econtract-tsa-discount" type="range" min="0" :max="tsaDiscountLimit" step="5" v-model.number="discountTsa" class="kdol-discount-slider">
                                                 <p v-if="econtractTsaAddonPlan" class="text-xs font-semibold text-vnpt-blue">TSA sau giảm: {{ formatPrice(econtractTsaAddonPrice) }} (chưa VAT)</p>
                                             </template>
                                         </div>
@@ -980,7 +974,7 @@
                             </template>
                             <template v-else>
                                 <label for="ceca-discount" class="text-xs font-semibold text-gray-700">Giảm TSA: {{ tsaDiscount }}% · tối đa {{ tsaDiscountLimit }}%</label>
-                                <input id="ceca-discount" type="range" min="0" :max="tsaDiscountLimit" step="1" v-model.number="discountTsa" class="kdol-discount-slider">
+                                <input id="ceca-discount" type="range" min="0" :max="tsaDiscountLimit" step="5" v-model.number="discountTsa" class="kdol-discount-slider">
                             </template>
                             <p v-if="!isEcontractPlatform || addonCecaPackage !== 'none'" class="text-xs text-gray-500">TSA: giá chưa VAT, chiết khấu tối đa 30%. Trường hợp vượt mức cần gửi đề xuất kèm cơ sở về Phòng Điều hành để trình Ban KHDN xem xét.</p>
                         </div>
@@ -1058,15 +1052,79 @@
                     <p v-else class="kdol-empty-state">Chưa có danh mục eContract.</p>
                 </section>
 
+                <!-- BIÊN LAI ĐIỆN TỬ -->
+                <section v-else-if="activeService?.id === 'bienlai'" aria-labelledby="receipt-title">
+                    <h2 id="receipt-title" class="sr-only">Biên lai điện tử</h2>
+                    <template v-if="receiptCatalog">
+                        <div class="kdol-config-panel">
+                            <div class="flex flex-wrap items-center justify-between gap-3">
+                                <p class="text-xs text-gray-600">Lưu trữ {{ receiptCatalog.storageYears }} năm từ ngày phát hành biên lai.</p>
+                                <div class="kdol-choice-group" role="group" aria-label="VAT biên lai điện tử">
+                                    <button type="button" @click="vatRate = 10" :class="['kdol-choice', vatRate === 10 ? 'bg-gray-800 text-white' : 'text-gray-500 hover:bg-gray-50']">VAT 10%</button>
+                                    <button type="button" @click="vatRate = 8" :class="['kdol-choice', vatRate === 8 ? 'bg-green-600 text-white' : 'text-gray-500 hover:bg-gray-50']">VAT 8%</button>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between gap-2">
+                                <label for="receipt-discount" class="text-sm font-semibold text-gray-700">Chiết khấu dịch vụ:</label>
+                                <span class="text-sm font-bold text-orange-600">{{ receiptDiscount }}%</span>
+                            </div>
+                            <input id="receipt-discount" type="range" min="0" :max="receiptCatalog.maxDiscount" step="5" v-model.number="discountReceipt" class="kdol-discount-slider">
+                            <div class="flex justify-between text-xs text-gray-500"><span>0%</span><span>Tối đa {{ receiptCatalog.maxDiscount }}%</span></div>
+                        </div>
+                        <div class="kdol-table-wrap">
+                            <table class="min-w-full divide-y divide-gray-300">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="kdol-table-heading kdol-table-heading--label text-left">Gói</th>
+                                        <th scope="col" class="kdol-table-heading text-right">Giá gói (chưa VAT)</th>
+                                        <th scope="col" class="kdol-table-heading text-right">Tổng tiền (có VAT)</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200 bg-white">
+                                    <tr v-for="plan in receiptTablePlans" :key="plan.name" class="hover:bg-gray-50 transition-colors">
+                                        <th scope="row" class="py-4 pl-4 pr-3 text-sm font-medium text-gray-900 text-left">
+                                            {{ plan.name }}
+                                            <p class="text-xs text-gray-500 font-normal mt-1">{{ plan.custom ? formatPrice(receiptCatalog.customUnitPrice) + '/biên lai' : new Intl.NumberFormat('vi-VN').format(plan.quantity) + ' biên lai' }}</p>
+                                            <template v-if="plan.custom">
+                                                <label for="receipt-custom-quantity" class="sr-only">Số biên lai, trên 10.000</label>
+                                                <input id="receipt-custom-quantity" type="number" :min="receiptCatalog.customMinimum" step="1" inputmode="numeric" v-model.number="receiptCustomAmount" class="kdol-select mt-2 w-full sm:w-44" placeholder="Nhập số biên lai" :aria-invalid="receiptCustomAmount !== '' && plan.price === null" aria-describedby="receipt-custom-note">
+                                                <p id="receipt-custom-note" v-if="receiptCustomAmount !== '' && plan.price === null" class="text-xs text-vnpt-red font-normal mt-1" role="status">Nhập số nguyên trên 10.000.</p>
+                                            </template>
+                                        </th>
+                                        <td class="whitespace-nowrap px-3 py-3 text-sm text-right text-gray-700">{{ plan.price === null ? '—' : formatPrice(plan.price) }}</td>
+                                        <td class="px-3 py-3 text-right">
+                                            <template v-if="calculateReceiptTotal(plan) !== null">
+                                                <div v-if="receiptDiscount > 0" class="text-xs text-gray-400 line-through mb-0.5">{{ formatPrice(calculateReceiptTotal(plan, 0)) }}</div>
+                                                <div class="flex items-center justify-end gap-3">
+                                                    <button type="button" @click="executeReceiptCopy(plan)" class="kdol-copy-button" title="Sao chép báo giá" :aria-label="'Sao chép báo giá ' + plan.name">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                                                    </button>
+                                                    <span class="kdol-price" :class="receiptDiscount > 0 ? 'text-orange-600' : 'text-vnpt-blue'">{{ formatPrice(calculateReceiptTotal(plan)) }}</span>
+                                                </div>
+                                                <p v-if="receiptDiscount > 0" class="text-xs text-gray-500 mt-1">Giảm {{ receiptDiscount }}%</p>
+                                            </template>
+                                            <span v-else class="text-xs text-gray-500">Nhập số biên lai hợp lệ</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </template>
+                    <p v-else class="kdol-empty-state">Chưa có bảng giá biên lai điện tử.</p>
+                </section>
+
                 <!-- 5. DỊCH VỤ INTERNET CÁP QUANG -->
                 <section v-else-if="activeService?.id === 'internet'" aria-labelledby="internet-title">
-                    <h2 id="internet-title" class="kdol-service-title mb-2">Internet cáp quang VNPT</h2>
+                    <h2 id="internet-title" class="sr-only">Internet cáp quang VNPT</h2>
                     <div v-if="internetData.length" class="kdol-internet-region">
                         <div class="kdol-internet-region-field">
-                            <label for="internet-region" class="block text-sm font-semibold text-gray-800 mb-2">Khu vực</label>
-                            <select id="internet-region" v-model="activeInternetRegion" @change="syncInternetFilters" class="kdol-select">
-                                <option v-for="region in internetRegionOptions" :key="region.id" :value="region.id">{{ region.name }}</option>
-                            </select>
+                            <div class="kdol-choice-group w-full sm:w-max" role="group" aria-label="Khu vực">
+                                <button v-for="region in internetRegionOptions" :key="region.id" type="button"
+                                    @click="activeInternetRegion = region.id; syncInternetFilters()" :aria-pressed="activeInternetRegion === region.id"
+                                    :class="['kdol-choice kdol-choice--fluid', activeInternetRegion === region.id ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">
+                                    {{ region.name }}
+                                </button>
+                            </div>
                         </div>
                         <div class="kdol-internet-options">
                             <label class="kdol-internet-toggle">
@@ -1089,11 +1147,11 @@
                         <div class="flex flex-wrap gap-x-6 gap-y-3 mt-3">
                             <label class="kdol-internet-toggle" title="Phí lắp đặt được cộng một lần vào tổng tiền của kỳ đang chọn.">
                                 <input type="checkbox" v-model="includeInternetSetupFee" class="kdol-internet-toggle__input">
-                                Cộng {{ formatPrice(internetSetupFee) }} phí lắp đặt
+                                {{ internetSetupFee.toLocaleString('en-US') }}đ phí lắp Internet
                             </label>
                             <label class="kdol-internet-toggle" title="Cộng một lần cho gói Internet có Camera, cộng thêm vào phí lắp đặt Internet nếu cùng chọn.">
                                 <input type="checkbox" v-model="includeInternetCameraSetupFee" class="kdol-internet-toggle__input">
-                                + Phí lắp cam {{ formatPrice(internetCameraSetupFee) }} (chỉ gói có cam)
+                                {{ internetCameraSetupFee.toLocaleString('en-US') }}đ phí lắp Camera
                             </label>
                         </div>
                     </div>
@@ -1184,10 +1242,9 @@
 
                 <!-- CAMERA: GIÁ CƯỚC VÀ PHÍ LẮP THEO TỪNG THIẾT BỊ -->
                 <section v-else-if="activeService?.id === 'camera'" aria-labelledby="camera-title">
-                    <h2 id="camera-title" class="kdol-service-title mb-2">AI Camera VNPT</h2>
+                    <h2 id="camera-title" class="sr-only">AI Camera VNPT</h2>
                     <template v-if="cameraCatalog">
                         <div class="kdol-camera-heading">
-                            <p>IN: trong nhà · OUT: ngoài trời. Lưu trữ Cloud hoặc thẻ nhớ.</p>
                             <a :href="cameraCatalog.poster" target="_blank" rel="noopener noreferrer" class="kdol-camera-source">Xem bảng giá gốc ↗</a>
                         </div>
                         <dl class="kdol-camera-specs">
@@ -1247,10 +1304,9 @@
 
                 <!-- 7. WIFI MESH -->
                 <section v-else-if="activeService?.id === 'mesh'" aria-labelledby="mesh-title">
-                    <h2 id="mesh-title" class="kdol-service-title mb-2">WiFi Mesh VNPT</h2>
+                    <h2 id="mesh-title" class="sr-only">WiFi Mesh VNPT</h2>
                     <template v-if="meshCatalog">
                         <div class="kdol-mesh-heading">
-                            <p>{{ meshCatalog.deviceName }} · Phù hợp nhà nhiều phòng, nhiều tầng.</p>
                             <a :href="meshCatalog.poster" target="_blank" rel="noopener noreferrer" class="kdol-mesh-source">Xem bảng giá gốc ↗</a>
                         </div>
                         <dl class="kdol-mesh-specs">
@@ -1316,14 +1372,8 @@
 
                 <!-- 6. TRUYỀN HÌNH MYTV -->
                 <section v-else-if="activeService?.id === 'mytv'" aria-labelledby="mytv-title">
-                    <h2 id="mytv-title" class="kdol-service-title mb-2">Truyền hình MyTV</h2>
+                    <h2 id="mytv-title" class="sr-only">Truyền hình MyTV</h2>
                     <p class="kdol-mytv-intro">Các gói dành cho khách hàng sử dụng mạng VNPT.</p>
-
-                    <div class="kdol-mytv-search">
-                        <label for="mytv-channel-search" class="block text-sm font-semibold text-gray-800 mb-2">Tìm kênh để chọn gói</label>
-                        <input id="mytv-channel-search" v-model="mytvQuery" type="search" class="kdol-select" placeholder="HBO, VTV3, ON Football hoặc số kênh…" autocomplete="off">
-                        <p v-if="mytvQuery.trim()" class="kdol-mytv-result" role="status">{{ filteredMytvPackages.length }} gói có kênh phù hợp.</p>
-                    </div>
 
                     <div class="kdol-mytv-toolbar" role="group" aria-labelledby="mytv-term-label">
                         <span id="mytv-term-label" class="block text-sm font-semibold text-gray-800 mb-2">Tính giá nhanh</span>
@@ -1367,7 +1417,6 @@
                             </tbody>
                         </table>
                     </div>
-                    <p class="kdol-mytv-footnote">* Số kênh công bố theo tờ giới thiệu; danh sách tra cứu gồm các kênh được liệt kê trong ảnh. Chọn tên gói để xem chi tiết.</p>
 
                     <div v-if="selectedMytvPackage" class="kdol-mytv-detail">
                         <div class="kdol-mytv-detail-heading">
@@ -1391,6 +1440,11 @@
                                 </ul>
                             </details>
                         </div>
+                    </div>
+                    <div class="kdol-mytv-search mt-4">
+                        <label for="mytv-channel-search" class="block text-sm font-semibold text-gray-800 mb-2">Tìm kênh để chọn gói</label>
+                        <input id="mytv-channel-search" v-model="mytvQuery" type="search" class="kdol-select" placeholder="HBO, VTV3, ON Football hoặc số kênh…" autocomplete="off">
+                        <p v-if="mytvQuery.trim()" class="kdol-mytv-result" role="status">{{ filteredMytvPackages.length }} gói có kênh phù hợp.</p>
                     </div>
                 </section>
                 </div>
@@ -1439,6 +1493,9 @@
                     posMaxAmount: '',
                     econtractData: [],
                     econtractCatalog: window.KDOL_ECONTRACT || null,
+                    receiptCatalog: window.KDOL_RECEIPT || null,
+                    discountReceipt: 0,
+                    receiptCustomAmount: '',
                     internetData: [],
                     cameraCatalog: window.KDOL_CAMERA || null,
                     cameraMode: 'addon',
@@ -1658,6 +1715,18 @@
                     if (this.activeEcontractGroup === 'econtract_saas') return this.econtractCatalog?.saasSetupPrice ?? 2000000;
                     if (this.activeEcontractGroup === 'econtract_onprem') return this.econtractCatalog?.onpremSetupPrice ?? 100000000;
                     return 0;
+                },
+                receiptDiscount() {
+                    return this.getReceiptDiscount(this.discountReceipt);
+                },
+                receiptTablePlans() {
+                    const quantity = Number(this.receiptCustomAmount);
+                    const price = quantity * (this.receiptCatalog?.customUnitPrice ?? 300);
+                    const valid = Number.isSafeInteger(quantity) && quantity >= (this.receiptCatalog?.customMinimum ?? 10001) && Number.isSafeInteger(price);
+                    return [
+                        ...(this.receiptCatalog?.plans || []),
+                        { name: 'Trên 10.000 biên lai', custom: true, quantity: valid ? quantity : 0, price: valid ? price : null }
+                    ];
                 },
                 currentEcontractPlans() {
                     if (!this.isEcontractPlatform) return this.tsaTablePlans;
@@ -1934,10 +2003,13 @@
                         if (this.meshCatalog?.service && !services.some(service => service.id === this.meshCatalog.service.id)) {
                             services.push(this.meshCatalog.service);
                         }
+                        if (this.receiptCatalog?.service && !services.some(service => service.id === this.receiptCatalog.service.id)) {
+                            services.push(this.receiptCatalog.service);
+                        }
                         this.categories = dbCategories.map(cat => ({
                             id: cat.id, name: cat.name,
                             services: services.filter(srv => srv.category_id === cat.id).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
-                        }));
+                        })).sort((a, b) => Number(a.id === 'cntt') - Number(b.id === 'cntt'));
                         
                         const { data: dbPlans } = await supabaseClient.from('plans').select('*');
 
@@ -2058,6 +2130,9 @@
                         this.invoiceMaxAmount = '';
                     } else if (srv.id === 'econtract') {
                         this.resetEcontractOptions();
+                    } else if (srv.id === 'bienlai') {
+                        this.discountReceipt = 0;
+                        this.receiptCustomAmount = '';
                     } else if (srv.id === 'internet') {
                         this.activeInternetRegion = 'noi';
                         this.internetMonths = 1;
@@ -2536,6 +2611,23 @@
                 },
                 executeEcontractEmaxCopy() {
                     if (this.econtractEmaxPlan) this.executeEcontractCopy(this.econtractEmaxPlan);
+                },
+
+                // --- BIÊN LAI ĐIỆN TỬ: GIÁ CHƯA VAT, CHIẾT KHẤU TỐI ĐA 30%. ---
+                getReceiptDiscount(value) {
+                    return Math.min(this.receiptCatalog?.maxDiscount ?? 30, Math.max(0, Number(value) || 0));
+                },
+                calculateReceiptTotal(plan, appliedDiscount = this.receiptDiscount) {
+                    if (!Number.isSafeInteger(plan?.quantity) || plan.quantity <= 0 || !Number.isSafeInteger(plan.price) || plan.price < 0) return null;
+                    const total = Math.round(plan.price * (100 - this.getReceiptDiscount(appliedDiscount)) * (100 + this.vatRate) / 10000);
+                    return Number.isSafeInteger(total) ? total : null;
+                },
+                executeReceiptCopy(plan) {
+                    const total = this.calculateReceiptTotal(plan);
+                    if (total === null) return;
+                    const discountText = this.receiptDiscount > 0 ? '; giảm ' + this.receiptDiscount + '%' : '';
+                    const textToCopy = 'Biên lai điện tử - ' + plan.name + ' (' + new Intl.NumberFormat('vi-VN').format(plan.quantity) + ' biên lai): Tổng thanh toán ' + this.formatPrice(total) + discountText + '. Đã gồm VAT ' + this.vatRate + '% và lưu trữ ' + (this.receiptCatalog?.storageYears ?? 10) + ' năm từ ngày phát hành biên lai.';
+                    navigator.clipboard.writeText(textToCopy).then(() => this.showToast('Đã copy: ' + this.formatPrice(total)));
                 },
 
                 // --- TÍNH TOÁN CHUNG ---

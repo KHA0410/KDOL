@@ -4,6 +4,8 @@ Nguồn: ảnh sơ đồ, SQL và ba file CSV do người dùng cung cấp ngày
 
 ## Dữ liệu CSV đã đọc
 
+Biên lai điện tử được bổ sung cục bộ trong mục CNTT qua `receipt-data.js`, không thay số dòng CSV xuất. Sáu gói BL300–BL10.000 và số lượng trên 10.000 × 300đ, lưu trữ 10 năm; VAT mặc định 8%, chiết khấu tối đa 30%, thanh kéo bước 5%. Xem [receipt-reference.md](receipt-reference.md).
+
 | File | Số dòng dữ liệu | Nội dung |
 | --- | ---: | --- |
 | `categories.csv` | 2 | `cntt` (Công nghệ thông tin, thứ tự 1), `brcd` (Băng rộng cố định, thứ tự 2) |
@@ -32,7 +34,7 @@ Người dùng xác nhận gói có ID `f66f61f7-a8da-4c40-a1d5-099da062a986` (`
 
 | Bảng | Vai trò trong ứng dụng | Cột |
 | --- | --- | --- |
-| `categories` | Danh mục ở cột thứ nhất, sắp xếp theo `sort_order` | `id` (text, PK), `name` (text), `sort_order` (integer, mặc định 0) |
+| `categories` | Danh mục ở cột thứ nhất, đọc theo `sort_order`; giao diện đưa Công nghệ thông tin xuống dưới Băng rộng cố định | `id` (text, PK), `name` (text), `sort_order` (integer, mặc định 0) |
 | `services` | Dịch vụ ở cột thứ hai, lọc theo `category_id` và sắp xếp theo `sort_order` | `id` (text, PK), `category_id` (text, FK), `name` (text), `sort_order` (integer, mặc định 0) |
 | `plans` | Gói cước dùng để lập bảng giá theo dịch vụ và nhóm gói | `id` (uuid, PK, mặc định `gen_random_uuid()`), `service_id`, `plan_group`, `group_name`, `duration_text`, `note` (text), `price`, `invoice_price` (bigint) |
 
@@ -100,7 +102,7 @@ Nhánh Chữ ký số Token có lựa chọn Gói thường / Gói Pro cho OID, 
 - VNPT-CA đăng ký mới (trừ Device ID): `price` và `invoice_price` đã bao gồm Token. Giá Token gốc ở VAT 10% là 550.000đ cho doanh nghiệp, 165.000đ cho cá nhân/nhân viên; ở VAT 8% lần lượt là 540.000đ và 162.000đ. Tách Token khỏi giá gốc VAT 10%, tính chiết khấu và VAT cho phần dịch vụ rồi cộng nguyên giá Token theo VAT đang chọn; chỉ làm tròn tổng cuối cùng đến đồng. Công thức này áp dụng đồng nhất cho giá thanh toán, giá xuất HĐ và nội dung sao chép. Gia hạn và Device ID không tách/cộng phí Token. Giá Token hiện bằng dòng chữ đỏ ngay trên giá thanh toán từng gói; đã bao gồm trong tổng tiền, không cộng thêm lần nữa.
 - SmartCA: tính hệ số nâng cao (nếu có), VAT và chiết khấu trước khi làm tròn giá cuối cùng đến đồng. Không dùng giá đã làm tròn sau quy đổi VAT để tiếp tục tính chiết khấu. Gói một lần không nhân hệ số nâng cao.
 - SmartCA có lựa chọn "Giá gốc / Áp dụng ưu đãi", mặc định giá gốc. Bấm áp dụng để tự tính mức giảm phù hợp từng gói: 1–3 tháng/dùng một lần 10%, 6 tháng 20%, từ 12 tháng 30%. Phần "Tùy chỉnh ưu đãi" thu gọn chứa điều kiện khách hàng riêng và chọn mức giảm thủ công; mọi mức giảm vẫn bị giới hạn theo chính sách. Điều kiện riêng/mức thủ công có tóm tắt bên ngoài phần thu gọn. Mỗi dòng chỉ ghi "Giảm X%" cạnh giá, công thức và nội dung sao chép dùng cùng mức thực tế; xem [smartca-reference.md](smartca-reference.md).
-- CA Token có chính sách chiết khấu riêng theo số chữ ký số trên 1 hợp đồng: dưới 100 tối đa 50%, từ 100 trở lên tối đa 60%, chỉ giảm phí dịch vụ. Chọn quy mô hợp đồng và mức chiết khấu bước 1%; tự hạ mức vượt trần khi đổi quy mô. Ngoài phân cấp cần đề xuất qua Phòng Điều hành gửi Tổng Công ty xem xét. Giá trong bảng và nội dung sao chép vẫn là giá cho 1 chữ ký số. Chính sách CA Token độc lập với SmartCA; xem [vnptca-reference.md](vnptca-reference.md).
+- CA Token có chính sách chiết khấu riêng theo số chữ ký số trên 1 hợp đồng: dưới 100 tối đa 50%, từ 100 trở lên tối đa 60%, chỉ giảm phí dịch vụ. Chọn quy mô hợp đồng và mức chiết khấu bước 5%; tự hạ mức vượt trần khi đổi quy mô. Ngoài phân cấp cần đề xuất qua Phòng Điều hành gửi Tổng Công ty xem xét. Giá trong bảng và nội dung sao chép vẫn là giá cho 1 chữ ký số. Chính sách CA Token độc lập với SmartCA; xem [vnptca-reference.md](vnptca-reference.md).
 - BHXH phân biệt địa bàn: Hà Nội/Đà Nẵng/TP.HCM tối đa 65% độc lập, 55% tích hợp; các địa bàn còn lại tối đa 50%/45%. Trần tính chung các khoản ưu đãi và thù lao đại lý theo chính sách. Mặc định địa bàn khác, giảm 0%; tự giới hạn khi đổi địa bàn hoặc loại gói. Chỉ chiết khấu phí dịch vụ, cộng nguyên Token cho tích hợp đăng ký mới; đổi VAT và chiết khấu trước khi làm tròn kết quả cuối. Xem [bhxh-reference.md](bhxh-reference.md).
 - Các dịch vụ CNTT (Chữ ký số Token/SmartCA, BHXH, Invoice/TVAN/Inbot/POS, eContract/TSA) mặc định VAT 8% khi mở hoặc chọn lại dịch vụ; vẫn chọn được VAT 10% khi cần. Đây là cấu hình mặc định của giao diện theo yêu cầu người dùng.
 - Invoice, Inbot và eContract: coi `price` là giá chưa VAT, sau đó tính chiết khấu, VAT và các khoản cộng thêm theo từng dịch vụ.
