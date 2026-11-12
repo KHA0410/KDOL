@@ -19,6 +19,10 @@
     <script src="camera-data.js"></script>
     <script src="vnptca-data.js"></script>
     <script src="bhxh-data.js"></script>
+    <script src="invoice-data.js"></script>
+    <script src="inbot-data.js"></script>
+    <script src="pos-data.js"></script>
+    <script src="econtract-data.js"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-gray-100 h-screen flex flex-col font-sans">
@@ -152,16 +156,19 @@
                             <table class="min-w-full divide-y divide-gray-300">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th class="kdol-table-heading kdol-table-heading--label text-left w-1/3">Thời gian</th>
-                                        <th v-if="activeVnptCaTab === 'doanhnghiep'" class="kdol-table-heading text-right w-1/3">Giá xuất HĐ</th>
-                                        <th class="kdol-table-heading text-right" :class="activeVnptCaTab === 'doanhnghiep' ? 'w-1/3' : 'w-2/3'">
+                                        <th class="kdol-table-heading kdol-table-heading--label text-left">Thời gian</th>
+                                        <th v-if="vnptCaTokenBasePrice > 0" class="kdol-table-heading text-right">
+                                            Giá dịch vụ
+                                            <span class="block text-xs font-normal">VAT {{ vatRate }}%</span>
+                                        </th>
+                                        <th class="kdol-table-heading text-right">
                                             {{ activeVnptCaTab === 'doanhnghiep' ? 'Giá thanh toán' : 'Tổng gói cước' }}
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200 bg-white">
                                     <tr v-if="currentVnptCaPlans.length === 0">
-                                        <td :colspan="activeVnptCaTab === 'doanhnghiep' ? 3 : 2" class="kdol-empty-state">
+                                        <td :colspan="vnptCaTokenBasePrice > 0 ? 3 : 2" class="kdol-empty-state">
                                             Chưa có dữ liệu cho tùy chọn này.
                                         </td>
                                     </tr>
@@ -170,9 +177,9 @@
                                             <span v-if="vnptCaProProduct" class="block text-xs text-gray-500 mb-1">{{ vnptCaProProduct.name }}</span>
                                             {{ plan.duration_text }} tháng
                                         </td>
-                                        <td v-if="activeVnptCaTab === 'doanhnghiep'" class="whitespace-nowrap px-3 py-3 text-right">
-                                            <div class="text-sm text-gray-400 line-through mb-0.5" v-if="vnptCaDiscount > 0">{{ formatPrice(calculateVnptCaPrice(plan.invoice_price, 0)) }}</div>
-                                            <div class="text-sm font-semibold text-gray-700">{{ formatPrice(calculateVnptCaPrice(plan.invoice_price)) }}</div>
+                                        <td v-if="vnptCaTokenBasePrice > 0" class="whitespace-nowrap px-3 py-3 text-right">
+                                            <div v-if="vnptCaDiscount > 0" class="text-xs text-gray-400 line-through mb-0.5">{{ formatPrice(calculateVnptCaServicePrice(plan.price, 0)) }}</div>
+                                            <div class="text-sm font-semibold" :class="vnptCaDiscount > 0 ? 'text-orange-600' : 'text-gray-700'">{{ formatPrice(calculateVnptCaServicePrice(plan.price)) }}</div>
                                         </td>
                                         <td class="whitespace-nowrap px-3 py-3">
                                             <div class="flex items-center justify-end gap-3">
@@ -417,7 +424,7 @@
                             {id: 'inbot', name: 'VNPT Invoice-Inbot'},
                             {id: 'pos', name: 'VNPT Invoice-POS'}
                         ]" :key="tab.id" 
-                            @click="activeHddtMainTab = tab.id; discountInvoice = 0; discountInvoiceSetup = 0; invoiceMaxAmount = '';"
+                            @click="activeHddtMainTab = tab.id; invoiceDiscountMode = 'none'; invoiceCustomerType = 'quantity'; discountInvoice = 0; discountInvoiceSetup = 0; invoiceMaxAmount = ''; inbotDiscountMode = 'none'; inbotSetupDiscountMode = 'none'; inbotCustomerType = 'quantity'; discountInbot = 0; discountInbotSetup = 0; resetPosOptions();"
                             :class="['flex-1 py-2 text-xs md:text-sm font-semibold rounded-md transition-colors text-center', 
                             activeHddtMainTab === tab.id ? 'bg-vnpt-blue text-white shadow' : 'text-gray-600 hover:text-gray-900']">
                             {{ tab.name }}
@@ -464,11 +471,43 @@
                             </div>
                             
                             <div class="mt-2 pt-3 border-t border-blue-200">
-                                <div class="flex justify-between items-center mb-1">
-                                    <span class="text-sm font-semibold text-gray-700">Chiết khấu cước phần mềm (Tối đa 40%):</span>
-                                    <span class="text-sm font-bold text-orange-600">{{ discountInvoice }}%</span>
+                                <div v-if="isInvoiceDiscountPolicy" class="flex flex-col gap-2">
+                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                        <span class="text-sm font-semibold text-gray-700">Ưu đãi giá gói:</span>
+                                        <div class="kdol-choice-group" role="group" aria-label="Áp dụng ưu đãi Invoice">
+                                            <button type="button" @click="invoiceDiscountMode = 'none'" :aria-pressed="invoiceDiscountMode === 'none'"
+                                                :class="['kdol-choice', invoiceDiscountMode === 'none' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Giá gốc</button>
+                                            <button type="button" @click="invoiceDiscountMode === 'none' && (invoiceDiscountMode = 'auto')" :aria-pressed="invoiceDiscountMode !== 'none'"
+                                                :class="['kdol-choice', invoiceDiscountMode !== 'none' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50']">Áp dụng ưu đãi</button>
+                                        </div>
+                                    </div>
+                                    <p v-if="invoiceDiscountMode !== 'none'" class="text-xs text-gray-600">{{ invoiceDiscountMode === 'custom' ? `Chọn giảm ${discountInvoice}%, tự giới hạn theo từng gói.` : 'Tự áp dụng mức giảm phù hợp theo số hóa đơn.' }}</p>
+                                    <p v-if="invoiceDiscountMode !== 'none' && selectedInvoiceCondition.id !== 'quantity'" class="text-xs font-medium text-vnpt-blue">{{ selectedInvoiceCondition.label }}</p>
+                                    <details v-if="invoiceDiscountMode !== 'none'" class="kdol-invoice-custom">
+                                        <summary>Tùy chỉnh ưu đãi</summary>
+                                        <div class="flex flex-col gap-2 mt-3">
+                                            <label for="invoice-customer-condition" class="text-xs font-semibold text-gray-700">Khách hàng có điều kiện riêng?</label>
+                                            <select id="invoice-customer-condition" v-model="invoiceCustomerType" class="kdol-select">
+                                                <option v-for="condition in invoiceCatalog?.customerConditions || []" :key="condition.id" :value="condition.id">{{ condition.label }}</option>
+                                            </select>
+                                            <div class="kdol-choice-group w-full sm:w-max" role="group" aria-label="Mức giảm Invoice">
+                                                <button type="button" @click="invoiceDiscountMode = 'auto'" :aria-pressed="invoiceDiscountMode === 'auto'"
+                                                    :class="['kdol-choice', invoiceDiscountMode === 'auto' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50']">Tự động</button>
+                                                <button v-for="rate in [0, 10, 20, 30, 40]" :key="rate" type="button" @click="invoiceDiscountMode = 'custom'; discountInvoice = rate"
+                                                    :aria-pressed="invoiceDiscountMode === 'custom' && discountInvoice === rate"
+                                                    :class="['kdol-choice kdol-choice--fluid', invoiceDiscountMode === 'custom' && discountInvoice === rate ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50']">{{ rate }}%</button>
+                                            </div>
+                                            <p class="text-xs text-gray-600">Dưới 5.000 HĐ: tối đa 20%; từ 5.000 đến dưới 10.000: 30%; từ 10.000 trở lên: 40%. Điều kiện khách hàng riêng có thể cho phép mức cao hơn.</p>
+                                        </div>
+                                    </details>
                                 </div>
-                                <input type="range" min="0" max="40" step="1" v-model="discountInvoice" class="kdol-discount-slider">
+                                <template v-else>
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="text-sm font-semibold text-gray-700">Chiết khấu cước phần mềm (Tối đa 40%):</span>
+                                        <span class="text-sm font-bold text-orange-600">{{ discountInvoice }}%</span>
+                                    </div>
+                                    <input type="range" min="0" max="40" step="1" v-model="discountInvoice" class="kdol-discount-slider">
+                                </template>
                                 
                                 <div v-if="activeInvoiceType === 'moi' && activeInvoiceSetupStatus === 'thu'" class="mt-2.5">
                                     <div class="flex justify-between items-center mb-1">
@@ -479,7 +518,6 @@
                                 </div>
 
                                 <div class="bg-white/70 p-2 rounded border border-blue-100 text-xs text-gray-600 mt-2">
-                                    <p><span class="font-semibold text-orange-600">Quy định C.Khấu:</span> Tối đa 20% (< 5k HĐ). Tối đa 30% (5k - <10k HĐ). Tối đa 40% (≥ 10k HĐ / Cạnh tranh).</p>
                                     <p class="mt-0.5"><span class="font-semibold text-vnpt-blue">Cước khởi tạo:</span> 1.000.000đ (chưa VAT) áp dụng khi đăng ký mới phần mềm HĐĐT / Truyền nhận dữ liệu.</p>
                                 </div>
                             </div>
@@ -502,11 +540,15 @@
                                     <tr v-for="plan in currentInvoicePlans" :key="plan.duration_text" class="hover:bg-gray-50 transition-colors">
                                         <td class="py-4 pl-4 pr-3 text-sm font-medium text-gray-900">
                                             {{ plan.duration_text }}
-                                            <div class="text-xs text-gray-500 font-normal mt-1">{{ plan.note }}</div>
+                                            <div v-if="plan.unitPrices" class="text-xs text-gray-500 font-normal mt-1">
+                                                <div>Tạo lập: {{ plan.unitPrices.creation }}đ/Truyền nhận: {{ plan.unitPrices.transmission }}đ</div>
+                                                <div>Đơn giá: {{ plan.unitPrices.creation + plan.unitPrices.transmission }}đ/HĐ</div>
+                                            </div>
+                                            <div v-else class="text-xs text-gray-500 font-normal mt-1">{{ plan.note }}</div>
                                         </td>
                                         <td class="whitespace-nowrap px-3 py-3 text-right">
-                                            <div class="text-sm text-gray-400 line-through mb-0.5" v-if="discountInvoice > 0">{{ formatPrice(plan.price) }}</div>
-                                            <div class="text-sm font-semibold text-gray-700">{{ formatPrice(plan.price * (1 - discountInvoice/100)) }}</div>
+                                            <div class="text-sm text-gray-400 line-through mb-0.5" v-if="getInvoiceDiscount(plan) > 0">{{ formatPrice(plan.price) }}</div>
+                                            <div class="text-sm font-semibold text-gray-700">{{ formatPrice(calculateInvoicePackagePrice(plan)) }}</div>
                                         </td>
                                         <td class="whitespace-nowrap px-3 py-3">
                                             <div class="flex items-center justify-end gap-3">
@@ -517,9 +559,10 @@
                                                     <div v-if="activeInvoiceType === 'moi' && activeInvoiceSetupStatus === 'thu'" class="text-xs text-vnpt-red font-medium mb-0.5">
                                                         + Khởi tạo: {{ formatPrice(calculateInvoiceSetupFee()) }}
                                                     </div>
-                                                    <div class="kdol-price" :class="discountInvoice > 0 ? 'text-orange-600' : 'text-vnpt-blue'">
-                                                        {{ formatPrice(calculateInvoiceTotal(plan.price)) }}
+                                                    <div class="kdol-price" :class="getInvoiceDiscount(plan) > 0 ? 'text-orange-600' : 'text-vnpt-blue'">
+                                                        {{ formatPrice(calculateInvoiceTotal(plan.price, plan)) }}
                                                     </div>
+                                                    <div v-if="isInvoiceDiscountPolicy && getInvoiceDiscount(plan) > 0" class="text-xs text-gray-600 mt-1">Giảm {{ getInvoiceDiscount(plan) }}%</div>
                                                 </div>
                                             </div>
                                         </td>
@@ -535,7 +578,11 @@
                                     <h3 class="text-lg font-bold text-gray-800">
                                         {{ activeInvoiceSubTab === 'invoice_new' ? 'Gói HD_MAX NEW (> 10.000 HĐ)' : 'Gói NT MAX (> 5.000.000 HĐ)' }}
                                     </h3>
-                                    <p class="text-sm text-gray-500">
+                                    <template v-if="activeInvoiceSubTab === 'invoice_new' && invoiceCatalog?.maxUnitPrices">
+                                        <p class="text-xs text-gray-500 mt-1">Tạo lập: {{ invoiceCatalog.maxUnitPrices.creation }}đ/Truyền nhận: {{ invoiceCatalog.maxUnitPrices.transmission }}đ</p>
+                                        <p class="text-xs text-gray-500">Đơn giá: {{ invoiceCatalog.maxUnitPrices.creation + invoiceCatalog.maxUnitPrices.transmission }}đ/HĐ</p>
+                                    </template>
+                                    <p v-else class="text-sm text-gray-500">
                                         Đơn giá: <span class="font-semibold text-vnpt-red">
                                             {{ activeInvoiceSubTab === 'invoice_new' ? '390đ' : '110đ' }}/HĐ
                                         </span> (Chưa VAT)
@@ -553,14 +600,14 @@
                                 <div class="kdol-quote-result">
                                     <div class="flex justify-between mb-2">
                                         <span class="text-sm text-gray-600">Giá trị gói (Chưa VAT):</span>
-                                        <span class="text-sm font-semibold" :class="discountInvoice > 0 ? 'line-through text-gray-400' : 'text-gray-800'">
+                                        <span class="text-sm font-semibold" :class="invoiceMaxDiscount > 0 ? 'line-through text-gray-400' : 'text-gray-800'">
                                             {{ formatPrice(invoiceMaxAmount * (activeInvoiceSubTab === 'invoice_new' ? 390 : 110)) }}
                                         </span>
                                     </div>
-                                    <div v-if="discountInvoice > 0" class="flex justify-between mb-2">
-                                        <span class="text-sm text-orange-600">Sau chiết khấu {{discountInvoice}}%:</span>
+                                    <div v-if="invoiceMaxDiscount > 0" class="flex justify-between mb-2">
+                                        <span class="text-sm text-orange-600">Sau chiết khấu {{ invoiceMaxDiscount }}%:</span>
                                         <span class="text-sm font-semibold text-orange-600">
-                                            {{ formatPrice(invoiceMaxAmount * (activeInvoiceSubTab === 'invoice_new' ? 390 : 110) * (1 - discountInvoice/100)) }}
+                                            {{ formatPrice(invoiceMaxAmount * (activeInvoiceSubTab === 'invoice_new' ? 390 : 110) * (1 - invoiceMaxDiscount/100)) }}
                                         </span>
                                     </div>
                                     <div v-if="activeInvoiceType === 'moi' && activeInvoiceSetupStatus === 'thu'" class="flex justify-between mb-2">
@@ -583,24 +630,7 @@
 
                     <!-- TAB 2: VNPT INVOICE-INBOT (HÓA ĐƠN ĐẦU VÀO - PHÍ KHỞI TẠO 300.000đ) -->
                     <div v-if="activeHddtMainTab === 'inbot'">
-                        <div class="kdol-tabs kdol-hide-scrollbar">
-                            <button v-for="tab in [{id: 'goi', name: 'Các gói Cố định'}, {id: 'max', name: 'Gói MAX (> 10.000 HĐ)'}]" :key="tab.id" 
-                                @click="activeInbotGroup = tab.id; discountInbot = 0; discountInbotSetup = 0;"
-                                :class="['kdol-tab',
-                                activeInbotGroup === tab.id ? 'border-b-2 border-vnpt-blue text-vnpt-blue' : 'text-gray-500 hover:text-gray-700']">
-                                {{ tab.name }}
-                            </button>
-                        </div>
-
                         <div class="kdol-config-panel">
-                            <div v-if="activeInbotGroup === 'max'" class="mb-2">
-                                <label class="block text-sm font-semibold text-gray-800 mb-2">Nhập số lượng hóa đơn (> 10.000):</label>
-                                <div class="flex items-center gap-2">
-                                    <input type="number" v-model="inbotMaxAmount" min="10001" placeholder="Ví dụ: 15000" class="border border-gray-300 rounded px-3 py-2 text-sm w-40 focus:outline-none focus:border-vnpt-blue">
-                                    <span class="text-sm text-gray-600">x 350đ/HĐ</span>
-                                </div>
-                            </div>
-
                             <div class="flex flex-col xl:flex-row justify-between gap-3">
                                 <div class="flex flex-wrap items-center gap-2">
                                     <span class="text-sm font-semibold text-gray-800">Trạng thái:</span>
@@ -610,10 +640,10 @@
                                     </div>
 
                                     <div v-if="activeInbotType === 'moi'" class="flex items-center gap-1.5 ml-0 sm:ml-2">
-                                        <span class="text-xs font-semibold text-gray-700">Khởi tạo (300.000đ):</span>
+                                        <span class="text-xs font-semibold text-gray-700">Khởi tạo ({{ formatPrice(inbotSetupPrice) }}):</span>
                                         <div class="kdol-choice-group">
-                                            <button @click="activeInbotSetupStatus = 'thu'" :class="['kdol-choice kdol-choice--compact', activeInbotSetupStatus === 'thu' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Có thu</button>
-                                            <button @click="activeInbotSetupStatus = 'khong'" :class="['kdol-choice kdol-choice--compact', activeInbotSetupStatus === 'khong' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Miễn phí</button>
+                                            <button type="button" @click="inbotSetupDiscountMode = 'none'" :aria-pressed="inbotSetupDiscountMode === 'none'" :class="['kdol-choice kdol-choice--compact', inbotSetupDiscountMode === 'none' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Giá gốc</button>
+                                            <button type="button" @click="inbotSetupDiscountMode === 'none' && (inbotSetupDiscountMode = 'auto')" :aria-pressed="inbotSetupDiscountMode !== 'none'" :class="['kdol-choice kdol-choice--compact', inbotSetupDiscountMode !== 'none' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50']">Áp dụng ưu đãi</button>
                                         </div>
                                     </div>
                                 </div>
@@ -623,29 +653,43 @@
                                 </div>
                             </div>
                             
-                            <div class="mt-2 pt-3 border-t border-blue-200">
-                                <div class="flex justify-between items-center mb-1">
-                                    <span class="text-sm font-semibold text-gray-700">Mức chiết khấu cước phần mềm Inbot (Tối đa 40%):</span>
-                                    <span class="text-sm font-bold text-orange-600">{{ discountInbot }}%</span>
-                                </div>
-                                <input type="range" min="0" max="40" step="1" v-model="discountInbot" class="kdol-discount-slider">
-                                
-                                <div v-if="activeInbotType === 'moi' && activeInbotSetupStatus === 'thu'" class="mt-2.5">
-                                    <div class="flex justify-between items-center mb-1">
-                                        <span class="text-sm font-semibold text-gray-700">Chiết khấu cước Khởi tạo Inbot (300.000đ):</span>
-                                        <span class="text-sm font-bold text-orange-600">{{ discountInbotSetup }}%</span>
+                            <div class="mt-2 pt-3 border-t border-blue-200 flex flex-col gap-2">
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <span class="text-sm font-semibold text-gray-700">Ưu đãi giá gói:</span>
+                                    <div class="kdol-choice-group" role="group" aria-label="Áp dụng ưu đãi Inbot">
+                                        <button type="button" @click="inbotDiscountMode = 'none'" :aria-pressed="inbotDiscountMode === 'none'" :class="['kdol-choice', inbotDiscountMode === 'none' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Giá gốc</button>
+                                        <button type="button" @click="inbotDiscountMode === 'none' && (inbotDiscountMode = 'auto')" :aria-pressed="inbotDiscountMode !== 'none'" :class="['kdol-choice', inbotDiscountMode !== 'none' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50']">Áp dụng ưu đãi</button>
                                     </div>
-                                    <input type="range" min="0" max="100" step="1" v-model="discountInbotSetup" class="kdol-discount-slider">
                                 </div>
-
-                                <div class="bg-white/70 p-2 rounded border border-blue-100 text-xs text-gray-600 mt-2">
-                                    <p><span class="font-semibold text-orange-600">Quy định C.Khấu:</span> Tối đa 20% (KH thường). Tối đa 30% (Gói 5k-10k HĐ / KH 10-30tr). Tối đa 40% (Gói >10k HĐ / KH >30tr).</p>
-                                    <p class="mt-1"><span class="font-semibold text-vnpt-blue">Phí cài đặt:</span> 300.000đ (chưa VAT) khi đăng ký mới.</p>
-                                </div>
+                                <p v-if="inbotDiscountMode !== 'none'" class="text-xs text-gray-600">{{ inbotDiscountMode === 'custom' ? `Chọn giảm giá gói ${discountInbot}%, tự giới hạn từng gói.` : 'Tự áp dụng mức giảm giá gói theo số hóa đơn.' }}</p>
+                                <p v-if="inbotDiscountMode !== 'none' && selectedInbotCondition.id !== 'quantity'" class="text-xs font-medium text-vnpt-blue">{{ selectedInbotCondition.label }}</p>
+                                <p v-if="activeInbotType === 'moi' && inbotSetupDiscountMode !== 'none'" class="text-xs text-gray-600">{{ inbotSetupDiscountMode === 'custom' ? `Chọn giảm khởi tạo ${discountInbotSetup}%, tự giới hạn theo doanh thu sau giảm giá gói.` : 'Khởi tạo tự giảm 50% hoặc 100% theo doanh thu sau giảm giá gói.' }}</p>
+                                <details v-if="inbotDiscountMode !== 'none' || (activeInbotType === 'moi' && inbotSetupDiscountMode !== 'none')" class="kdol-inbot-custom">
+                                    <summary>Tùy chỉnh ưu đãi</summary>
+                                    <div class="flex flex-col gap-2 mt-3">
+                                        <template v-if="inbotDiscountMode !== 'none'">
+                                            <label for="inbot-customer-condition" class="text-xs font-semibold text-gray-700">Khách hàng có điều kiện riêng?</label>
+                                            <select id="inbot-customer-condition" v-model="inbotCustomerType" class="kdol-select">
+                                                <option v-for="condition in inbotCatalog?.customerConditions || []" :key="condition.id" :value="condition.id">{{ condition.label }}</option>
+                                            </select>
+                                            <div class="kdol-choice-group w-full sm:w-max" role="group" aria-label="Mức giảm giá gói Inbot">
+                                                <button type="button" @click="inbotDiscountMode = 'auto'" :aria-pressed="inbotDiscountMode === 'auto'" :class="['kdol-choice', inbotDiscountMode === 'auto' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50']">Tự động</button>
+                                                <button v-for="rate in [0, 10, 20, 30, 40]" :key="rate" type="button" @click="inbotDiscountMode = 'custom'; discountInbot = rate" :aria-pressed="inbotDiscountMode === 'custom' && discountInbot === rate" :class="['kdol-choice kdol-choice--fluid', inbotDiscountMode === 'custom' && discountInbot === rate ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50']">{{ rate }}%</button>
+                                            </div>
+                                            <p class="text-xs text-gray-600">Dưới 5.000 HĐ: tối đa 20%; từ 5.000 đến dưới 10.000: 30%; từ 10.000 trở lên: 40%. Điều kiện khách hàng riêng có thể cho phép mức cao hơn.</p>
+                                        </template>
+                                        <template v-if="activeInbotType === 'moi' && inbotSetupDiscountMode !== 'none'">
+                                            <label for="inbot-setup-discount" class="text-xs font-semibold text-gray-700">Giảm phí khởi tạo: {{ inbotSetupDiscountMode === 'auto' ? 'Tự động' : `${discountInbotSetup}% (có giới hạn từng gói)` }}</label>
+                                            <button type="button" class="text-xs text-vnpt-blue text-left underline" @click="inbotSetupDiscountMode = 'auto'">Dùng mức tự động</button>
+                                            <input id="inbot-setup-discount" type="range" min="0" max="100" step="1" v-model.number="discountInbotSetup" @input="inbotSetupDiscountMode = 'custom'" class="kdol-discount-slider">
+                                        </template>
+                                        <p class="text-xs text-gray-600">Doanh thu gói sau chiết khấu, chưa VAT: trên 500.000đ được giảm khởi tạo tối đa 100%; từ 500.000đ trở xuống tối đa 50%.</p>
+                                    </div>
+                                </details>
                             </div>
                         </div>
 
-                        <div v-if="activeInbotGroup === 'goi'" class="kdol-table-wrap">
+                        <div class="kdol-table-wrap mb-4">
                             <table class="min-w-full divide-y divide-gray-300">
                                 <thead class="bg-gray-50">
                                     <tr>
@@ -661,8 +705,8 @@
                                             <div class="text-xs text-gray-500 font-normal mt-1">{{ plan.note }}</div>
                                         </td>
                                         <td class="whitespace-nowrap px-3 py-3 text-right">
-                                            <div class="text-sm text-gray-400 line-through mb-0.5" v-if="discountInbot > 0">{{ formatPrice(plan.price) }}</div>
-                                            <div class="text-sm font-semibold text-gray-700">{{ formatPrice(plan.price * (1 - discountInbot/100)) }}</div>
+                                            <div class="text-sm text-gray-400 line-through mb-0.5" v-if="getInbotDiscount(plan) > 0">{{ formatPrice(plan.price) }}</div>
+                                            <div class="text-sm font-semibold text-gray-700">{{ formatPrice(calculateInbotPackagePrice(plan)) }}</div>
                                         </td>
                                         <td class="whitespace-nowrap px-3 py-3">
                                             <div class="flex items-center justify-end gap-3">
@@ -670,12 +714,13 @@
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                                                 </button>
                                                 <div class="text-right">
-                                                    <div v-if="activeInbotType === 'moi' && activeInbotSetupStatus === 'thu'" class="text-xs text-vnpt-red font-medium mb-0.5">
-                                                        + Khởi tạo: {{ formatPrice(calculateInbotSetupFee()) }}
+                                                    <div v-if="activeInbotType === 'moi'" class="text-xs text-vnpt-red font-medium mb-0.5">
+                                                        Khởi tạo: {{ formatPrice(calculateInbotSetupFee(plan)) }}<span v-if="getInbotSetupDiscount(plan) > 0"> (giảm {{ getInbotSetupDiscount(plan) }}%)</span>
                                                     </div>
-                                                    <div class="kdol-price" :class="discountInbot > 0 ? 'text-orange-600' : 'text-vnpt-blue'">
-                                                        {{ formatPrice(calculateInbotTotal(plan.price)) }}
+                                                    <div class="kdol-price" :class="getInbotDiscount(plan) > 0 || getInbotSetupDiscount(plan) > 0 ? 'text-orange-600' : 'text-vnpt-blue'">
+                                                        {{ formatPrice(calculateInbotTotal(plan)) }}
                                                     </div>
+                                                    <div v-if="getInbotDiscount(plan) > 0" class="text-xs text-gray-600 mt-1">Giảm {{ getInbotDiscount(plan) }}% giá gói</div>
                                                 </div>
                                             </div>
                                         </td>
@@ -684,400 +729,334 @@
                             </table>
                         </div>
                         
-                        <div v-if="activeInbotGroup === 'max'" class="bg-white shadow ring-1 ring-black ring-opacity-5 rounded-lg p-6 text-center">
-                            <div v-if="!inbotMaxAmount || inbotMaxAmount < 10001" class="text-gray-500 italic">Vui lòng nhập số lượng hóa đơn lớn hơn 10.000 để tính giá.</div>
+                        <div class="kdol-quote-card">
+                            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                                <div>
+                                    <h3 class="text-lg font-bold text-gray-800">{{ inbotMaxName }}</h3>
+                                    <p class="text-sm text-gray-500">Đơn giá: <span class="font-semibold text-vnpt-red">{{ inbotMaxUnitPrice }}đ/HĐ</span> (chưa VAT)</p>
+                                </div>
+                                <div class="w-full md:w-auto">
+                                    <label for="inbot-max-quantity" class="sr-only">Số hóa đơn Inbot MAX, lớn hơn 10.000</label>
+                                    <input id="inbot-max-quantity" type="number" v-model="inbotMaxAmount" min="10001" step="1" inputmode="numeric" placeholder="Nhập SL > 10.000..." class="kdol-select w-full md:w-48">
+                                </div>
+                            </div>
+                            <div v-if="!inbotMaxPlan" class="text-gray-500 italic">Nhập số lượng hóa đơn là số nguyên lớn hơn 10.000 để tính giá.</div>
                             <div v-else>
-                                <p class="text-lg font-semibold text-gray-800 mb-2">Gói Inbot MAX - {{ new Intl.NumberFormat('vi-VN').format(inbotMaxAmount) }} HĐ</p>
-                                <p class="text-sm text-gray-500 mb-4">Đơn giá: 350đ/HĐ</p>
-                                <div class="bg-gray-50 p-4 rounded inline-block text-left mb-4 min-w-[300px]">
+                                <div class="kdol-quote-result">
                                     <div class="flex justify-between mb-2">
                                         <span class="text-sm text-gray-600">Giá trị gói (Chưa VAT):</span>
-                                        <span class="text-sm font-semibold" :class="discountInbot > 0 ? 'line-through text-gray-400' : 'text-gray-800'">{{ formatPrice(inbotMaxAmount * 350) }}</span>
+                                        <span class="text-sm font-semibold" :class="getInbotDiscount(inbotMaxPlan) > 0 ? 'line-through text-gray-400' : 'text-gray-800'">{{ formatPrice(inbotMaxPlan.price) }}</span>
                                     </div>
-                                    <div v-if="discountInbot > 0" class="flex justify-between mb-2">
-                                        <span class="text-sm text-orange-600">Sau chiết khấu {{discountInbot}}%:</span>
-                                        <span class="text-sm font-semibold text-orange-600">{{ formatPrice(inbotMaxAmount * 350 * (1 - discountInbot/100)) }}</span>
+                                    <div v-if="getInbotDiscount(inbotMaxPlan) > 0" class="flex justify-between mb-2">
+                                        <span class="text-sm text-orange-600">Sau chiết khấu {{ getInbotDiscount(inbotMaxPlan) }}%:</span>
+                                        <span class="text-sm font-semibold text-orange-600">{{ formatPrice(calculateInbotPackagePrice(inbotMaxPlan)) }}</span>
                                     </div>
-                                    <div v-if="activeInbotType === 'moi' && activeInbotSetupStatus === 'thu'" class="flex justify-between mb-2">
-                                        <span class="text-sm text-vnpt-red">Phí khởi tạo (Đã có VAT):</span>
-                                        <span class="text-sm font-semibold text-vnpt-red">{{ formatPrice(calculateInbotSetupFee()) }}</span>
+                                    <div v-if="activeInbotType === 'moi'" class="flex justify-between mb-2">
+                                        <span class="text-sm text-vnpt-red">Phí khởi tạo (đã VAT)<span v-if="getInbotSetupDiscount(inbotMaxPlan) > 0"> · giảm {{ getInbotSetupDiscount(inbotMaxPlan) }}%</span>:</span>
+                                        <span class="text-sm font-semibold text-vnpt-red">{{ formatPrice(calculateInbotSetupFee(inbotMaxPlan)) }}</span>
                                     </div>
                                     <div class="kdol-quote-total">
                                         <span class="font-bold text-gray-800">TỔNG THANH TOÁN:</span>
-                                        <span class="text-xl font-bold text-vnpt-blue">{{ formatPrice(calculateInbotTotal(inbotMaxAmount * 350)) }}</span>
+                                        <span class="text-xl font-bold text-vnpt-blue">{{ formatPrice(calculateInbotTotal(inbotMaxPlan)) }}</span>
                                     </div>
                                 </div>
-                                <div>
-                                    <button @click="executeInbotMaxCopy()" class="kdol-primary-button">Copy Báo Giá</button>
+                                <div class="mt-4 text-right">
+                                    <button @click="executeInbotMaxCopy()" class="kdol-primary-button w-full md:w-auto">Copy Báo Giá MAX</button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- TAB 3: VNPT INVOICE-POS (MÁY TÍNH TIỀN - PHÍ KHỞI TẠO 1.000.000đ) -->
+                    <!-- TAB 3: VNPT INVOICE-POS -->
                     <div v-if="activeHddtMainTab === 'pos'">
                         <div class="kdol-config-panel">
-                            <div class="flex flex-col xl:flex-row justify-between gap-3">
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <span class="text-sm font-semibold text-gray-800">Trạng thái:</span>
-                                    <div class="kdol-choice-group">
-                                        <button @click="activeInvoiceType = 'moi'" :class="['kdol-choice', activeInvoiceType === 'moi' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Đăng ký mới</button>
-                                        <button @click="activeInvoiceType = 'giahan'" :class="['kdol-choice', activeInvoiceType === 'giahan' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Gia hạn</button>
-                                    </div>
-
-                                    <div v-if="activeInvoiceType === 'moi'" class="flex items-center gap-1.5 ml-0 sm:ml-2">
-                                        <span class="text-xs font-semibold text-gray-700">Khởi tạo (1.000.000đ):</span>
-                                        <div class="kdol-choice-group">
-                                            <button @click="activeInvoiceSetupStatus = 'thu'" :class="['kdol-choice kdol-choice--compact', activeInvoiceSetupStatus === 'thu' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Có thu</button>
-                                            <button @click="activeInvoiceSetupStatus = 'khong'" :class="['kdol-choice kdol-choice--compact', activeInvoiceSetupStatus === 'khong' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Miễn phí</button>
-                                        </div>
-                                    </div>
+                            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                                <div class="w-full sm:max-w-md">
+                                    <label for="pos-setup-amount" class="block text-sm font-semibold text-gray-700 mb-2">Phí khởi tạo do đơn vị bán hàng quyết định</label>
+                                    <input id="pos-setup-amount" type="number" min="0" step="1" inputmode="numeric" v-model="posSetupAmount" class="kdol-select" placeholder="Nhập phí khởi tạo chưa VAT" :aria-invalid="posSetupAmount !== '' && posSetupPrice === null" aria-describedby="pos-setup-note">
+                                    <p id="pos-setup-note" class="text-xs text-gray-500 mt-1">Chưa VAT. Có thể sửa hoặc nhập 0 nếu không thu.</p>
                                 </div>
-                                <div class="kdol-choice-group w-max self-start xl:self-end">
+                                <div class="kdol-choice-group w-max">
                                     <button @click="vatRate = 10" :class="['kdol-choice', vatRate === 10 ? 'bg-gray-800 text-white' : 'text-gray-500 hover:bg-gray-50']">VAT 10%</button>
                                     <button @click="vatRate = 8" :class="['kdol-choice', vatRate === 8 ? 'bg-green-600 text-white' : 'text-gray-500 hover:bg-gray-50']">VAT 8%</button>
                                 </div>
                             </div>
-                            
-                            <div class="mt-2 pt-3 border-t border-blue-200">
-                                <div class="flex justify-between items-center mb-1">
-                                    <span class="text-sm font-semibold text-gray-700">Chiết khấu cước phần mềm MTT (Tối đa 40%):</span>
-                                    <span class="text-sm font-bold text-orange-600">{{ discountInvoice }}%</span>
-                                </div>
-                                <input type="range" min="0" max="40" step="1" v-model="discountInvoice" class="kdol-discount-slider">
-                                
-                                <div v-if="activeInvoiceType === 'moi' && activeInvoiceSetupStatus === 'thu'" class="mt-2.5">
-                                    <div class="flex justify-between items-center mb-1">
-                                        <span class="text-sm font-semibold text-gray-700">Chiết khấu cước Khởi tạo (1.000.000đ):</span>
-                                        <span class="text-sm font-bold text-orange-600">{{ discountInvoiceSetup }}%</span>
-                                    </div>
-                                    <input type="range" min="0" max="100" step="1" v-model="discountInvoiceSetup" class="kdol-discount-slider">
-                                </div>
-
-                                <div class="bg-white/70 p-2 rounded border border-blue-100 text-xs text-gray-600 mt-2">
-                                    <p><span class="font-semibold text-orange-600">Quy định cước POS:</span> Cước duy trì dịch vụ: 50.000đ/lần. Phí khởi tạo dịch vụ: 1.000.000đ (chưa VAT).</p>
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <span class="text-sm font-semibold text-gray-700">Ưu đãi giá gói và duy trì:</span>
+                                <div class="kdol-choice-group" role="group" aria-label="Áp dụng ưu đãi POS">
+                                    <button type="button" @click="posDiscountMode = 'none'" :aria-pressed="posDiscountMode === 'none'" :class="['kdol-choice', posDiscountMode === 'none' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Giá gốc</button>
+                                    <button type="button" @click="posDiscountMode === 'none' && (posDiscountMode = 'auto')" :aria-pressed="posDiscountMode !== 'none'" :class="['kdol-choice', posDiscountMode !== 'none' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50']">Áp dụng ưu đãi</button>
                                 </div>
                             </div>
+                            <p class="text-xs text-gray-600">Cước duy trì {{ formatPrice(posMaintenancePrice) }}/lần, chưa VAT.</p>
+                            <p v-if="posDiscountMode === 'auto'" class="text-xs text-gray-600">Tự giảm giá gói và duy trì theo điều kiện từng gói.</p>
+                            <p v-if="posDiscountMode === 'custom'" class="text-xs text-gray-600">Chọn giảm gói {{ discountPosPackage }}%, duy trì {{ discountPosMaintenance }}%; tự giới hạn theo điều kiện.</p>
+                            <p v-if="posDiscountMode !== 'none' && selectedPosCondition.id !== 'quantity'" class="text-xs font-medium text-vnpt-blue">{{ selectedPosCondition.label }}</p>
+                            <details v-if="posDiscountMode !== 'none'" class="kdol-pos-custom">
+                                <summary>Tùy chỉnh ưu đãi</summary>
+                                <div class="flex flex-col gap-2 mt-3">
+                                    <label for="pos-customer-condition" class="text-xs font-semibold text-gray-700">Khách hàng có điều kiện riêng?</label>
+                                    <select id="pos-customer-condition" v-model="posCustomerType" class="kdol-select">
+                                        <option v-for="condition in posCatalog?.customerConditions || []" :key="condition.id" :value="condition.id">{{ condition.label }}</option>
+                                    </select>
+                                    <button type="button" @click="posDiscountMode = 'auto'" class="text-xs text-vnpt-blue text-left underline">Dùng mức tự động</button>
+                                    <label for="pos-package-discount" class="text-xs font-semibold text-gray-700">Giảm giá gói: {{ posDiscountMode === 'auto' ? 'Tự động' : discountPosPackage + '%' }}</label>
+                                    <input id="pos-package-discount" type="range" min="0" max="40" step="1" v-model.number="discountPosPackage" @input="posDiscountMode = 'custom'" class="kdol-discount-slider">
+                                    <label for="pos-maintenance-discount" class="text-xs font-semibold text-gray-700">Giảm duy trì: {{ posDiscountMode === 'auto' ? 'Tự động' : discountPosMaintenance + '%' }}</label>
+                                    <input id="pos-maintenance-discount" type="range" min="0" max="100" step="1" v-model.number="discountPosMaintenance" @input="posDiscountMode = 'custom'" class="kdol-discount-slider">
+                                    <p class="text-xs text-gray-600">Theo số HĐ: đến 10.000 giảm tối đa gói 10% / duy trì 20%; gói 50.000: 30% / 50%; từ 100.000: 40% / 100%. Điều kiện khách hàng riêng có thể cho phép mức cao hơn.</p>
+                                </div>
+                            </details>
                         </div>
 
-                        <!-- BẢNG GIÁ INVOICE POS (MTT) -->
                         <div class="kdol-table-wrap mb-4">
                             <table class="min-w-full divide-y divide-gray-300">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th class="kdol-table-heading kdol-table-heading--label text-left w-1/3">Tên Gói</th>
-                                        <th class="kdol-table-heading text-right w-1/3">Giá gói (Chưa VAT)</th>
-                                        <th class="kdol-table-heading text-right w-1/3">Tổng Tiền (Có VAT)</th>
+                                        <th class="kdol-table-heading kdol-table-heading--label text-left w-1/3">Tên gói</th>
+                                        <th class="kdol-table-heading text-right w-1/3">Giá gói (chưa VAT)</th>
+                                        <th class="kdol-table-heading text-right w-1/3">Tổng tiền (có VAT)</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200 bg-white">
-                                    <tr v-if="currentInvoicePlans.length === 0">
-                                        <td colspan="3" class="kdol-empty-state">Chưa có dữ liệu cho gói POS này.</td>
-                                    </tr>
-                                    <tr v-for="plan in currentInvoicePlans" :key="plan.duration_text" class="hover:bg-gray-50 transition-colors">
+                                    <tr v-for="plan in currentPosPlans" :key="plan.duration_text" class="hover:bg-gray-50 transition-colors">
                                         <td class="py-4 pl-4 pr-3 text-sm font-medium text-gray-900">
                                             {{ plan.duration_text }}
                                             <div class="text-xs text-gray-500 font-normal mt-1">{{ plan.note }}</div>
                                         </td>
                                         <td class="whitespace-nowrap px-3 py-3 text-right">
-                                            <div class="text-sm text-gray-400 line-through mb-0.5" v-if="discountInvoice > 0">{{ formatPrice(plan.price) }}</div>
-                                            <div class="text-sm font-semibold text-gray-700">{{ formatPrice(plan.price * (1 - discountInvoice/100)) }}</div>
+                                            <div v-if="getPosPackageDiscount(plan) > 0" class="text-sm text-gray-400 line-through mb-0.5">{{ formatPrice(plan.price) }}</div>
+                                            <div class="text-sm font-semibold text-gray-700">{{ formatPrice(calculatePosPackagePrice(plan)) }}</div>
+                                            <div v-if="getPosPackageDiscount(plan) > 0" class="text-xs text-gray-500 mt-1">Giảm {{ getPosPackageDiscount(plan) }}%</div>
                                         </td>
-                                        <td class="whitespace-nowrap px-3 py-3">
+                                        <td class="px-3 py-3 text-right">
+                                            <div class="text-xs text-gray-500 mb-0.5">Duy trì: {{ formatPrice(calculatePosMaintenanceFee(plan)) }}<span v-if="getPosMaintenanceDiscount(plan) > 0"> (giảm {{ getPosMaintenanceDiscount(plan) }}%)</span></div>
+                                            <div v-if="posSetupPrice !== null && posSetupPrice > 0" class="text-xs text-vnpt-red mb-0.5">Khởi tạo: {{ formatPrice(posSetupFee) }}</div>
                                             <div class="flex items-center justify-end gap-3">
-                                                <button @click="executeInvoiceCopy(plan)" class="kdol-copy-button" title="Bấm để copy">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                                                <button type="button" @click="executePosCopy(plan)" :disabled="calculatePosTotal(plan) === null" class="kdol-copy-button disabled:opacity-40 disabled:cursor-not-allowed" title="Sao chép báo giá đầy đủ">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 002 2z" /></svg>
                                                 </button>
-                                                <div class="text-right">
-                                                    <div v-if="activeInvoiceType === 'moi' && activeInvoiceSetupStatus === 'thu'" class="text-xs text-vnpt-red font-medium mb-0.5">
-                                                        + Khởi tạo: {{ formatPrice(calculateInvoiceSetupFee()) }}
-                                                    </div>
-                                                    <div class="kdol-price" :class="discountInvoice > 0 ? 'text-orange-600' : 'text-vnpt-blue'">
-                                                        {{ formatPrice(calculateInvoiceTotal(plan.price)) }}
-                                                    </div>
-                                                </div>
+                                                <span v-if="calculatePosTotal(plan) === null" class="text-xs text-gray-500">Chưa nhập phí khởi tạo</span>
+                                                <span v-else class="kdol-price" :class="getPosPackageDiscount(plan) > 0 || getPosMaintenanceDiscount(plan) > 0 ? 'text-orange-600' : 'text-vnpt-blue'">{{ formatPrice(calculatePosTotal(plan)) }}</span>
                                             </div>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
-                        
-                        <!-- GÓI MTT MAX DƯỚI BẢNG CHO INVOICE POS -->
+
                         <div class="kdol-quote-card">
                             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                                 <div>
-                                    <h3 class="text-lg font-bold text-gray-800">
-                                        Gói MTT Max (Từ 500.000 HĐ trở lên)
-                                    </h3>
-                                    <p class="text-sm text-gray-500">
-                                        Đơn giá: <span class="font-semibold text-vnpt-red">100đ/HĐ</span> (Chưa VAT)
-                                    </p>
+                                    <h3 class="text-lg font-bold text-gray-800">{{ posCatalog?.maxName || 'MTT Max' }} (từ 500.000 HĐ trở lên)</h3>
+                                    <p class="text-sm text-gray-500">Đơn giá: <span class="font-semibold text-vnpt-red">{{ posCatalog?.maxUnitPrice ?? 100 }}đ/HĐ</span> (chưa VAT)</p>
                                 </div>
-                                <div class="flex items-center gap-2 w-full md:w-auto">
-                                    <input type="number" v-model="invoiceMaxAmount" 
-                                        min="500000" 
-                                        placeholder="Nhập SL ≥ 500.000..." 
-                                        class="border border-gray-300 rounded px-3 py-2 text-sm w-full md:w-48 focus:outline-none focus:border-vnpt-blue">
+                                <div class="w-full md:w-auto">
+                                    <label for="pos-max-quantity" class="sr-only">Số hóa đơn MTT Max, từ 500.000</label>
+                                    <input id="pos-max-quantity" type="number" min="500000" step="1" inputmode="numeric" v-model="posMaxAmount" placeholder="Nhập SL ≥ 500.000..." class="kdol-select w-full md:w-48">
                                 </div>
                             </div>
-
-                            <div v-if="invoiceMaxAmount && invoiceMaxAmount >= 500000">
-                                <div class="kdol-quote-result">
-                                    <div class="flex justify-between mb-2">
-                                        <span class="text-sm text-gray-600">Giá trị gói (Chưa VAT):</span>
-                                        <span class="text-sm font-semibold" :class="discountInvoice > 0 ? 'line-through text-gray-400' : 'text-gray-800'">
-                                            {{ formatPrice(invoiceMaxAmount * 100) }}
-                                        </span>
-                                    </div>
-                                    <div v-if="discountInvoice > 0" class="flex justify-between mb-2">
-                                        <span class="text-sm text-orange-600">Sau chiết khấu {{discountInvoice}}%:</span>
-                                        <span class="text-sm font-semibold text-orange-600">
-                                            {{ formatPrice(invoiceMaxAmount * 100 * (1 - discountInvoice/100)) }}
-                                        </span>
-                                    </div>
-                                    <div v-if="activeInvoiceType === 'moi' && activeInvoiceSetupStatus === 'thu'" class="flex justify-between mb-2">
-                                        <span class="text-sm text-vnpt-red">Phí khởi tạo (Đã VAT):</span>
-                                        <span class="text-sm font-semibold text-vnpt-red">{{ formatPrice(calculateInvoiceSetupFee()) }}</span>
-                                    </div>
-                                    <div class="kdol-quote-total">
-                                        <span class="font-bold text-gray-800">TỔNG (Đã VAT):</span>
-                                        <span class="text-xl font-bold text-vnpt-blue">
-                                            {{ formatPrice(calculateInvoiceMaxTotal()) }}
-                                        </span>
-                                    </div>
+                            <div v-if="posMaxPlan" class="kdol-quote-result">
+                                <div class="flex justify-between mb-2">
+                                    <span class="text-sm text-gray-600">Giá gói sau giảm {{ getPosPackageDiscount(posMaxPlan) }}% (chưa VAT):</span>
+                                    <span class="text-sm font-semibold">{{ formatPrice(calculatePosPackagePrice(posMaxPlan)) }}</span>
+                                </div>
+                                <div class="flex justify-between mb-2">
+                                    <span class="text-sm text-gray-600">Duy trì (đã VAT)<span v-if="getPosMaintenanceDiscount(posMaxPlan) > 0"> · giảm {{ getPosMaintenanceDiscount(posMaxPlan) }}%</span>:</span>
+                                    <span class="text-sm font-semibold">{{ formatPrice(calculatePosMaintenanceFee(posMaxPlan)) }}</span>
+                                </div>
+                                <div v-if="posSetupFee !== null" class="flex justify-between mb-2">
+                                    <span class="text-sm text-gray-600">Khởi tạo (đã VAT):</span>
+                                    <span class="text-sm font-semibold">{{ formatPrice(posSetupFee) }}</span>
+                                </div>
+                                <div class="kdol-quote-total">
+                                    <span class="font-bold text-gray-800">TỔNG (đã VAT):</span>
+                                    <span v-if="calculatePosTotal(posMaxPlan) === null" class="text-xs text-gray-500">Chưa nhập phí khởi tạo</span>
+                                    <span v-else class="text-xl font-bold text-vnpt-blue">{{ formatPrice(calculatePosTotal(posMaxPlan)) }}</span>
                                 </div>
                                 <div class="mt-4 text-right">
-                                    <button @click="executeInvoiceMaxCopy()" class="kdol-primary-button w-full md:w-auto">Copy Báo Giá Gói MTT Max</button>
+                                    <button type="button" @click="executePosMaxCopy()" :disabled="calculatePosTotal(posMaxPlan) === null" class="kdol-primary-button w-full md:w-auto disabled:opacity-40 disabled:cursor-not-allowed">Copy Báo Giá MTT Max</button>
                                 </div>
                             </div>
+                            <p v-else class="text-sm text-gray-500">Nhập số hóa đơn nguyên từ 500.000 trở lên để tính giá.</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- 4. DỊCH VỤ HỢP ĐỒNG ĐIỆN TỬ -->
-                <div v-else-if="activeService?.id === 'econtract'">
-                    <h2 class="kdol-service-title mb-2">Hợp đồng điện tử (VNPT eContract)</h2>
-                    <p class="text-sm text-gray-600 mb-4">Giải pháp giao kết HĐĐT có chứng thực Trục CeCA - Bộ Công Thương.</p>
-
-                    <div class="kdol-tabs kdol-hide-scrollbar">
-                        <button v-for="tab in [{id: 'econtract_saas', name: 'Phần mềm eContract (SaaS)'}, {id: 'econtract_ceca_tab', name: 'Ký chứng thực TSA CeCA (Tích xanh)'}]" :key="tab.id" 
-                            @click="activeEcontractGroup = tab.id; discountEcontract = 0; discountEcontractSetup = 0; econtractEmaxAmount = '';"
-                            :class="['kdol-tab',
-                            activeEcontractGroup === tab.id ? 'border-b-2 border-vnpt-blue text-vnpt-blue' : 'text-gray-500 hover:text-gray-700']">
-                            {{ tab.name }}
-                        </button>
-                    </div>
-
-                    <div class="kdol-config-panel">
-                        <div v-if="activeEcontractGroup === 'econtract_saas'" class="border-b border-blue-200 pb-3">
-                            <label class="block text-sm font-semibold text-gray-800 mb-2">Dịch vụ cộng thêm (Add-on):</label>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                                <div class="bg-white p-2.5 rounded border flex items-center justify-between gap-2 shadow-sm">
-                                    <div>
-                                        <div class="text-xs font-semibold text-gray-800">SMS OTP (800đ/tin)</div>
-                                        <div class="text-[11px] text-gray-500">Brandname V.eContract</div>
-                                    </div>
-                                    <input type="number" min="0" v-model.number="addonSmsCount" placeholder="SL tin" class="w-24 text-right border rounded px-2 py-1 text-xs focus:outline-none focus:border-vnpt-blue">
-                                </div>
-                                <div class="bg-white p-2.5 rounded border flex items-center justify-between gap-2 shadow-sm">
-                                    <div>
-                                        <div class="text-xs font-semibold text-gray-800">VNPT eKYC (3.000đ/lượt)</div>
-                                        <div class="text-[11px] text-gray-500">OCR & Face matching</div>
-                                    </div>
-                                    <input type="number" min="0" v-model.number="addonEkycCount" placeholder="SL lượt" class="w-24 text-right border rounded px-2 py-1 text-xs focus:outline-none focus:border-vnpt-blue">
-                                </div>
-                                <div class="bg-white p-2.5 rounded border flex items-center justify-between gap-2 shadow-sm">
-                                    <div>
-                                        <div class="text-xs font-semibold text-gray-800">+250MB lưu trữ (90k)</div>
-                                        <div class="text-[11px] text-gray-500">Thời hạn 10 năm</div>
-                                    </div>
-                                    <input type="number" min="0" v-model.number="addonStorageCount" placeholder="Số gói" class="w-24 text-right border rounded px-2 py-1 text-xs focus:outline-none focus:border-vnpt-blue">
-                                </div>
-                                <div class="bg-white p-2.5 rounded border flex items-center justify-between gap-2 shadow-sm">
-                                    <div>
-                                        <div class="text-xs font-semibold text-green-700">Kèm TSA CeCA (Tích xanh)</div>
-                                        <div class="text-[11px] text-gray-500">Dấu thời gian Trục CeCA</div>
-                                    </div>
-                                    <select v-model="addonCecaPackage" class="border rounded px-2 py-1 text-xs focus:outline-none focus:border-vnpt-blue max-w-[130px]">
-                                        <option value="none">Không kèm</option>
-                                        <option value="5000">5.000 lượt (4.5tr)</option>
-                                        <option value="10000">10.000 lượt (8tr)</option>
-                                        <option value="20000">20.000 lượt (14tr)</option>
-                                        <option value="50000">50.000 lượt (30tr)</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div v-if="totalEcontractAddonNoVat > 0" class="text-right text-xs font-semibold text-vnpt-blue mt-2">
-                                Tổng Add-on (Chưa VAT): {{ formatPrice(totalEcontractAddonNoVat) }}
-                            </div>
+                <section v-else-if="activeService?.id === 'econtract'" aria-labelledby="econtract-title">
+                    <h2 id="econtract-title" class="kdol-service-title mb-3">Hợp đồng điện tử VNPT eContract</h2>
+                    <template v-if="econtractCatalog">
+                        <div class="kdol-tabs kdol-hide-scrollbar">
+                            <button v-for="mode in [{ id: 'econtract_saas', name: 'SaaS · Hạ tầng VNPT' }, { id: 'econtract_onprem', name: 'OnPremise · Hệ thống khách hàng' }, { id: 'econtract_ceca_tab', name: 'Ký dấu thời gian TSA CeCA' }]" :key="mode.id" type="button" @click="selectEcontractMode(mode.id)" :aria-pressed="activeEcontractGroup === mode.id" :class="['kdol-tab', activeEcontractGroup === mode.id ? 'border-b-2 border-vnpt-blue text-vnpt-blue' : 'text-gray-500 hover:text-gray-700']">{{ mode.name }}</button>
                         </div>
-
-                        <div v-if="activeEcontractGroup === 'econtract_ceca_tab'" class="border-b border-blue-200 pb-3">
-                            <label class="block text-sm font-semibold text-gray-800 mb-2">Chọn hình thức gói TSA CeCA:</label>
-                            <div class="flex flex-wrap items-center gap-2">
+                        <div class="kdol-config-panel">
+                            <div class="flex flex-wrap items-start justify-between gap-3">
+                                <div v-if="isEcontractPlatform" class="text-sm text-gray-700">
+                                    <p class="font-semibold">{{ activeEcontractGroup === 'econtract_onprem' ? 'Cước triển khai' : 'Cước khởi tạo' }}: {{ formatPrice(econtractSetupBase) }} <span class="font-normal text-xs">(chưa VAT)</span></p>
+                                    <p v-if="activeEcontractGroup === 'econtract_onprem'" class="text-xs text-gray-500 mt-1">Cước sử dụng bằng 50% SaaS, chưa kèm lưu trữ; chưa gồm chi phí/tối ưu hệ thống khác theo yêu cầu.</p>
+                                </div>
+                                <span v-else class="text-sm font-semibold text-gray-700">Ký dấu thời gian TSA CeCA</span>
                                 <div class="kdol-choice-group w-max">
-                                    <button @click="activeCecaType = 'goi'" :class="['kdol-choice', activeCecaType === 'goi' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Gói cố định</button>
-                                    <button @click="activeCecaType = 'min'" :class="['kdol-choice', activeCecaType === 'min' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Gói Min (< 5.000)</button>
-                                    <button @click="activeCecaType = 'max'" :class="['kdol-choice', activeCecaType === 'max' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Gói Max (> 50.000)</button>
-                                </div>
-                                <div v-if="activeCecaType !== 'goi'" class="flex items-center gap-2 mt-2 sm:mt-0">
-                                    <input type="number" v-model.number="cecaCustomAmount" :placeholder="activeCecaType === 'min' ? 'Nhập SL < 5.000' : 'Nhập SL > 50.000'" class="border rounded px-3 py-1.5 text-xs w-36 focus:outline-none focus:border-vnpt-blue">
-                                    <span class="text-xs font-semibold text-vnpt-red">x {{ activeCecaType === 'min' ? '1.000đ' : '500đ' }}/lượt</span>
+                                    <button @click="vatRate = 10" :class="['kdol-choice', vatRate === 10 ? 'bg-gray-800 text-white' : 'text-gray-500 hover:bg-gray-50']">VAT 10%</button>
+                                    <button @click="vatRate = 8" :class="['kdol-choice', vatRate === 8 ? 'bg-green-600 text-white' : 'text-gray-500 hover:bg-gray-50']">VAT 8%</button>
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="flex flex-col xl:flex-row justify-between gap-3">
-                            <div class="flex items-center gap-2" v-if="activeEcontractGroup === 'econtract_saas'">
-                                <span class="text-sm font-semibold text-gray-800">Cước khởi tạo (2.000.000đ):</span>
-                                <div class="kdol-choice-group">
-                                    <button @click="activeEcontractSetupStatus = 'moi'" :class="['kdol-choice', activeEcontractSetupStatus === 'moi' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Có thu</button>
-                                    <button @click="activeEcontractSetupStatus = 'khong'" :class="['kdol-choice', activeEcontractSetupStatus === 'khong' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Miễn phí</button>
+                            <template v-if="isEcontractPlatform">
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <span class="text-sm font-semibold text-gray-700">{{ activeEcontractGroup === 'econtract_onprem' ? 'Ưu đãi cước triển khai:' : 'Ưu đãi dịch vụ và khởi tạo:' }}</span>
+                                    <div class="kdol-choice-group" role="group" aria-label="Áp dụng ưu đãi eContract">
+                                        <button type="button" @click="econtractDiscountMode = 'none'" :aria-pressed="econtractDiscountMode === 'none'" :class="['kdol-choice', econtractDiscountMode === 'none' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Giá gốc</button>
+                                        <button type="button" @click="econtractDiscountMode === 'none' && (econtractDiscountMode = 'auto')" :aria-pressed="econtractDiscountMode !== 'none'" :class="['kdol-choice', econtractDiscountMode !== 'none' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50']">Áp dụng ưu đãi</button>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="kdol-choice-group w-max self-start xl:self-end">
-                                <button @click="vatRate = 10" :class="['kdol-choice', vatRate === 10 ? 'bg-gray-800 text-white' : 'text-gray-500 hover:bg-gray-50']">VAT 10%</button>
-                                <button @click="vatRate = 8" :class="['kdol-choice', vatRate === 8 ? 'bg-green-600 text-white' : 'text-gray-500 hover:bg-gray-50']">VAT 8%</button>
-                            </div>
-                        </div>
-                        
-                        <div class="mt-2 pt-3 border-t border-blue-200">
-                            <div class="mb-3">
-                                <div class="flex justify-between items-center mb-1">
-                                    <span class="text-sm font-semibold text-gray-700">Chiết khấu cước phần mềm / gói CeCA (Tối đa 30%):</span>
-                                    <span class="text-sm font-bold text-orange-600">{{ discountEcontract }}%</span>
-                                </div>
-                                <input type="range" min="0" max="30" step="1" v-model.number="discountEcontract" class="kdol-discount-slider">
-                            </div>
-                            
-                            <div v-if="activeEcontractGroup === 'econtract_saas' && activeEcontractSetupStatus === 'moi'">
-                                <div class="flex justify-between items-center mb-1">
-                                    <span class="text-sm font-semibold text-gray-700">Chiết khấu cước Khởi tạo (Tối đa 100%):</span>
-                                    <span class="text-sm font-bold text-orange-600">{{ discountEcontractSetup }}%</span>
-                                </div>
-                                <input type="range" min="0" max="100" step="1" v-model.number="discountEcontractSetup" class="kdol-discount-slider">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div v-if="activeEcontractGroup === 'econtract_saas' || (activeEcontractGroup === 'econtract_ceca_tab' && activeCecaType === 'goi')" class="kdol-table-wrap mb-4">
-                        <table class="min-w-full divide-y divide-gray-300">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="kdol-table-heading kdol-table-heading--label text-left w-1/3">Tên Gói</th>
-                                    <th class="kdol-table-heading text-right w-1/3">Giá gói (Chưa VAT)</th>
-                                    <th class="kdol-table-heading text-right w-1/3">Tổng Tiền (Có VAT)</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200 bg-white">
-                                <tr v-for="plan in currentEcontractPlans" :key="plan.duration_text" class="hover:bg-gray-50 transition-colors">
-                                    <td class="py-4 pl-4 pr-3 text-sm font-medium text-gray-900">
-                                        {{ plan.duration_text }}
-                                        <div class="text-xs text-gray-500 font-normal mt-1">{{ plan.note }}</div>
-                                    </td>
-                                    <td class="whitespace-nowrap px-3 py-3 text-right">
-                                        <div class="text-sm text-gray-400 line-through mb-0.5" v-if="discountEcontract > 0">{{ formatPrice(plan.price) }}</div>
-                                        <div class="text-sm font-semibold text-gray-700">{{ formatPrice(plan.price * (1 - discountEcontract/100)) }}</div>
-                                    </td>
-                                    <td class="whitespace-nowrap px-3 py-3">
-                                        <div class="flex items-center justify-end gap-3">
-                                            <button @click="executeEcontractCopy(plan)" class="kdol-copy-button" title="Bấm để copy">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                                            </button>
-                                            <div class="text-right">
-                                                <div v-if="activeEcontractGroup === 'econtract_saas' && activeEcontractSetupStatus === 'moi'" class="text-xs text-vnpt-red font-medium mb-0.5">+ Khởi tạo: {{ formatPrice(calculateEcontractSetupFee()) }}</div>
-                                                <div v-if="activeEcontractGroup === 'econtract_saas' && totalEcontractAddonNoVat > 0" class="text-xs text-green-700 font-medium mb-0.5">+ Addon: {{ formatPrice(totalEcontractAddonWithVat) }}</div>
-                                                <div class="kdol-price" :class="discountEcontract > 0 ? 'text-orange-600' : 'text-vnpt-blue'">
-                                                    {{ formatPrice(calculateEcontractTotal(plan.price)) }}
-                                                </div>
-                                            </div>
+                                <p v-if="econtractDiscountMode !== 'none' && selectedEcontractCondition.id !== 'quantity'" class="text-xs font-medium text-vnpt-blue">{{ selectedEcontractCondition.label }}</p>
+                                <p v-if="econtractDiscountMode === 'custom'" class="text-xs text-gray-600">Mức chọn: dịch vụ {{ activeEcontractGroup === 'econtract_onprem' ? 0 : discountEcontract }}%, khởi tạo/triển khai {{ discountEcontractSetup }}%; tự giới hạn theo từng gói.</p>
+                                <p v-if="econtractDiscountMode === 'auto' && activeEcontractGroup === 'econtract_onprem' && selectedEcontractCondition.id === 'quantity'" class="text-xs text-gray-600">Chọn điều kiện khách hàng trong Tùy chỉnh ưu đãi để xét giảm cước triển khai.</p>
+                                <details v-if="econtractDiscountMode !== 'none'" class="kdol-econtract-custom">
+                                    <summary>Tùy chỉnh ưu đãi</summary>
+                                    <div class="flex flex-col gap-2 mt-3">
+                                        <label for="econtract-customer-condition" class="text-xs font-semibold text-gray-700">Điều kiện khách hàng</label>
+                                        <select id="econtract-customer-condition" v-model="econtractCustomerType" class="kdol-select">
+                                            <option v-for="condition in econtractCatalog.customerConditions" :key="condition.id" :value="condition.id">{{ condition.id === 'quantity' ? 'Không có điều kiện khách hàng riêng' : condition.label }}</option>
+                                        </select>
+                                        <button type="button" @click="econtractDiscountMode = 'auto'" class="text-xs text-vnpt-blue text-left underline">Dùng mức tự động</button>
+                                        <template v-if="activeEcontractGroup === 'econtract_saas'">
+                                            <label for="econtract-service-discount" class="text-xs font-semibold text-gray-700">Giảm dịch vụ: {{ econtractDiscountMode === 'auto' ? 'Tự động' : discountEcontract + '%' }}</label>
+                                            <input id="econtract-service-discount" type="range" min="0" max="30" step="1" v-model.number="discountEcontract" @input="econtractDiscountMode = 'custom'" class="kdol-discount-slider">
+                                        </template>
+                                        <label for="econtract-setup-discount" class="text-xs font-semibold text-gray-700">Giảm khởi tạo/triển khai: {{ econtractDiscountMode === 'auto' ? 'Tự động' : discountEcontractSetup + '%' }}</label>
+                                        <input id="econtract-setup-discount" type="range" min="0" :max="activeEcontractGroup === 'econtract_onprem' ? selectedEcontractCondition.onpremSetupDiscount : 100" step="1" v-model.number="discountEcontractSetup" @input="econtractDiscountMode = 'custom'" class="kdol-discount-slider">
+                                        <p v-if="activeEcontractGroup === 'econtract_saas'" class="text-xs text-gray-600">Theo số hợp đồng: dưới 2.000 giảm tối đa dịch vụ/khởi tạo 10%/10%; từ 2.000: 20%/50%; từ 5.000: 30%/100%. Điều kiện khách hàng riêng có thể cho phép mức cao hơn.</p>
+                                        <p v-else class="text-xs text-gray-600">Cước triển khai giảm tối đa 10%/20%/30% theo điều kiện khách hàng. Cước sử dụng tính bằng 50% giá SaaS đã ban hành.</p>
+                                    </div>
+                                </details>
+                                <details class="kdol-econtract-addons">
+                                    <summary>Dịch vụ cộng thêm</summary>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                                        <div class="bg-white border rounded p-3 flex flex-col gap-2">
+                                            <label for="econtract-sms-count" class="text-xs font-semibold text-gray-800">SMS OTP · {{ econtractCatalog.smsUnitPrice }}đ/tin với Brandname chung</label>
+                                            <select v-model="econtractSmsBrand" class="kdol-select" aria-label="Loại SMS Brandname">
+                                                <option value="shared">Brandname chung VNPT eContract / V.eContract</option>
+                                                <option value="private">Brandname riêng của doanh nghiệp</option>
+                                            </select>
+                                            <input id="econtract-sms-count" type="number" min="0" step="1" inputmode="numeric" v-model.number="addonSmsCount" class="kdol-select" placeholder="Số tin nhắn">
+                                            <template v-if="econtractSmsBrand === 'private'">
+                                                <label for="econtract-private-sms-price" class="text-xs text-gray-600">Đơn giá theo chính sách SMS Brandname riêng, chưa VAT</label>
+                                                <input id="econtract-private-sms-price" type="number" min="0" step="1" inputmode="numeric" v-model="econtractPrivateSmsPrice" class="kdol-select" placeholder="Nhập đơn giá thực tế/tin">
+                                            </template>
                                         </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div v-if="activeEcontractGroup === 'econtract_saas'" class="kdol-quote-card">
-                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-3">
-                            <div>
-                                <h3 class="text-lg font-bold text-gray-800">Gói Emax (Số lượng ≥ 10.000 Hợp đồng)</h3>
-                                <p class="text-sm text-gray-500">Đơn giá: <span class="font-semibold text-vnpt-red">5.000đ/HĐ</span> (Bao gồm 5MB lưu trữ/HĐ, chưa VAT)</p>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <input type="number" min="10000" v-model.number="econtractEmaxAmount" placeholder="Nhập số lượng HĐ..." class="border border-gray-300 rounded px-3 py-2 text-sm w-full md:w-48 focus:outline-none focus:border-vnpt-blue">
-                            </div>
+                                        <div class="bg-white border rounded p-3 flex flex-col gap-2">
+                                            <label for="econtract-ekyc-count" class="text-xs font-semibold text-gray-800">VNPT eKYC · {{ formatPrice(econtractCatalog.ekycUnitPrice) }}/lượt</label>
+                                            <p class="text-xs text-gray-500">OCR và Face Matching. Tính cả lượt không thành công.</p>
+                                            <input id="econtract-ekyc-count" type="number" min="0" step="1" inputmode="numeric" v-model.number="addonEkycCount" class="kdol-select" placeholder="Số lượt ký">
+                                        </div>
+                                        <div class="bg-white border rounded p-3 flex flex-col gap-2">
+                                            <label for="econtract-storage-count" class="text-xs font-semibold text-gray-800">Thuê thêm {{ econtractCatalog.storageUnitMB }} MB · {{ formatPrice(econtractCatalog.storageUnitPrice) }}/gói</label>
+                                            <p class="text-xs text-gray-500">Lưu trữ {{ econtractCatalog.storageYears }} năm.</p>
+                                            <input id="econtract-storage-count" type="number" min="0" step="1" inputmode="numeric" v-model.number="addonStorageCount" class="kdol-select" placeholder="Số gói lưu trữ">
+                                        </div>
+                                        <div class="bg-white border rounded p-3 flex flex-col gap-2">
+                                            <label for="econtract-ceca-addon" class="text-xs font-semibold text-gray-800">Kèm TSA CeCA</label>
+                                            <select id="econtract-ceca-addon" v-model="addonCecaPackage" class="kdol-select">
+                                                <option v-for="option in econtractCecaAddonOptions" :key="option.id" :value="option.id">{{ option.label }}{{ option.price ? ' · ' + formatPrice(option.price) : '' }}</option>
+                                            </select>
+                                            <template v-if="addonCecaPackage !== 'none'">
+                                                <template v-if="['min', 'max'].includes(addonCecaPackage)">
+                                                    <label for="econtract-tsa-quantity" class="text-xs text-gray-600">Số lượt · {{ addonCecaPackage === 'min' ? '1.000đ' : '500đ' }}/lượt (chưa VAT)</label>
+                                                    <input id="econtract-tsa-quantity" type="number" :min="addonCecaPackage === 'min' ? 1 : 50001" :max="addonCecaPackage === 'min' ? 4999 : undefined" step="1" inputmode="numeric" v-model.number="addonCecaAmount" class="kdol-select">
+                                                </template>
+                                                <label for="econtract-tsa-discount" class="text-xs font-semibold text-gray-700">Giảm TSA: {{ tsaDiscount }}% · tối đa {{ tsaDiscountLimit }}%</label>
+                                                <input id="econtract-tsa-discount" type="range" min="0" :max="tsaDiscountLimit" step="1" v-model.number="discountTsa" class="kdol-discount-slider">
+                                                <p v-if="econtractTsaAddonPlan" class="text-xs font-semibold text-vnpt-blue">TSA sau giảm: {{ formatPrice(econtractTsaAddonPrice) }} (chưa VAT)</p>
+                                            </template>
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-2">Các đơn giá cộng thêm chưa VAT. Hỗ trợ ký bằng USB Token VNPT-CA hoặc ứng dụng VNPT SmartCA; cước chứng thư/chữ ký số tra riêng tại dịch vụ Chữ ký số.</p>
+                                </details>
+                                <p v-if="totalEcontractAddonNoVat > 0" class="text-xs font-semibold text-vnpt-blue">Add-on đã chọn: {{ formatPrice(totalEcontractAddonNoVat) }} (chưa VAT)</p>
+                                <p v-if="econtractTsaAddonPlan" class="text-xs text-gray-600">{{ econtractTsaAddonPlan.duration_text }} · Giảm TSA {{ tsaDiscount }}% (tối đa {{ tsaDiscountLimit }}%).</p>
+                                <p v-if="econtractAddonError || totalEcontractAddonNoVat === null" class="text-xs text-vnpt-red" role="status">{{ econtractAddonError || 'Kiểm tra lại số lượng và giá trị add-on.' }}</p>
+                            </template>
+                            <template v-else>
+                                <label for="ceca-discount" class="text-xs font-semibold text-gray-700">Giảm TSA: {{ tsaDiscount }}% · tối đa {{ tsaDiscountLimit }}%</label>
+                                <input id="ceca-discount" type="range" min="0" :max="tsaDiscountLimit" step="1" v-model.number="discountTsa" class="kdol-discount-slider">
+                            </template>
+                            <p v-if="!isEcontractPlatform || addonCecaPackage !== 'none'" class="text-xs text-gray-500">TSA: giá chưa VAT, chiết khấu tối đa 30%. Trường hợp vượt mức cần gửi đề xuất kèm cơ sở về Phòng Điều hành để trình Ban KHDN xem xét.</p>
                         </div>
 
-                        <div v-if="econtractEmaxAmount && econtractEmaxAmount >= 10000" class="kdol-quote-result">
-                            <div class="flex justify-between mb-2">
-                                <span class="text-sm text-gray-600">Giá trị phần mềm (Chưa VAT):</span>
-                                <span class="text-sm font-semibold" :class="discountEcontract > 0 ? 'line-through text-gray-400' : 'text-gray-800'">
-                                    {{ formatPrice(econtractEmaxAmount * 5000) }}
-                                </span>
-                            </div>
-                            <div v-if="discountEcontract > 0" class="flex justify-between mb-2">
-                                <span class="text-sm text-orange-600">Sau chiết khấu {{discountEcontract}}%:</span>
-                                <span class="text-sm font-semibold text-orange-600">
-                                    {{ formatPrice(econtractEmaxAmount * 5000 * (1 - discountEcontract/100)) }}
-                                </span>
-                            </div>
-                            <div v-if="activeEcontractSetupStatus === 'moi'" class="flex justify-between mb-2">
-                                <span class="text-sm text-vnpt-red">Phí khởi tạo (Đã VAT):</span>
-                                <span class="text-sm font-semibold text-vnpt-red">{{ formatPrice(calculateEcontractSetupFee()) }}</span>
-                            </div>
-                            <div v-if="totalEcontractAddonNoVat > 0" class="flex justify-between mb-2">
-                                <span class="text-sm text-green-700">Phí Add-on (Đã VAT):</span>
-                                <span class="text-sm font-semibold text-green-700">{{ formatPrice(totalEcontractAddonWithVat) }}</span>
-                            </div>
-                            <div class="kdol-quote-total">
-                                <span class="font-bold text-gray-800">TỔNG THANH TOÁN:</span>
-                                <span class="text-xl font-bold text-vnpt-blue">
-                                    {{ formatPrice(calculateEcontractEmaxTotal()) }}
-                                </span>
-                            </div>
-                            <div class="mt-4 text-right">
-                                <button @click="executeEcontractEmaxCopy()" class="kdol-primary-button w-full md:w-auto">Copy Báo Giá Gói Emax</button>
-                            </div>
+                        <div class="kdol-table-wrap mb-4">
+                            <table class="min-w-full divide-y divide-gray-300">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="kdol-table-heading kdol-table-heading--label text-left w-1/3">Tên gói</th>
+                                        <th class="kdol-table-heading text-right w-1/3">Giá dịch vụ (chưa VAT)</th>
+                                        <th class="kdol-table-heading text-right w-1/3">Tổng tiền (có VAT)</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200 bg-white">
+                                    <tr v-if="!currentEcontractPlans.length"><td colspan="3" class="kdol-empty-state">Chưa có dữ liệu cho gói này.</td></tr>
+                                    <tr v-for="plan in currentEcontractPlans" :key="plan.duration_text" class="hover:bg-gray-50 transition-colors">
+                                        <td class="py-4 pl-4 pr-3 text-sm font-medium text-gray-900">
+                                            {{ plan.duration_text }}
+                                            <div class="text-xs text-gray-500 font-normal mt-1">{{ plan.note }}</div>
+                                            <template v-if="plan.tsaType">
+                                                <label :for="'tsa-quantity-' + plan.tsaType" class="sr-only">Số lượt {{ plan.duration_text }}</label>
+                                                <input :id="'tsa-quantity-' + plan.tsaType" type="number" :min="plan.tsaType === 'min' ? 1 : 50001" :max="plan.tsaType === 'min' ? 4999 : undefined" step="1" inputmode="numeric" v-model.number="tsaQuantities[plan.tsaType]" class="kdol-select mt-2 w-full sm:w-44" placeholder="Nhập số lượt">
+                                                <p v-if="plan.price === null && tsaQuantities[plan.tsaType] !== ''" class="text-xs text-vnpt-red font-normal mt-1" role="status">{{ plan.tsaType === 'min' ? 'Nhập số nguyên 1–4.999.' : 'Nhập số nguyên trên 50.000.' }}</p>
+                                            </template>
+                                        </td>
+                                        <td class="whitespace-nowrap px-3 py-3 text-right">
+                                            <template v-if="plan.price !== null">
+                                            <div v-if="getEcontractServiceDiscount(plan) > 0" class="text-xs text-gray-400 line-through">{{ formatPrice(plan.price) }}</div>
+                                            <div class="text-sm font-semibold text-gray-700">{{ formatPrice(calculateEcontractPackagePrice(plan)) }}</div>
+                                            <div v-if="getEcontractServiceDiscount(plan) > 0" class="text-xs text-gray-500">Giảm {{ getEcontractServiceDiscount(plan) }}%</div>
+                                            </template>
+                                            <span v-else class="text-xs text-gray-400">—</span>
+                                        </td>
+                                        <td class="px-3 py-3 text-right">
+                                            <div v-if="isEcontractPlatform" class="text-xs text-vnpt-red mb-1">{{ activeEcontractGroup === 'econtract_onprem' ? 'Triển khai' : 'Khởi tạo' }}: {{ formatPrice(calculateEcontractSetupFee(plan)) }}<span v-if="getEcontractSetupDiscount(plan) > 0"> (giảm {{ getEcontractSetupDiscount(plan) }}%)</span></div>
+                                            <div v-if="isEcontractPlatform && totalEcontractAddonNoVat > 0" class="text-xs text-green-700 mb-1">Add-on: {{ formatPrice(totalEcontractAddonWithVat) }}</div>
+                                            <div class="flex items-center justify-end gap-3">
+                                                <button type="button" @click="executeEcontractCopy(plan)" :disabled="calculateEcontractTotal(plan) === null" class="kdol-copy-button disabled:opacity-40 disabled:cursor-not-allowed" title="Sao chép báo giá">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 002 2z" /></svg>
+                                                </button>
+                                                <span v-if="calculateEcontractTotal(plan) === null" class="text-xs text-gray-500">{{ plan.tsaType ? 'Nhập số lượt hợp lệ' : 'Kiểm tra add-on' }}</span>
+                                                <span v-else class="kdol-price" :class="getEcontractServiceDiscount(plan) > 0 || getEcontractSetupDiscount(plan) > 0 ? 'text-orange-600' : 'text-vnpt-blue'">{{ formatPrice(calculateEcontractTotal(plan)) }}</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
-                    </div>
 
-                    <div v-if="activeEcontractGroup === 'econtract_ceca_tab' && activeCecaType !== 'goi'" class="bg-white shadow ring-1 ring-black ring-opacity-5 rounded-lg p-6 text-center">
-                        <div v-if="!cecaCustomAmount || (activeCecaType === 'min' && cecaCustomAmount >= 5000) || (activeCecaType === 'max' && cecaCustomAmount <= 50000)" class="text-gray-500 italic">
-                            Vui lòng nhập số lượng hợp lệ ({{ activeCecaType === 'min' ? '< 5.000' : '> 50.000' }} lượt ký).
-                        </div>
-                        <div v-else>
-                            <h3 class="text-lg font-bold text-gray-800 mb-2">
-                                Gói {{ activeCecaType === 'min' ? 'TSA CeCA Min' : 'TSA CeCA Max' }} - {{ new Intl.NumberFormat('vi-VN').format(cecaCustomAmount) }} Lượt ký
-                            </h3>
-                            <p class="text-sm text-gray-500 mb-4">Đơn giá: {{ activeCecaType === 'min' ? '1.000đ' : '500đ' }}/lượt (Chưa VAT)</p>
-                            <div class="bg-gray-50 p-4 rounded inline-block text-left mb-4 min-w-[320px]">
-                                <div class="flex justify-between mb-2">
-                                    <span class="text-sm text-gray-600">Tiền cước (Chưa VAT):</span>
-                                    <span class="text-sm font-semibold" :class="discountEcontract > 0 ? 'line-through text-gray-400' : 'text-gray-800'">
-                                        {{ formatPrice(cecaCustomAmount * (activeCecaType === 'min' ? 1000 : 500)) }}
-                                    </span>
+                        <div v-if="isEcontractPlatform" class="kdol-quote-card">
+                            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-3">
+                                <div>
+                                    <h3 class="text-lg font-bold text-gray-800">Emax · Từ 10.000 hợp đồng</h3>
+                                    <p class="text-sm text-gray-500">{{ formatPrice(econtractCatalog.emaxUnitPrice * (activeEcontractGroup === 'econtract_onprem' ? econtractCatalog.onpremUsagePercent / 100 : 1)) }}/HĐ, chưa VAT · {{ activeEcontractGroup === 'econtract_onprem' ? 'Không kèm lưu trữ' : '5 MB lưu trữ/HĐ' }}</p>
                                 </div>
-                                <div v-if="discountEcontract > 0" class="flex justify-between mb-2">
-                                    <span class="text-sm text-orange-600">Sau chiết khấu {{discountEcontract}}%:</span>
-                                    <span class="text-sm font-semibold text-orange-600">
-                                        {{ formatPrice(cecaCustomAmount * (activeCecaType === 'min' ? 1000 : 500) * (1 - discountEcontract/100)) }}
-                                    </span>
+                                <div class="w-full md:w-auto">
+                                    <label for="econtract-emax-quantity" class="sr-only">Số hợp đồng Emax, từ 10.000</label>
+                                    <input id="econtract-emax-quantity" type="number" min="10000" step="1" inputmode="numeric" v-model.number="econtractEmaxAmount" placeholder="Nhập SL ≥ 10.000..." class="kdol-select w-full md:w-48">
                                 </div>
+                            </div>
+                            <div v-if="econtractEmaxPlan" class="kdol-quote-result">
+                                <div class="flex justify-between mb-2"><span class="text-sm text-gray-600">Dịch vụ sau giảm {{ getEcontractServiceDiscount(econtractEmaxPlan) }}% (chưa VAT):</span><span class="text-sm font-semibold">{{ formatPrice(calculateEcontractPackagePrice(econtractEmaxPlan)) }}</span></div>
+                                <div class="flex justify-between mb-2"><span class="text-sm text-gray-600">{{ activeEcontractGroup === 'econtract_onprem' ? 'Triển khai' : 'Khởi tạo' }} (đã VAT):</span><span class="text-sm font-semibold">{{ formatPrice(calculateEcontractSetupFee(econtractEmaxPlan)) }}</span></div>
+                                <div v-if="totalEcontractAddonNoVat > 0" class="flex justify-between mb-2"><span class="text-sm text-gray-600">Add-on (đã VAT):</span><span class="text-sm font-semibold">{{ formatPrice(totalEcontractAddonWithVat) }}</span></div>
                                 <div class="kdol-quote-total">
-                                    <span class="font-bold text-gray-800">TỔNG (Đã VAT):</span>
-                                    <span class="text-xl font-bold text-vnpt-blue">
-                                        {{ formatPrice(cecaCustomAmount * (activeCecaType === 'min' ? 1000 : 500) * (1 - discountEcontract/100) * (1 + vatRate/100)) }}
-                                    </span>
+                                    <span class="font-bold text-gray-800">TỔNG (đã VAT):</span>
+                                    <span v-if="calculateEcontractEmaxTotal() === null" class="text-xs text-gray-500">Kiểm tra add-on</span>
+                                    <span v-else class="text-xl font-bold text-vnpt-blue">{{ formatPrice(calculateEcontractEmaxTotal()) }}</span>
                                 </div>
+                                <div class="mt-4 text-right"><button type="button" @click="executeEcontractEmaxCopy()" :disabled="calculateEcontractEmaxTotal() === null" class="kdol-primary-button w-full md:w-auto disabled:opacity-40 disabled:cursor-not-allowed">Copy Báo Giá Emax</button></div>
                             </div>
-                            <div>
-                                <button @click="executeCecaCustomCopy()" class="kdol-primary-button">Copy Báo Giá TSA CeCA</button>
-                            </div>
+                            <p v-else class="text-sm text-gray-500">Nhập số hợp đồng nguyên từ 10.000 trở lên.</p>
                         </div>
-                    </div>
-                </div>
+                    </template>
+                    <p v-else class="kdol-empty-state">Chưa có danh mục eContract.</p>
+                </section>
 
                 <!-- 5. DỊCH VỤ INTERNET CÁP QUANG -->
                 <section v-else-if="activeService?.id === 'internet'" aria-labelledby="internet-title">
@@ -1448,8 +1427,18 @@
                     bhxhData: [],
                     bhxhCatalog: window.KDOL_BHXH || null,
                     inbotData: [],
+                    inbotCatalog: window.KDOL_INBOT || null,
                     invoiceData: [],
+                    invoiceCatalog: window.KDOL_INVOICE || null,
+                    posCatalog: window.KDOL_POS || null,
+                    posSetupAmount: window.KDOL_POS?.defaultSetupPrice ?? 1000000,
+                    posDiscountMode: 'none',
+                    posCustomerType: 'quantity',
+                    discountPosPackage: 0,
+                    discountPosMaintenance: 0,
+                    posMaxAmount: '',
                     econtractData: [],
+                    econtractCatalog: window.KDOL_ECONTRACT || null,
                     internetData: [],
                     cameraCatalog: window.KDOL_CAMERA || null,
                     cameraMode: 'addon',
@@ -1477,7 +1466,7 @@
                     
                     activeCategory: null,
                     activeService: null,
-                    vatRate: 10,
+                    vatRate: 8,
                     discountRate: 0,
                     smartCaDiscountMode: 'none',
                     
@@ -1495,26 +1484,33 @@
                     activeInvoiceSubTab: 'invoice_new',
 
                     activeEcontractGroup: 'econtract_saas',
-                    activeEcontractSetupStatus: 'khong',
-                    activeCecaType: 'goi',
+                    econtractDiscountMode: 'none',
+                    econtractCustomerType: 'quantity',
+                    econtractSmsBrand: 'shared',
+                    econtractPrivateSmsPrice: '',
+                    tsaQuantities: { min: '', max: '' },
                     discountEcontract: 0,
                     discountEcontractSetup: 0,
+                    discountTsa: 0,
                     addonSmsCount: 0,
                     addonEkycCount: 0,
                     addonStorageCount: 0,
                     addonCecaPackage: 'none',
+                    addonCecaAmount: '',
                     econtractEmaxAmount: '',
-                    cecaCustomAmount: '',
 
                     activeInvoiceType: 'moi',
                     activeInvoiceSetupStatus: 'thu',
                     discountInvoice: 0,
+                    invoiceDiscountMode: 'none',
+                    invoiceCustomerType: 'quantity',
                     discountInvoiceSetup: 0,
                     invoiceMaxAmount: '',
                     
-                    activeInbotGroup: 'goi',
                     activeInbotType: 'moi',
-                    activeInbotSetupStatus: 'thu', // 'thu' (có thu 300k) hoặc 'khong' (miễn phí)
+                    inbotDiscountMode: 'none',
+                    inbotSetupDiscountMode: 'none',
+                    inbotCustomerType: 'quantity',
                     discountInbot: 0,
                     discountInbotSetup: 0,
                     inbotMaxAmount: '',
@@ -1651,26 +1647,140 @@
                         {id: '_max', label: 'VNPT-VAN MAX'}
                     ];
                 },
+                isEcontractPlatform() {
+                    return ['econtract_saas', 'econtract_onprem'].includes(this.activeEcontractGroup);
+                },
+                selectedEcontractCondition() {
+                    return this.econtractCatalog?.customerConditions?.find(condition => condition.id === this.econtractCustomerType)
+                        || { id: 'quantity', label: 'Theo số hợp đồng', serviceDiscount: 0, saasSetupDiscount: 0, onpremSetupDiscount: 0 };
+                },
+                econtractSetupBase() {
+                    if (this.activeEcontractGroup === 'econtract_saas') return this.econtractCatalog?.saasSetupPrice ?? 2000000;
+                    if (this.activeEcontractGroup === 'econtract_onprem') return this.econtractCatalog?.onpremSetupPrice ?? 100000000;
+                    return 0;
+                },
                 currentEcontractPlans() {
-                    let groupId = this.activeEcontractGroup === 'econtract_saas' ? 'econtract_saas' : 'econtract_ceca';
-                    const group = this.econtractData.find(g => g.type === groupId);
-                    return group ? group.plans : [];
+                    if (!this.isEcontractPlatform) return this.tsaTablePlans;
+                    const plans = this.econtractCatalog?.saasPlans || this.econtractData.find(group => group.type === 'econtract_saas')?.plans || [];
+                    const onprem = this.activeEcontractGroup === 'econtract_onprem';
+                    const numberFormat = new Intl.NumberFormat('vi-VN');
+                    return plans.map(plan => {
+                        const quantity = plan.quantity || Number(String(plan.duration_text).replace(/\D/g, ''));
+                        const storageMB = onprem ? 0 : plan.storageMB ?? quantity * 5;
+                        return {
+                            ...plan, quantity, storageMB,
+                            price: onprem ? Number(plan.price) * (this.econtractCatalog?.onpremUsagePercent ?? 50) / 100 : Number(plan.price),
+                            note: `${numberFormat.format(quantity)} HĐ · ${onprem ? 'Không bao gồm lưu trữ' : numberFormat.format(storageMB) + ' MB lưu trữ'}`
+                        };
+                    });
+                },
+                econtractEmaxPlan() {
+                    if (!this.isEcontractPlatform) return null;
+                    const quantity = Number(this.econtractEmaxAmount);
+                    const price = quantity * (this.econtractCatalog?.emaxUnitPrice ?? 5000)
+                        * (this.activeEcontractGroup === 'econtract_onprem' ? (this.econtractCatalog?.onpremUsagePercent ?? 50) / 100 : 1);
+                    if (!Number.isSafeInteger(quantity) || quantity < (this.econtractCatalog?.emaxMinimum ?? 10000) || !Number.isSafeInteger(price)) return null;
+                    return { duration_text: 'Emax', quantity, price, storageMB: this.activeEcontractGroup === 'econtract_onprem' ? 0 : quantity * (this.econtractCatalog?.storagePerContractMB ?? 5) };
+                },
+                tsaDiscountLimit() {
+                    return this.econtractCatalog?.tsa?.maxDiscount ?? 30;
+                },
+                tsaDiscount() {
+                    return Math.min(this.tsaDiscountLimit, Math.max(0, Number(this.discountTsa) || 0));
+                },
+                currentTsaPlans() {
+                    const numberFormat = new Intl.NumberFormat('vi-VN');
+                    return (this.econtractCatalog?.tsa?.plans || []).map(plan => ({
+                        ...plan,
+                        note: numberFormat.format(plan.quantity) + ' lượt · ' + numberFormat.format(plan.unitPrice) + 'đ/lượt'
+                    }));
+                },
+                econtractCecaAddonOptions() {
+                    return [
+                        { id: 'none', label: 'Không kèm', price: 0 },
+                        { id: 'min', label: 'TSA CeCA Min (< 5.000 lượt)', price: 0 },
+                        ...(this.econtractCatalog?.tsa?.plans || []).map(plan => ({ id: String(plan.quantity), label: plan.duration_text, price: plan.price })),
+                        { id: 'max', label: 'TSA CeCA Max (> 50.000 lượt)', price: 0 }
+                    ];
+                },
+                econtractTsaAddonPlan() {
+                    if (['min', 'max'].includes(this.addonCecaPackage)) return this.getTsaCustomPlan(this.addonCecaPackage, this.addonCecaAmount);
+                    return (this.econtractCatalog?.tsa?.plans || []).find(plan => String(plan.quantity) === this.addonCecaPackage) || null;
+                },
+                econtractTsaAddonPrice() {
+                    return this.econtractTsaAddonPlan ? this.econtractTsaAddonPlan.price * (100 - this.tsaDiscount) / 100 : 0;
+                },
+                econtractAddonError() {
+                    if ([this.addonSmsCount, this.addonEkycCount, this.addonStorageCount].some(value => this.getEcontractAddonCount(value) === null)) return 'Nhập số lượng add-on là số nguyên từ 0 trở lên.';
+                    if (!['shared', 'private'].includes(this.econtractSmsBrand)) return 'Chọn loại SMS Brandname.';
+                    if (this.getEcontractAddonCount(this.addonSmsCount) > 0 && this.getEcontractSmsUnitPrice() === null) return 'Nhập đơn giá SMS Brandname riêng theo chính sách SMS Brandname, chưa VAT.';
+                    if (!this.econtractCecaAddonOptions.some(option => option.id === this.addonCecaPackage)) return 'Chọn lại gói TSA CeCA cộng thêm.';
+                    if (this.addonCecaPackage !== 'none' && !this.econtractTsaAddonPlan) return this.addonCecaPackage === 'min' ? 'TSA CeCA Min: nhập số lượt nguyên từ 1 đến 4.999.' : 'TSA CeCA Max: nhập số lượt nguyên trên 50.000.';
+                    return '';
                 },
                 totalEcontractAddonNoVat() {
-                    let total = 0;
-                    if (this.addonSmsCount > 0) total += this.addonSmsCount * 800;
-                    if (this.addonEkycCount > 0) total += this.addonEkycCount * 3000;
-                    if (this.addonStorageCount > 0) total += this.addonStorageCount * 90000;
-                    
-                    if (this.addonCecaPackage === '5000') total += 4500000;
-                    else if (this.addonCecaPackage === '10000') total += 8000000;
-                    else if (this.addonCecaPackage === '20000') total += 14000000;
-                    else if (this.addonCecaPackage === '50000') total += 30000000;
-
-                    return total;
+                    if (this.econtractAddonError) return null;
+                    const ceca = this.econtractTsaAddonPrice;
+                    const total = this.getEcontractAddonCount(this.addonSmsCount) * (this.getEcontractSmsUnitPrice() ?? 0)
+                        + this.getEcontractAddonCount(this.addonEkycCount) * (this.econtractCatalog?.ekycUnitPrice ?? 3000)
+                        + this.getEcontractAddonCount(this.addonStorageCount) * (this.econtractCatalog?.storageUnitPrice ?? 90000) + ceca;
+                    return Number.isSafeInteger(total) ? total : null;
                 },
                 totalEcontractAddonWithVat() {
-                    return this.totalEcontractAddonNoVat * (1 + this.vatRate/100);
+                    return this.totalEcontractAddonNoVat === null ? null : Math.round(this.totalEcontractAddonNoVat * (100 + this.vatRate) / 100);
+                },
+                tsaTablePlans() {
+                    const numberFormat = new Intl.NumberFormat('vi-VN');
+                    const customRow = type => {
+                        const plan = this.getTsaCustomPlan(type, this.tsaQuantities[type]);
+                        const unitPrice = type === 'min' ? (this.econtractCatalog?.tsa?.minUnitPrice ?? 1000) : (this.econtractCatalog?.tsa?.maxUnitPrice ?? 500);
+                        return {
+                            duration_text: type === 'min' ? 'TSA CeCA Min' : 'TSA CeCA Max',
+                            quantity: 0, price: null, ...plan, tsaType: type,
+                            note: (type === 'min' ? 'Dưới 5.000 lượt' : 'Trên 50.000 lượt') + ' · ' + numberFormat.format(unitPrice) + 'đ/lượt'
+                        };
+                    };
+                    return [customRow('min'), ...this.currentTsaPlans, customRow('max')];
+                },
+                currentPosPlans() {
+                    const plans = this.posCatalog?.plans || this.invoiceData.find(group => group.type === 'invoice_pos')?.plans || [];
+                    const numberFormat = new Intl.NumberFormat('vi-VN');
+                    return plans.map(plan => ({
+                        ...plan,
+                        note: plan.quantity ? `${numberFormat.format(plan.quantity)} HĐ (${numberFormat.format(plan.unitPrice)}đ/HĐ)` : plan.note
+                    }));
+                },
+                selectedPosCondition() {
+                    return this.posCatalog?.customerConditions?.find(condition => condition.id === this.posCustomerType)
+                        || { id: 'quantity', label: 'Theo số hóa đơn của gói', packageDiscount: 0, maintenanceDiscount: 0 };
+                },
+                posMaintenancePrice() {
+                    return this.posCatalog?.maintenancePrice ?? 50000;
+                },
+                posSetupPrice() {
+                    if (String(this.posSetupAmount ?? '').trim() === '') return null;
+                    const price = Number(this.posSetupAmount);
+                    return Number.isSafeInteger(price) && price >= 0 ? price : null;
+                },
+                posSetupFee() {
+                    return this.posSetupPrice === null ? null : Math.round(this.posSetupPrice * (100 + this.vatRate) / 100);
+                },
+                posMaxPlan() {
+                    const quantity = Number(this.posMaxAmount);
+                    const price = quantity * (this.posCatalog?.maxUnitPrice ?? 100);
+                    return Number.isSafeInteger(quantity) && quantity >= (this.posCatalog?.maxMinimum ?? 500000) && Number.isSafeInteger(price)
+                        ? { duration_text: this.posCatalog?.maxName || 'MTT Max', quantity, price } : null;
+                },
+                isInvoiceDiscountPolicy() {
+                    return this.activeHddtMainTab === 'invoice' && this.activeInvoiceSubTab === 'invoice_new';
+                },
+                selectedInvoiceCondition() {
+                    return this.invoiceCatalog?.customerConditions?.find(condition => condition.id === this.invoiceCustomerType)
+                        || { id: 'quantity', label: 'Theo số hóa đơn đăng ký', maxDiscount: 0 };
+                },
+                invoiceMaxDiscount() {
+                    if (this.activeHddtMainTab === 'pos') return this.getPosPackageDiscount(this.posMaxPlan);
+                    return this.getInvoiceDiscount({ quantity: this.invoiceMaxAmount });
                 },
                 currentInvoicePlans() {
                     let planKey = '';
@@ -1680,9 +1790,40 @@
                         planKey = 'invoice_pos';
                     }
                     const group = this.invoiceData.find(g => g.type === planKey);
-                    return group ? group.plans : [];
+                    if (!group) return [];
+                    if (planKey !== 'invoice_new') return group.plans;
+                    return group.plans.map(plan => ({
+                        ...plan,
+                        unitPrices: this.invoiceCatalog?.unitPrices[Number(String(plan.duration_text).replace(/\D/g, ''))] || null
+                    }));
+                },
+                selectedInbotCondition() {
+                    return this.inbotCatalog?.customerConditions?.find(condition => condition.id === this.inbotCustomerType)
+                        || { id: 'quantity', label: 'Theo số hóa đơn đăng ký', maxDiscount: 0 };
+                },
+                inbotMaxPlan() {
+                    const quantity = Number(this.inbotMaxAmount);
+                    const price = quantity * this.inbotMaxUnitPrice;
+                    return Number.isSafeInteger(quantity) && quantity > 10000 && Number.isSafeInteger(price)
+                        ? { duration_text: this.inbotMaxName, quantity, price } : null;
+                },
+                inbotSetupPrice() {
+                    return this.inbotCatalog?.setupPrice ?? 300000;
+                },
+                inbotMaxName() {
+                    return this.inbotCatalog?.maxName ?? 'VNPT Invoice-Inbot_MAX';
+                },
+                inbotMaxUnitPrice() {
+                    return this.inbotCatalog?.maxUnitPrice ?? 350;
                 },
                 currentInbotPlans() {
+                    if (this.inbotCatalog?.plans) {
+                        const numberFormat = new Intl.NumberFormat('vi-VN');
+                        return this.inbotCatalog.plans.map(plan => ({
+                            ...plan,
+                            note: `${numberFormat.format(plan.quantity)} HĐ (${numberFormat.format(plan.unitPrice)}đ/HĐ)`
+                        }));
+                    }
                     const group = this.inbotData.find(g => g.type === 'inbot_goi');
                     return group ? group.plans : [];
                 },
@@ -1882,7 +2023,7 @@
                 selectService(srv) {
                     this.activeService = srv;
                     this.discountRate = 0;
-                    this.vatRate = 10;
+                    this.vatRate = 8;
                     
                     if(srv.id === 'cks') {
                         this.smartCaCustomerType = 'term';
@@ -1899,8 +2040,15 @@
                         this.activeBhxhType = 'moi'; 
                         this.bhxhRegion = 'other';
                         this.discountBhxh = 0;
-                        this.vatRate = 8;
                     } else if (srv.id === 'hddt') {
+                        this.resetPosOptions();
+                        this.inbotDiscountMode = 'none';
+                        this.inbotSetupDiscountMode = 'none';
+                        this.inbotCustomerType = 'quantity';
+                        this.discountInbot = 0;
+                        this.discountInbotSetup = 0;
+                        this.invoiceDiscountMode = 'none';
+                        this.invoiceCustomerType = 'quantity';
                         this.activeHddtMainTab = 'invoice';
                         this.activeInvoiceSubTab = 'invoice_new';
                         this.activeInvoiceType = 'moi';
@@ -1909,17 +2057,7 @@
                         this.discountInvoiceSetup = 0;
                         this.invoiceMaxAmount = '';
                     } else if (srv.id === 'econtract') {
-                        this.activeEcontractGroup = 'econtract_saas'; 
-                        this.activeEcontractSetupStatus = 'khong'; 
-                        this.activeCecaType = 'goi'; 
-                        this.discountEcontract = 0; 
-                        this.discountEcontractSetup = 0; 
-                        this.addonSmsCount = 0;
-                        this.addonEkycCount = 0;
-                        this.addonStorageCount = 0;
-                        this.addonCecaPackage = 'none';
-                        this.econtractEmaxAmount = '';
-                        this.cecaCustomAmount = '';
+                        this.resetEcontractOptions();
                     } else if (srv.id === 'internet') {
                         this.activeInternetRegion = 'noi';
                         this.internetMonths = 1;
@@ -2007,12 +2145,112 @@
                 
                 formatPrice(value) { return new Intl.NumberFormat('vi-VN').format(Math.round(value)) + ' đ'; },
 
-                // --- TÍNH TOÁN INVOICE & POS (1.000.000đ CHƯA VAT) ---
+                // --- POS: phí khởi tạo theo đơn vị bán hàng, duy trì và giá gói có trần riêng. ---
+                resetPosOptions() {
+                    this.posSetupAmount = this.posCatalog?.defaultSetupPrice ?? 1000000;
+                    this.posDiscountMode = 'none';
+                    this.posCustomerType = 'quantity';
+                    this.discountPosPackage = 0;
+                    this.discountPosMaintenance = 0;
+                    this.posMaxAmount = '';
+                },
+                getPosQuantity(plan) {
+                    const quantity = Number(plan?.quantity ?? String(plan?.duration_text || '').replace(/\D/g, ''));
+                    return Number.isSafeInteger(quantity) && quantity > 0 ? quantity : 0;
+                },
+                getPosQuantityCaps(plan) {
+                    const quantity = this.getPosQuantity(plan);
+                    if (quantity >= 100000) return { packageDiscount: 40, maintenanceDiscount: 100 };
+                    if (quantity === 50000) return { packageDiscount: 30, maintenanceDiscount: 50 };
+                    if (quantity > 0 && quantity <= 10000) return { packageDiscount: 10, maintenanceDiscount: 20 };
+                    return { packageDiscount: 0, maintenanceDiscount: 0 };
+                },
+                getPosDiscountCaps(plan) {
+                    if (!this.getPosQuantity(plan)) return { packageDiscount: 0, maintenanceDiscount: 0 };
+                    const caps = this.getPosQuantityCaps(plan);
+                    return {
+                        packageDiscount: Math.max(caps.packageDiscount, this.selectedPosCondition.packageDiscount),
+                        maintenanceDiscount: Math.max(caps.maintenanceDiscount, this.selectedPosCondition.maintenanceDiscount)
+                    };
+                },
+                getPosPackageDiscount(plan) {
+                    const cap = this.getPosDiscountCaps(plan).packageDiscount;
+                    if (this.posDiscountMode === 'auto') return cap;
+                    if (this.posDiscountMode === 'custom') return Math.min(cap, Math.max(0, Number(this.discountPosPackage) || 0));
+                    return 0;
+                },
+                getPosMaintenanceDiscount(plan) {
+                    const cap = this.getPosDiscountCaps(plan).maintenanceDiscount;
+                    if (this.posDiscountMode === 'auto') return cap;
+                    if (this.posDiscountMode === 'custom') return Math.min(cap, Math.max(0, Number(this.discountPosMaintenance) || 0));
+                    return 0;
+                },
+                getPosDiscountReason(plan) {
+                    const caps = this.getPosQuantityCaps(plan);
+                    if (this.selectedPosCondition.packageDiscount > caps.packageDiscount || this.selectedPosCondition.maintenanceDiscount > caps.maintenanceDiscount) return this.selectedPosCondition.label;
+                    return `Số lượng ${new Intl.NumberFormat('vi-VN').format(this.getPosQuantity(plan))} HĐ`;
+                },
+                calculatePosPackagePrice(plan) {
+                    return Number(plan?.price || 0) * (100 - this.getPosPackageDiscount(plan)) / 100;
+                },
+                calculatePosMaintenanceFee(plan) {
+                    return Math.round(this.posMaintenancePrice * (100 - this.getPosMaintenanceDiscount(plan)) * (100 + this.vatRate) / 10000);
+                },
+                calculatePosTotal(plan) {
+                    const price = Number(plan?.price);
+                    if (this.posSetupPrice === null || !this.getPosQuantity(plan) || !Number.isSafeInteger(price) || price < 0) return null;
+                    const numerator = price * (100 - this.getPosPackageDiscount(plan))
+                        + this.posMaintenancePrice * (100 - this.getPosMaintenanceDiscount(plan)) + this.posSetupPrice * 100;
+                    const total = Math.round(numerator * (100 + this.vatRate) / 10000);
+                    return Number.isSafeInteger(total) ? total : null;
+                },
+                executePosCopy(plan) {
+                    const total = this.calculatePosTotal(plan);
+                    if (total === null) return;
+                    const packageDiscount = this.getPosPackageDiscount(plan);
+                    const maintenanceDiscount = this.getPosMaintenanceDiscount(plan);
+                    const discountText = packageDiscount > 0 || maintenanceDiscount > 0
+                        ? ` (giảm gói ${packageDiscount}%, duy trì ${maintenanceDiscount}%; ${this.getPosDiscountReason(plan)})` : '';
+                    const textToCopy = `VNPT Invoice-POS - ${plan.duration_text} (${new Intl.NumberFormat('vi-VN').format(this.getPosQuantity(plan))} HĐ): Tổng thanh toán ${this.formatPrice(total)}${discountText}. Đã gồm duy trì ${this.formatPrice(this.calculatePosMaintenanceFee(plan))}, khởi tạo ${this.formatPrice(this.posSetupFee)} và ${this.vatRate}% VAT.`;
+                    navigator.clipboard.writeText(textToCopy).then(() => this.showToast('Đã copy: ' + this.formatPrice(total)));
+                },
+                executePosMaxCopy() {
+                    if (this.posMaxPlan) this.executePosCopy(this.posMaxPlan);
+                },
+
+                // --- TÍNH TOÁN INVOICE & TVAN (1.000.000đ CHƯA VAT) ---
+                getInvoiceQuantity(plan) {
+                    const quantity = Number(plan?.quantity ?? String(plan?.duration_text || '').replace(/\D/g, ''));
+                    return Number.isSafeInteger(quantity) && quantity > 0 ? quantity : 0;
+                },
+                getInvoiceQuantityDiscount(plan) {
+                    const quantity = this.getInvoiceQuantity(plan);
+                    if (!quantity) return 0;
+                    return quantity >= 10000 ? 40 : quantity >= 5000 ? 30 : 20;
+                },
+                getInvoiceMaxDiscount(plan) {
+                    if (!this.getInvoiceQuantity(plan)) return 0;
+                    return Math.max(this.getInvoiceQuantityDiscount(plan), this.selectedInvoiceCondition.maxDiscount);
+                },
+                getInvoiceDiscount(plan) {
+                    if (this.activeHddtMainTab === 'pos') return this.getPosPackageDiscount(plan);
+                    if (!this.isInvoiceDiscountPolicy) return Number(this.discountInvoice) || 0;
+                    const maxDiscount = this.getInvoiceMaxDiscount(plan);
+                    if (this.invoiceDiscountMode === 'auto') return maxDiscount;
+                    if (this.invoiceDiscountMode === 'custom') return Math.min(maxDiscount, Math.max(0, Number(this.discountInvoice) || 0));
+                    return 0;
+                },
+                getInvoiceDiscountReason(plan) {
+                    if (this.selectedInvoiceCondition.maxDiscount > this.getInvoiceQuantityDiscount(plan)) return this.selectedInvoiceCondition.label;
+                    return `Số lượng ${new Intl.NumberFormat('vi-VN').format(this.getInvoiceQuantity(plan))} HĐ`;
+                },
+                calculateInvoicePackagePrice(plan) {
+                    return Number(plan.price) * (1 - this.getInvoiceDiscount(plan) / 100);
+                },
                 calculateInvoiceSetupFee() {
                     const isInvoiceOrTvan = (this.activeHddtMainTab === 'invoice');
-                    const isPos = (this.activeHddtMainTab === 'pos');
 
-                    if (this.activeInvoiceType === 'giahan' || this.activeInvoiceSetupStatus === 'khong' || (!isInvoiceOrTvan && !isPos)) {
+                    if (this.activeInvoiceType === 'giahan' || this.activeInvoiceSetupStatus === 'khong' || !isInvoiceOrTvan) {
                         return 0;
                     }
 
@@ -2020,44 +2258,48 @@
                     let feeAfterDiscount = fee * (1 - this.discountInvoiceSetup / 100);
                     return feeAfterDiscount * (1 + this.vatRate / 100);
                 },
-                calculateInvoiceTotal(planPrice) {
-                    let priceAfterDiscount = planPrice * (1 - this.discountInvoice / 100);
+                calculateInvoiceTotal(planPrice, plan = null) {
+                    if (this.activeHddtMainTab === 'pos') return this.calculatePosTotal(plan);
+                    let priceAfterDiscount = planPrice * (1 - this.getInvoiceDiscount(plan) / 100);
                     let baseWithVat = priceAfterDiscount * (1 + this.vatRate / 100);
                     return baseWithVat + this.calculateInvoiceSetupFee();
                 },
                 calculateInvoiceMaxTotal() {
+                    if (this.activeHddtMainTab === 'pos') return this.calculatePosTotal(this.posMaxPlan);
                     let unitRate = 110;
                     if (this.activeHddtMainTab === 'invoice') {
                         unitRate = this.activeInvoiceSubTab === 'invoice_new' ? 390 : 110;
-                    } else if (this.activeHddtMainTab === 'pos') {
-                        unitRate = 100;
                     }
 
                     let basePrice = this.invoiceMaxAmount * unitRate;
-                    let priceAfterDiscount = basePrice * (1 - this.discountInvoice / 100);
+                    let priceAfterDiscount = basePrice * (1 - this.invoiceMaxDiscount / 100);
                     let baseWithVat = priceAfterDiscount * (1 + this.vatRate / 100);
                     return baseWithVat + this.calculateInvoiceSetupFee();
                 },
                 executeInvoiceCopy(plan) {
+                    if (this.activeHddtMainTab === 'pos') return this.executePosCopy(plan);
                     let typeTxt = this.activeInvoiceType === 'moi' ? 'Đăng ký mới' : 'Gia hạn';
-                    let ckTxt = this.discountInvoice > 0 ? ` (Đã CK ${this.discountInvoice}%)` : '';
+                    const discount = this.getInvoiceDiscount(plan);
+                    const reason = this.isInvoiceDiscountPolicy ? `; ${this.getInvoiceDiscountReason(plan)}` : '';
+                    const ckTxt = discount > 0 ? ` (Đã CK ${discount}%${reason})` : '';
                     let setupFee = this.calculateInvoiceSetupFee();
                     let setupTxt = setupFee > 0 ? ` + Khởi tạo: ${this.formatPrice(setupFee)}` : '';
-                    let total = this.calculateInvoiceTotal(plan.price);
+                    let total = this.calculateInvoiceTotal(plan.price, plan);
                     
                     let svcName = 'VNPT Invoice (TT78)';
                     if (this.activeHddtMainTab === 'invoice' && this.activeInvoiceSubTab === 'invoice_nt') {
                         svcName = 'Truyền nhận dữ liệu TVAN';
-                    } else if (this.activeHddtMainTab === 'pos') {
-                        svcName = 'VNPT Invoice-POS (Máy tính tiền)';
                     }
 
                     let textToCopy = `${svcName} (${typeTxt}) - Gói ${plan.duration_text}: Tổng Thanh Toán ${this.formatPrice(total)}${ckTxt}${setupTxt}. Đã bao gồm ${this.vatRate}% VAT.`;
                     navigator.clipboard.writeText(textToCopy).then(() => this.showToast('Đã copy: ' + this.formatPrice(total)));
                 },
                 executeInvoiceMaxCopy() {
+                    if (this.activeHddtMainTab === 'pos') return this.executePosMaxCopy();
                     let typeTxt = this.activeInvoiceType === 'moi' ? 'Đăng ký mới' : 'Gia hạn';
-                    let ckTxt = this.discountInvoice > 0 ? ` (Đã CK ${this.discountInvoice}%)` : '';
+                    const discount = this.invoiceMaxDiscount;
+                    const reason = this.isInvoiceDiscountPolicy ? `; ${this.getInvoiceDiscountReason({ quantity: this.invoiceMaxAmount })}` : '';
+                    const ckTxt = discount > 0 ? ` (Đã CK ${discount}%${reason})` : '';
                     let setupFee = this.calculateInvoiceSetupFee();
                     let setupTxt = setupFee > 0 ? ` + Khởi tạo: ${this.formatPrice(setupFee)}` : '';
                     let total = this.calculateInvoiceMaxTotal();
@@ -2065,8 +2307,6 @@
                     let svcName = 'VNPT Invoice (HD_MAX)';
                     if (this.activeHddtMainTab === 'invoice' && this.activeInvoiceSubTab === 'invoice_nt') {
                         svcName = 'Truyền nhận TVAN (NT MAX)';
-                    } else if (this.activeHddtMainTab === 'pos') {
-                        svcName = 'VNPT Invoice-POS (MTT Max)';
                     }
 
                     let textToCopy = `${svcName} (${typeTxt}) - SL: ${new Intl.NumberFormat('vi-VN').format(this.invoiceMaxAmount)} HĐ: Tổng Thanh Toán ${this.formatPrice(total)}${ckTxt}${setupTxt}. Đã bao gồm ${this.vatRate}% VAT.`;
@@ -2074,38 +2314,77 @@
                 },
 
                 // --- TÍNH TOÁN INBOT (300.000đ CHƯA VAT) ---
-                calculateInbotSetupFee() {
-                    if (this.activeInbotType === 'giahan' || this.activeInbotSetupStatus === 'khong') {
-                        return 0;
-                    }
-                    let fee = 300000;
-                    let feeAfterDiscount = fee * (1 - this.discountInbotSetup / 100);
-                    return feeAfterDiscount * (1 + this.vatRate / 100);
+                getInbotQuantity(plan) {
+                    const quantity = Number(plan?.quantity ?? String(plan?.duration_text || '').replace(/\D/g, ''));
+                    return Number.isSafeInteger(quantity) && quantity > 0 ? quantity : 0;
                 },
-                calculateInbotTotal(basePriceNoVat) {
-                    let priceAfterDiscount = basePriceNoVat * (1 - this.discountInbot / 100);
-                    let priceWithVat = priceAfterDiscount * (1 + this.vatRate / 100);
-                    return priceWithVat + this.calculateInbotSetupFee();
+                getInbotQuantityDiscount(plan) {
+                    const quantity = this.getInbotQuantity(plan);
+                    return !quantity ? 0 : quantity >= 10000 ? 40 : quantity >= 5000 ? 30 : 20;
+                },
+                getInbotMaxDiscount(plan) {
+                    if (!this.getInbotQuantity(plan)) return 0;
+                    return Math.max(this.getInbotQuantityDiscount(plan), this.selectedInbotCondition.maxDiscount);
+                },
+                getInbotDiscount(plan) {
+                    const cap = this.getInbotMaxDiscount(plan);
+                    if (this.inbotDiscountMode === 'auto') return cap;
+                    if (this.inbotDiscountMode === 'custom') return Math.min(cap, Math.max(0, Number(this.discountInbot) || 0));
+                    return 0;
+                },
+                getInbotDiscountReason(plan) {
+                    if (this.selectedInbotCondition.maxDiscount > this.getInbotQuantityDiscount(plan)) return this.selectedInbotCondition.label;
+                    return `Số lượng ${new Intl.NumberFormat('vi-VN').format(this.getInbotQuantity(plan))} HĐ`;
+                },
+                calculateInbotPackagePrice(plan) {
+                    return Number(plan?.price || 0) * (100 - this.getInbotDiscount(plan)) / 100;
+                },
+                getInbotSetupMaxDiscount(plan) {
+                    const price = Number(plan?.price);
+                    if (!this.getInbotQuantity(plan) || !Number.isFinite(price) || price <= 0) return 0;
+                    // Xét doanh thu chưa VAT, sau chiết khấu; không làm tròn trước ngưỡng 500.000đ.
+                    return price * (100 - this.getInbotDiscount(plan)) > 500000 * 100 ? 100 : 50;
+                },
+                getInbotSetupDiscount(plan) {
+                    if (this.activeInbotType !== 'moi') return 0;
+                    const cap = this.getInbotSetupMaxDiscount(plan);
+                    if (this.inbotSetupDiscountMode === 'auto') return cap;
+                    if (this.inbotSetupDiscountMode === 'custom') return Math.min(cap, Math.max(0, Number(this.discountInbotSetup) || 0));
+                    return 0;
+                },
+                calculateInbotSetupFee(plan) {
+                    if (this.activeInbotType !== 'moi') return 0;
+                    return Math.round(this.inbotSetupPrice * (100 - this.getInbotSetupDiscount(plan)) * (100 + this.vatRate) / 10000);
+                },
+                calculateInbotTotal(plan) {
+                    const serviceNumerator = Number(plan?.price || 0) * (100 - this.getInbotDiscount(plan));
+                    const setupNumerator = this.activeInbotType === 'moi' ? this.inbotSetupPrice * (100 - this.getInbotSetupDiscount(plan)) : 0;
+                    return Math.round((serviceNumerator + setupNumerator) * (100 + this.vatRate) / 10000);
                 },
 
                 executeInbotCopy(plan) {
-                    const setupFee = this.calculateInbotSetupFee();
-                    const total = this.calculateInbotTotal(plan.price);
+                    const setupFee = this.calculateInbotSetupFee(plan);
+                    const total = this.calculateInbotTotal(plan);
                     let typeTxt = this.activeInbotType === 'moi' ? 'Đăng ký mới' : 'Gia hạn';
-                    let ckTxt = this.discountInbot > 0 ? ` (Đã CK ${this.discountInbot}% dịch vụ)` : '';
-                    let setupTxt = setupFee > 0 ? ` + Phí khởi tạo: ${this.formatPrice(setupFee)}` : '';
-                    let textToCopy = `Hóa đơn ĐV VNPT Invoice-Inbot (${typeTxt}) - Gói ${plan.duration_text}: Tổng Thanh Toán ${this.formatPrice(total)}${ckTxt}${setupTxt}. Đã bao gồm ${this.vatRate}% VAT.`;
+                    const discount = this.getInbotDiscount(plan);
+                    const setupDiscount = this.getInbotSetupDiscount(plan);
+                    const ckTxt = discount > 0 ? ` (Đã CK ${discount}% dịch vụ; ${this.getInbotDiscountReason(plan)})` : '';
+                    const setupTxt = this.activeInbotType === 'moi' ? ` + Phí khởi tạo: ${this.formatPrice(setupFee)}${setupDiscount > 0 ? ` (giảm ${setupDiscount}%)` : ''}` : '';
+                    let textToCopy = `${plan.duration_text} (${typeTxt}): Tổng Thanh Toán ${this.formatPrice(total)}${ckTxt}${setupTxt}. Đã bao gồm ${this.vatRate}% VAT.`;
                     navigator.clipboard.writeText(textToCopy).then(() => this.showToast('Đã copy: ' + this.formatPrice(total)));
                 },
 
                 executeInbotMaxCopy() {
-                    const basePrice = this.inbotMaxAmount * 350;
-                    const setupFee = this.calculateInbotSetupFee();
-                    const total = this.calculateInbotTotal(basePrice);
+                    const plan = this.inbotMaxPlan;
+                    if (!plan) return;
+                    const setupFee = this.calculateInbotSetupFee(plan);
+                    const total = this.calculateInbotTotal(plan);
                     let typeTxt = this.activeInbotType === 'moi' ? 'Đăng ký mới' : 'Gia hạn';
-                    let ckTxt = this.discountInbot > 0 ? ` (Đã CK ${this.discountInbot}% dịch vụ)` : '';
-                    let setupTxt = setupFee > 0 ? ` + Phí khởi tạo: ${this.formatPrice(setupFee)}` : '';
-                    let textToCopy = `Hóa đơn ĐV VNPT Invoice-Inbot (${typeTxt}) - Gói MAX (${new Intl.NumberFormat('vi-VN').format(this.inbotMaxAmount)} HĐ): Tổng Thanh Toán ${this.formatPrice(total)}${ckTxt}${setupTxt}. Đã bao gồm ${this.vatRate}% VAT.`;
+                    const discount = this.getInbotDiscount(plan);
+                    const setupDiscount = this.getInbotSetupDiscount(plan);
+                    const ckTxt = discount > 0 ? ` (Đã CK ${discount}% dịch vụ; ${this.getInbotDiscountReason(plan)})` : '';
+                    const setupTxt = this.activeInbotType === 'moi' ? ` + Phí khởi tạo: ${this.formatPrice(setupFee)}${setupDiscount > 0 ? ` (giảm ${setupDiscount}%)` : ''}` : '';
+                    let textToCopy = `${this.inbotMaxName} (${typeTxt}) - ${new Intl.NumberFormat('vi-VN').format(this.inbotMaxAmount)} HĐ: Tổng Thanh Toán ${this.formatPrice(total)}${ckTxt}${setupTxt}. Đã bao gồm ${this.vatRate}% VAT.`;
                     navigator.clipboard.writeText(textToCopy).then(() => this.showToast('Đã copy: ' + this.formatPrice(total)));
                 },
 
@@ -2130,59 +2409,133 @@
                     navigator.clipboard.writeText(textToCopy).then(() => this.showToast('Đã copy: ' + formattedTotal));
                 },
 
-                // --- TÍNH TOÁN ECONTRACT ---
-                calculateEcontractSetupFee() {
-                    if (this.activeEcontractSetupStatus === 'khong') return 0;
-                    let fee = 2000000;
-                    let feeAfterDiscount = fee * (1 - this.discountEcontractSetup/100);
-                    return feeAfterDiscount * (1 + this.vatRate/100);
+                // --- eContract: SaaS, OnPremise và TSA CeCA tách chính sách. ---
+                selectEcontractMode(mode) {
+                    this.activeEcontractGroup = mode;
+                    this.econtractDiscountMode = 'none';
+                    this.econtractCustomerType = 'quantity';
+                    this.discountEcontract = 0;
+                    this.discountEcontractSetup = 0;
                 },
-                calculateEcontractTotal(planPrice) {
-                    let priceAfterDiscount = planPrice * (1 - this.discountEcontract/100);
-                    let baseVat = priceAfterDiscount * (1 + this.vatRate/100);
-                    let total = baseVat;
-                    if (this.activeEcontractGroup === 'econtract_saas') {
-                        total += this.totalEcontractAddonWithVat;
-                        total += this.calculateEcontractSetupFee();
-                    }
-                    return total;
+                resetEcontractOptions() {
+                    this.selectEcontractMode('econtract_saas');
+                    this.addonSmsCount = 0;
+                    this.addonEkycCount = 0;
+                    this.addonStorageCount = 0;
+                    this.addonCecaPackage = 'none';
+                    this.addonCecaAmount = '';
+                    this.discountTsa = 0;
+                    this.econtractSmsBrand = 'shared';
+                    this.econtractPrivateSmsPrice = '';
+                    this.econtractEmaxAmount = '';
+                    this.tsaQuantities = { min: '', max: '' };
+                },
+                getTsaCustomPlan(type, value) {
+                    const quantity = Number(value);
+                    if (!Number.isSafeInteger(quantity) || quantity <= 0) return null;
+                    const tsa = this.econtractCatalog?.tsa;
+                    const valid = type === 'min' ? quantity < (tsa?.minLimit ?? 5000) : type === 'max' && quantity > (tsa?.maxLimit ?? 50000);
+                    const unitPrice = type === 'min' ? (tsa?.minUnitPrice ?? 1000) : (tsa?.maxUnitPrice ?? 500);
+                    const price = quantity * unitPrice;
+                    return valid && Number.isSafeInteger(price) ? { duration_text: type === 'min' ? 'TSA CeCA Min' : 'TSA CeCA Max', quantity, unitPrice, price } : null;
+                },
+                getEcontractQuantity(plan) {
+                    const quantity = Number(plan?.quantity ?? String(plan?.duration_text || '').replace(/\D/g, ''));
+                    return Number.isSafeInteger(quantity) && quantity > 0 ? quantity : 0;
+                },
+                getEcontractQuantityCaps(plan) {
+                    const quantity = this.getEcontractQuantity(plan);
+                    if (!quantity) return { serviceDiscount: 0, setupDiscount: 0 };
+                    if (quantity >= 5000) return { serviceDiscount: 30, setupDiscount: 100 };
+                    if (quantity >= 2000) return { serviceDiscount: 20, setupDiscount: 50 };
+                    return { serviceDiscount: 10, setupDiscount: 10 };
+                },
+                getEcontractDiscountCaps(plan) {
+                    if (!this.getEcontractQuantity(plan)) return { serviceDiscount: 0, setupDiscount: 0 };
+                    if (this.activeEcontractGroup === 'econtract_onprem') return { serviceDiscount: 0, setupDiscount: this.selectedEcontractCondition.onpremSetupDiscount };
+                    if (!this.isEcontractPlatform) return { serviceDiscount: this.tsaDiscountLimit, setupDiscount: 0 };
+                    const caps = this.getEcontractQuantityCaps(plan);
+                    return {
+                        serviceDiscount: Math.max(caps.serviceDiscount, this.selectedEcontractCondition.serviceDiscount),
+                        setupDiscount: Math.max(caps.setupDiscount, this.selectedEcontractCondition.saasSetupDiscount)
+                    };
+                },
+                getEcontractServiceDiscount(plan) {
+                    const cap = this.getEcontractDiscountCaps(plan).serviceDiscount;
+                    if (!this.isEcontractPlatform) return this.tsaDiscount;
+                    if (this.econtractDiscountMode === 'auto') return cap;
+                    if (this.econtractDiscountMode === 'custom') return Math.min(cap, Math.max(0, Number(this.discountEcontract) || 0));
+                    return 0;
+                },
+                getEcontractSetupDiscount(plan) {
+                    if (!this.isEcontractPlatform) return 0;
+                    const cap = this.getEcontractDiscountCaps(plan).setupDiscount;
+                    if (this.econtractDiscountMode === 'auto') return cap;
+                    if (this.econtractDiscountMode === 'custom') return Math.min(cap, Math.max(0, Number(this.discountEcontractSetup) || 0));
+                    return 0;
+                },
+                getEcontractDiscountReason(plan) {
+                    if (this.activeEcontractGroup === 'econtract_onprem') return this.selectedEcontractCondition.label;
+                    const caps = this.getEcontractQuantityCaps(plan);
+                    if (this.selectedEcontractCondition.serviceDiscount > caps.serviceDiscount || this.selectedEcontractCondition.saasSetupDiscount > caps.setupDiscount) return this.selectedEcontractCondition.label;
+                    return 'Số lượng ' + new Intl.NumberFormat('vi-VN').format(this.getEcontractQuantity(plan)) + ' hợp đồng';
+                },
+                calculateEcontractPackagePrice(plan) {
+                    return Number(plan?.price || 0) * (100 - this.getEcontractServiceDiscount(plan)) / 100;
+                },
+                getEcontractAddonCount(value) {
+                    const quantity = Number(value);
+                    return Number.isSafeInteger(quantity) && quantity >= 0 ? quantity : null;
+                },
+                getEcontractSmsUnitPrice() {
+                    if (this.econtractSmsBrand === 'shared') return this.econtractCatalog?.smsUnitPrice ?? 800;
+                    if (this.econtractSmsBrand !== 'private' || String(this.econtractPrivateSmsPrice ?? '').trim() === '') return null;
+                    const price = Number(this.econtractPrivateSmsPrice);
+                    return Number.isSafeInteger(price) && price >= 0 ? price : null;
+                },
+                calculateEcontractSetupFee(plan) {
+                    return Math.round(this.econtractSetupBase * (100 - this.getEcontractSetupDiscount(plan)) * (100 + this.vatRate) / 10000);
+                },
+                calculateEcontractTotal(plan) {
+                    const price = Number(plan?.price);
+                    if (!this.getEcontractQuantity(plan) || !Number.isSafeInteger(price) || price < 0) return null;
+                    const addons = this.isEcontractPlatform ? this.totalEcontractAddonNoVat : 0;
+                    if (addons === null) return null;
+                    const numerator = price * (100 - this.getEcontractServiceDiscount(plan))
+                        + this.econtractSetupBase * (100 - this.getEcontractSetupDiscount(plan)) + addons * 100;
+                    const total = Math.round(numerator * (100 + this.vatRate) / 10000);
+                    return Number.isSafeInteger(total) ? total : null;
                 },
                 calculateEcontractEmaxTotal() {
-                    let basePrice = this.econtractEmaxAmount * 5000;
-                    let priceAfterDiscount = basePrice * (1 - this.discountEcontract/100);
-                    let baseVat = priceAfterDiscount * (1 + this.vatRate/100);
-                    return baseVat + this.totalEcontractAddonWithVat + this.calculateEcontractSetupFee();
+                    return this.calculateEcontractTotal(this.econtractEmaxPlan);
                 },
-
+                getEcontractAddonDescription() {
+                    const parts = [];
+                    if (this.addonSmsCount > 0) parts.push('SMS ' + (this.econtractSmsBrand === 'private' ? 'Brandname riêng ' : 'chung VNPT ') + this.addonSmsCount + ' tin × ' + this.formatPrice(this.getEcontractSmsUnitPrice()) + '/tin');
+                    if (this.addonEkycCount > 0) parts.push('eKYC ' + this.addonEkycCount + ' lượt (gồm lượt không thành công)');
+                    if (this.addonStorageCount > 0) parts.push('lưu trữ ' + this.addonStorageCount + ' gói 250 MB/10 năm');
+                    if (this.econtractTsaAddonPlan) parts.push(this.econtractTsaAddonPlan.duration_text + ' (' + new Intl.NumberFormat('vi-VN').format(this.econtractTsaAddonPlan.quantity) + ' lượt; giảm TSA ' + this.tsaDiscount + '%)');
+                    return parts.join('; ');
+                },
                 executeEcontractCopy(plan) {
-                    let ckTxt = this.discountEcontract > 0 ? ` (Đã CK DV ${this.discountEcontract}%)` : '';
-                    let setupTxt = (this.activeEcontractGroup === 'econtract_saas' && this.activeEcontractSetupStatus === 'moi') ? ` + Phí khởi tạo: ${this.formatPrice(this.calculateEcontractSetupFee())}` : '';
-                    let addonTxt = (this.activeEcontractGroup === 'econtract_saas' && this.totalEcontractAddonNoVat > 0) ? ` + Add-on: ${this.formatPrice(this.totalEcontractAddonWithVat)}` : '';
-                    let total = this.calculateEcontractTotal(plan.price);
-                    
-                    let groupName = this.activeEcontractGroup === 'econtract_saas' ? 'VNPT eContract' : 'Ký chứng thực TSA CeCA';
-                    let textToCopy = `${groupName} - Gói ${plan.duration_text}: Tổng Thanh Toán ${this.formatPrice(total)}${ckTxt}${setupTxt}${addonTxt}. Đã bao gồm ${this.vatRate}% VAT.`;
+                    const total = this.calculateEcontractTotal(plan);
+                    if (total === null) return;
+                    const serviceDiscount = this.getEcontractServiceDiscount(plan);
+                    const setupDiscount = this.getEcontractSetupDiscount(plan);
+                    const discountText = this.isEcontractPlatform
+                        ? (serviceDiscount > 0 || setupDiscount > 0 ? ' (giảm dịch vụ ' + serviceDiscount + '%, khởi tạo/triển khai ' + setupDiscount + '%; ' + this.getEcontractDiscountReason(plan) + ')' : '')
+                        : ' (giảm TSA ' + serviceDiscount + '%)';
+                    const setupText = this.isEcontractPlatform ? '; khởi tạo/triển khai ' + this.formatPrice(this.calculateEcontractSetupFee(plan)) : '';
+                    const addonText = this.isEcontractPlatform && this.totalEcontractAddonNoVat > 0
+                        ? '; add-on ' + this.formatPrice(this.totalEcontractAddonWithVat) + ' (' + this.getEcontractAddonDescription() + ')' : '';
+                    const onprem = this.activeEcontractGroup === 'econtract_onprem';
+                    const groupName = onprem ? 'VNPT eContract OnPremise' : this.isEcontractPlatform ? 'VNPT eContract SaaS' : 'Ký dấu thời gian TSA CeCA';
+                    const scope = onprem ? ' Không kèm lưu trữ trong giá sử dụng; chưa gồm chi phí/tối ưu hệ thống khác theo yêu cầu.' : '';
+                    const textToCopy = groupName + ' - Gói ' + plan.duration_text + ' (' + new Intl.NumberFormat('vi-VN').format(this.getEcontractQuantity(plan)) + ' ' + (this.isEcontractPlatform ? 'HĐ' : 'lượt') + '): Tổng thanh toán ' + this.formatPrice(total) + discountText + '. Đã gồm ' + this.vatRate + '% VAT' + setupText + addonText + '.' + scope;
                     navigator.clipboard.writeText(textToCopy).then(() => this.showToast('Đã copy: ' + this.formatPrice(total)));
                 },
-
                 executeEcontractEmaxCopy() {
-                    let ckTxt = this.discountEcontract > 0 ? ` (Đã CK DV ${this.discountEcontract}%)` : '';
-                    let setupTxt = this.activeEcontractSetupStatus === 'moi' ? ` + Phí khởi tạo: ${this.formatPrice(this.calculateEcontractSetupFee())}` : '';
-                    let addonTxt = this.totalEcontractAddonNoVat > 0 ? ` + Add-on: ${this.formatPrice(this.totalEcontractAddonWithVat)}` : '';
-                    let total = this.calculateEcontractEmaxTotal();
-                    
-                    let textToCopy = `VNPT eContract - Gói Emax (${new Intl.NumberFormat('vi-VN').format(this.econtractEmaxAmount)} HĐ): Tổng Thanh Toán ${this.formatPrice(total)}${ckTxt}${setupTxt}${addonTxt}. Đã bao gồm ${this.vatRate}% VAT.`;
-                    navigator.clipboard.writeText(textToCopy).then(() => this.showToast('Đã copy: ' + this.formatPrice(total)));
-                },
-
-                executeCecaCustomCopy() {
-                    let ckTxt = this.discountEcontract > 0 ? ` (Đã CK ${this.discountEcontract}%)` : '';
-                    let basePrice = this.cecaCustomAmount * (this.activeCecaType === 'min' ? 1000 : 500);
-                    let total = basePrice * (1 - this.discountEcontract/100) * (1 + this.vatRate/100);
-                    let groupName = this.activeCecaType === 'min' ? 'TSA CeCA Min' : 'TSA CeCA Max';
-
-                    let textToCopy = `Dịch vụ Ký chứng thực ${groupName} (${new Intl.NumberFormat('vi-VN').format(this.cecaCustomAmount)} lượt): Tổng Thanh Toán ${this.formatPrice(total)}${ckTxt}. Đã bao gồm ${this.vatRate}% VAT.`;
-                    navigator.clipboard.writeText(textToCopy).then(() => this.showToast('Đã copy: ' + this.formatPrice(total)));
+                    if (this.econtractEmaxPlan) this.executeEcontractCopy(this.econtractEmaxPlan);
                 },
 
                 // --- TÍNH TOÁN CHUNG ---
@@ -2221,11 +2574,14 @@
                     return Math.round(Number(plan.price) * multiplier * (100 + this.vatRate) * (100 - this.getSmartCaDiscount(plan)) / 11000);
                 },
 
-                calculateVnptCaPrice(basePrice, appliedDiscount = this.vnptCaDiscount) {
-                    // Giá đầu vào đã gồm Token và VAT 10%; chỉ chiết khấu phần dịch vụ.
+                calculateVnptCaServicePrice(basePrice, appliedDiscount = this.vnptCaDiscount) {
+                    // Tách Token khỏi giá gốc trước khi tính VAT và chiết khấu dịch vụ.
                     const discount = Math.min(this.maxVnptCaDiscount, Math.max(0, Number(appliedDiscount) || 0));
                     const servicePrice = Number(basePrice) - this.vnptCaTokenBasePrice;
-                    return Math.round(servicePrice * (100 + this.vatRate) * (100 - discount) / 11000 + this.vnptCaTokenPrice);
+                    return Math.round(servicePrice * (100 + this.vatRate) * (100 - discount) / 11000);
+                },
+                calculateVnptCaPrice(basePrice, appliedDiscount = this.vnptCaDiscount) {
+                    return this.calculateVnptCaServicePrice(basePrice, appliedDiscount) + this.vnptCaTokenPrice;
                 },
 
                 executeCaCopy(plan) {

@@ -8,7 +8,8 @@ id,service_id,plan_group,group_name,duration_text,price,note,invoice_price
 05230f80-0bf7-4be8-bee7-4bca609c8b36,internet,noi_cam_none,Kèm Camera Nội thành,Home Slay_F (300Mbps),215000,KM: 300Mbps + 1 Mesh 6 + 1 Cam Indoor lưu trữ 1 ngày,
 05aded7b-a172-41c8-918a-93f04fdc3195,bhxh,bhxh_doclap_100,Kê khai BHXH,60,1320000,,
 066fde69-8943-432e-90f3-4f42918e253c,bhxh,tichhop_giahan_1000,Tích hợp Gia hạn - VAN 1000,48,3608000,,
-070f9aae-b8ad-4747-a9de-49cbcfd960f2,inbot,inbot_goi,Inbot Đầu vào,IB 5.000,2500000,5.000 HĐ (500đ/HĐ),
+070f9aae-b8ad-4747-a9de-49cbcfd960f2,inbot,inbot_goi,Inbot Đầu vào,VNPT Invoice-Inbot_5000,2250000,5.000 HĐ (450đ/HĐ),
+1544ceff-e3c7-48f3-b5fb-832308e818d5,inbot,inbot_goi,Inbot Đầu vào,VNPT Invoice-Inbot_300,315000,300 HĐ (1.050đ/HĐ),
 0822c480-0009-4ba8-94de-48dbcd6fa5a7,internet,nt_tv_none,Kèm MyTV Ngoại thành,HomeTV 2 (500ULM),240000,Tích hợp MyTV App,
 08bb5183-f3c9-4f9a-aa4f-db9bd8394bfd,internet,noi_cam_none,Kèm Camera Nội thành,Home Cam 3 (1Gbps),340000,01 Cam Indoor + Cloud 3 ngày,
 094b533c-2461-409a-a714-efed0cb3b315,invoice,invoice_pos,HĐĐT Máy tính tiền,MTT 50.000,11000000,50.000 HĐ (220đ/HĐ),
@@ -71,7 +72,7 @@ id,service_id,plan_group,group_name,duration_text,price,note,invoice_price
 5d2891f3-7784-4433-b7fd-e629ea4d670e,bhxh,tichhop_giahan_1000,Tích hợp Gia hạn - VAN 1000,18,1897500,,
 6265e53c-97f4-4385-897d-179bfc7c60af,invoice,invoice_pos,HĐĐT Máy tính tiền,MTT 5.000,1950000,5.000 HĐ (390đ/HĐ),
 63712f80-f425-439f-ba1e-9317f8e8d852,invoice,invoice_nt,Truyền nhận dữ liệu,"NT 500,000",67500000,500.000 HĐ. Đơn giá: 135đ,
-667649f7-96a5-4780-9e57-4c3c65233095,inbot,inbot_goi,Inbot Đầu vào,IB 2.000,1200000,2.000 HĐ (600đ/HĐ),
+667649f7-96a5-4780-9e57-4c3c65233095,inbot,inbot_goi,Inbot Đầu vào,VNPT Invoice-Inbot_2000,990000,2.000 HĐ (495đ/HĐ),
 667abe97-e228-4cc9-9b2c-8d7cb9ce9bc4,bhxh,bhxh_doclap,Kê khai BHXH,48,418000,,
 66f13118-4fe7-4827-a411-b5044dccd57b,vnptca,nhanvien_moi,Nhân viên Mới,36,935000,,935000
 6815700e-f11a-4dcf-b09b-7ff6f7ac48f0,vnptca,device,Thiết bị,12,5500000,,5500000
@@ -149,8 +150,8 @@ cf39eedc-30c9-4f3a-a6a4-57f46d9a7bff,internet,noi_home_1mesh,Chỉ Internet Nộ
 d1c4e687-f222-4183-a2eb-ba47b82bc581,internet,noi_tv_1mesh,Kèm MyTV Nội thành,HomeTV 1 (300Mbps),270000,Tích hợp MyTV App + 1 Mesh 6,
 d3c2c737-93f1-49ec-8aaf-2aa345fa4965,econtract,econtract_saas,Phần mềm eContract SaaS,E5000,26000000,"5000 HĐ, 25.000MB lưu trữ",
 d4086472-9ba2-4a20-9893-3bc5001a8189,vnptca,nhanvien_moi,Nhân viên Mới,24,770000,,770000
-d4dd4316-0d4d-466a-a93f-17859f82c72a,inbot,inbot_goi,Inbot Đầu vào,IB 500,400000,500 HĐ (800đ/HĐ),
-db108ee0-8594-48fc-b087-26d7f9916ae8,inbot,inbot_goi,Inbot Đầu vào,IB 10.000,4000000,10.000 HĐ (400đ/HĐ),
+d4dd4316-0d4d-466a-a93f-17859f82c72a,inbot,inbot_goi,Inbot Đầu vào,VNPT Invoice-Inbot_500,450000,500 HĐ (900đ/HĐ),
+db108ee0-8594-48fc-b087-26d7f9916ae8,inbot,inbot_goi,Inbot Đầu vào,VNPT Invoice-Inbot_10000,4000000,10.000 HĐ (400đ/HĐ),
 db39ed63-b5cc-4fbc-abc9-0d2d3a811203,internet,noi_mobile,Kèm Di động Nội thành,Home Sành 2 (300Mbps),249000,"Chủ nhóm: 3GB/ngày + 1.500p nội mạng, 89p ngoại mạng. Miễn phí gọi nhóm (tối đa 6 TV)",
 dde59ddc-b558-410c-9f4e-4ff7948e0bd7,bhxh,bhxh_doclap_max,Kê khai BHXH,60,2585000,,
 ded79f66-a5d6-49ff-812a-f4dab1e51528,invoice,invoice_nt,Truyền nhận dữ liệu,"NT 50,000",7500000,50.000 HĐ. Đơn giá: 150đ,
@@ -171,7 +172,7 @@ f51dcc99-90d4-4b56-8a0e-720a3cd132a0,bhxh,bhxh_doclap_1000,Kê khai BHXH,48,1672
 f66f61f7-a8da-4c40-a1d5-099da062a986,invoice,invoice_new,HĐĐT Thông tư 78,"HD 2,000 NEW",1300000,2.000 HĐ. Đơn giá: 650đ,
 f7b68056-7a90-49ba-a112-a89a4dfb6e74,bhxh,tichhop_giahan,Tích hợp Gia hạn - VAN 10,48,2530000,,
 faa74224-85ac-427e-b449-850d06503d27,vnptca,doanhnghiep_giahan,Doanh nghiệp Gia hạn,12,1273000,,1273000
-fc4ab8e3-b17c-45b2-8645-9088ced53734,inbot,inbot_goi,Inbot Đầu vào,IB 1.000,700000,1.000 HĐ (700đ/HĐ),
+fc4ab8e3-b17c-45b2-8645-9088ced53734,inbot,inbot_goi,Inbot Đầu vào,VNPT Invoice-Inbot_1000,540000,1.000 HĐ (540đ/HĐ),
 fcb450f3-2d97-49b6-b91e-6993cdb72adf,econtract,econtract_saas,Phần mềm eContract SaaS,E2000,10800000,"2000 HĐ, 10.000MB lưu trữ",
 ff1e6edc-04e3-4b7a-80ff-4a5cfbdd7b29,internet,nt_home_1mesh,Chỉ Internet Ngoại thành,Home 3 (1Gbps),310000,Modem + 1 Mesh Wifi 6,
 ff257db3-042d-4b49-826a-8d89630c751c,invoice,invoice_pos,HĐĐT Máy tính tiền,MTT 100,150000,100 HĐ (1.500đ/HĐ),

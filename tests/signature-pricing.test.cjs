@@ -13,8 +13,11 @@ test('all signature plans: VAT 8/10, both CA contract tiers, fixed Token and cop
             assert.equal(state.vnptCaTokenPrice, token);
             for (const field of ['price', 'invoice_price']) {
                 const service = BigInt(Number(plan[field]) - tokenBase);
-                const expected = roundFraction(service * BigInt(100 + vat) * BigInt(100 - discount), 11000n) + token;
+                const expectedService = roundFraction(service * BigInt(100 + vat) * BigInt(100 - discount), 11000n);
+                const expected = expectedService + token;
+                assert.equal(state.calculateVnptCaServicePrice(plan[field]), expectedService);
                 assert.equal(state.calculateVnptCaPrice(plan[field]), expected);
+                assert.equal(state.calculateVnptCaServicePrice(plan[field]) + state.vnptCaTokenPrice, expected);
                 if (!discount && vat === 10) assert.equal(expected, Number(plan[field]));
                 priceCases++;
             }
@@ -99,6 +102,7 @@ test('VAT switches do not accumulate changes; one-dong rounding regressions', ()
 
 test('CA discount caps apply to prices and copy immediately when contract tier changes', () => {
     const app = loadPricing(), state = app.state;
+    state.vatRate = 10; // This price example explicitly uses VAT 10%.
     const plan = { duration_text: '12', price: 1823000, invoice_price: 1823000 };
     assert.equal(state.vnptCaContractSize, 'under100');
     assert.equal(state.maxVnptCaDiscount, 50);
@@ -125,12 +129,14 @@ test('CA discount caps apply to prices and copy immediately when contract tier c
     assert.equal(state.calculateFinalPrice({ price: 20000, duration_text: '1' }), 17673);
     assert.equal(state.discountVnptCa, 50);
     state.selectService({ id: 'cks' });
+    assert.equal(state.vatRate, 8);
     assert.equal(state.vnptCaContractSize, 'under100');
     assert.equal(state.discountVnptCa, 0);
 });
 
 test('SmartCA limits each duration and copied quote when 30% is selected', () => {
     const app = loadPricing(), state = app.state;
+    state.vatRate = 10; // This price example explicitly uses VAT 10%.
     const smart = readPlans().filter(plan => plan.service_id === 'smartca');
     state.smartCaData = [...new Set(smart.map(plan => plan.plan_group))].map(type => ({ type, name: type, plans: smart.filter(plan => plan.plan_group === type) }));
     state.activeSmartCaTab = 'canhan'; state.discountRate = 30; state.smartCaDiscountMode = 'custom';
@@ -176,6 +182,7 @@ test('SmartCA limits each duration and copied quote when 30% is selected', () =>
 
 test('SmartCA one-click automatic discounts, optional custom rates and original prices', () => {
     const app = loadPricing(), state = app.state;
+    state.vatRate = 10; // This price example explicitly uses VAT 10%.
     const plans = [
         { duration_text: '1', price: 35000 },
         { duration_text: '6', price: 120000 },

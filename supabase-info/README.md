@@ -8,9 +8,9 @@ Nguồn: ảnh sơ đồ, SQL và ba file CSV do người dùng cung cấp ngày
 | --- | ---: | --- |
 | `categories.csv` | 2 | `cntt` (Công nghệ thông tin, thứ tự 1), `brcd` (Băng rộng cố định, thứ tự 2) |
 | `services.csv` | 7 | CNTT: `cks`, `bhxh`, `hddt`, `econtract`. Băng rộng cố định: `internet`, `mytv`, `camera` |
-| `plans.csv` | 176 | 49 nhóm gói của bảy mã phân loại bên dưới |
+| `plans.csv` | 177 | 49 nhóm gói của bảy mã phân loại bên dưới |
 
-Số dòng trên không tính tiêu đề CSV. Người dùng đã bổ sung `plans.csv` từ 100 lên 176 dòng (thêm 76 dòng). Các số liệu trong tài liệu đã được cập nhật theo bản xuất bổ sung này; chưa đối chiếu trực tiếp với database đang chạy.
+Số dòng trên không tính tiêu đề CSV. Người dùng đã bổ sung `plans.csv` từ 100 lên 176 dòng (thêm 76 dòng); lần cập nhật giá Inbot theo ảnh mới bổ sung IB 300, thành 177 dòng. Các số liệu trong tài liệu phản ánh dữ liệu cục bộ hiện tại; chưa đối chiếu trực tiếp với database đang chạy.
 
 Giá BHXH tích hợp VAN 100 gia hạn 33 tháng trong CSV đã được sửa từ 2.695.000đ thành 2.695.100đ theo ảnh và xác nhận người dùng. Giao diện áp dụng cùng điều chỉnh qua `bhxh-data.js` trong khi Supabase chưa cập nhật; xem [bhxh-reference.md](bhxh-reference.md).
 
@@ -20,7 +20,7 @@ Giá BHXH tích hợp VAN 100 gia hạn 33 tháng trong CSV đã được sửa 
 | `smartca` | 16 | Chữ ký số từ xa |
 | `bhxh` | 40 | BHXH độc lập và tích hợp |
 | `invoice` | 21 | Invoice, truyền nhận TVAN, POS |
-| `inbot` | 5 | Hóa đơn đầu vào |
+| `inbot` | 6 | Hóa đơn đầu vào |
 | `econtract` | 11 | eContract SaaS và TSA CeCA |
 | `internet` | 62 | Internet cáp quang: bảng so sánh cấu hình và tính giá 1/3/6/12 tháng |
 
@@ -102,7 +102,14 @@ Nhánh Chữ ký số Token có lựa chọn Gói thường / Gói Pro cho OID, 
 - SmartCA có lựa chọn "Giá gốc / Áp dụng ưu đãi", mặc định giá gốc. Bấm áp dụng để tự tính mức giảm phù hợp từng gói: 1–3 tháng/dùng một lần 10%, 6 tháng 20%, từ 12 tháng 30%. Phần "Tùy chỉnh ưu đãi" thu gọn chứa điều kiện khách hàng riêng và chọn mức giảm thủ công; mọi mức giảm vẫn bị giới hạn theo chính sách. Điều kiện riêng/mức thủ công có tóm tắt bên ngoài phần thu gọn. Mỗi dòng chỉ ghi "Giảm X%" cạnh giá, công thức và nội dung sao chép dùng cùng mức thực tế; xem [smartca-reference.md](smartca-reference.md).
 - CA Token có chính sách chiết khấu riêng theo số chữ ký số trên 1 hợp đồng: dưới 100 tối đa 50%, từ 100 trở lên tối đa 60%, chỉ giảm phí dịch vụ. Chọn quy mô hợp đồng và mức chiết khấu bước 1%; tự hạ mức vượt trần khi đổi quy mô. Ngoài phân cấp cần đề xuất qua Phòng Điều hành gửi Tổng Công ty xem xét. Giá trong bảng và nội dung sao chép vẫn là giá cho 1 chữ ký số. Chính sách CA Token độc lập với SmartCA; xem [vnptca-reference.md](vnptca-reference.md).
 - BHXH phân biệt địa bàn: Hà Nội/Đà Nẵng/TP.HCM tối đa 65% độc lập, 55% tích hợp; các địa bàn còn lại tối đa 50%/45%. Trần tính chung các khoản ưu đãi và thù lao đại lý theo chính sách. Mặc định địa bàn khác, giảm 0%; tự giới hạn khi đổi địa bàn hoặc loại gói. Chỉ chiết khấu phí dịch vụ, cộng nguyên Token cho tích hợp đăng ký mới; đổi VAT và chiết khấu trước khi làm tròn kết quả cuối. Xem [bhxh-reference.md](bhxh-reference.md).
+- Các dịch vụ CNTT (Chữ ký số Token/SmartCA, BHXH, Invoice/TVAN/Inbot/POS, eContract/TSA) mặc định VAT 8% khi mở hoặc chọn lại dịch vụ; vẫn chọn được VAT 10% khi cần. Đây là cấu hình mặc định của giao diện theo yêu cầu người dùng.
 - Invoice, Inbot và eContract: coi `price` là giá chưa VAT, sau đó tính chiết khấu, VAT và các khoản cộng thêm theo từng dịch vụ.
+- Inbot dùng giá mới trong `inbot-data.js`: sáu gói 300/500/1.000/2.000/5.000/10.000 HĐ, MAX 350đ/HĐ và khởi tạo 300.000đ/lần, đều chưa VAT. Đã cập nhật CSV và bổ sung IB 300; cấu hình cục bộ thay giá Supabase cũ khi hiển thị, chưa ghi lên database online. Xem [inbot-reference.md](inbot-reference.md).
+- Inbot ràng buộc chiết khấu gói tối đa 20%/30%/40% theo số HĐ và điều kiện khách hàng. Khởi tạo có trần riêng theo doanh thu gói sau giảm, chưa VAT: trên 500.000đ tối đa 100%, từ 500.000đ trở xuống tối đa 50%. Hai nút áp dụng ưu đãi độc lập và phần tùy chỉnh thu gọn dùng chung giới hạn cho bảng, MAX và sao chép; không còn miễn phí khởi tạo vô điều kiện. Gia hạn không tính khởi tạo.
+- Invoice TT78 bổ sung đơn giá tạo lập và truyền nhận từng HĐ từ `invoice-data.js` dưới tên sáu gói cố định và HD_MAX NEW. Hai thành phần đã nằm trong tổng đơn giá/giá gói, chưa VAT; không cộng thêm vào phí khởi tạo dịch vụ. TVAN riêng, POS và Inbot giữ thông tin hiện có. Xem [invoice-reference.md](invoice-reference.md).
+- Invoice TT78/HD_MAX NEW ràng buộc chiết khấu: dưới 5.000 HĐ tối đa 20%, từ 5.000 đến dưới 10.000 tối đa 30%, từ 10.000 tối đa 40%. Điều kiện doanh thu khách hiện hữu hoặc cạnh tranh giá có thể cho phép mức cao hơn theo các điều kiện "hoặc" trong chính sách. Giao diện "Giá gốc / Áp dụng ưu đãi" và phần tùy chỉnh thu gọn dùng cùng giới hạn cho giá chưa VAT, thanh toán và sao chép. Chính sách mới chưa áp dụng cho TVAN/POS/Inbot hoặc phí khởi tạo.
+- POS có bảng giá/chính sách riêng trong `pos-data.js`: chín gói cố định giữ giá theo ảnh, MTT Max từ 500.000 HĐ × 100đ, duy trì 50.000đ/lần. Phí khởi tạo do đơn vị bán hàng quyết định; theo yêu cầu người dùng, mặc định tạm tính 1.000.000đ chưa VAT, có thể sửa hoặc nhập 0 nếu không thu. Trần giảm giá gói/duy trì lần lượt 10%/20%, 30%/50%, 40%/100% theo số lượng hoặc điều kiện khách hàng. Phí khởi tạo phải hợp lệ để có tổng đầy đủ và sao chép báo giá. Xem [pos-reference.md](pos-reference.md).
+- eContract dùng `econtract-data.js`: SaaS khởi tạo 2.000.000đ, bảy gói E50–E5000 và Emax từ 10.000 HĐ × 5.000đ/HĐ; OnPremise triển khai 100.000.000đ, sử dụng bằng 50% SaaS và không kèm lưu trữ. SaaS giới hạn dịch vụ/khởi tạo 10%/10%, 20%/50%, 30%/100% theo số HĐ hoặc điều kiện khách hàng; OnPremise chỉ giảm triển khai tối đa 10%/20%/30% theo khách hàng. Add-on dùng được cho cả hai, SMS riêng cần đơn giá riêng, eKYC tính cả lượt không thành công. TSA CeCA đủ sáu gói Min/5.000/10.000/20.000/50.000/Max theo ảnh nguồn, chiết khấu riêng tối đa 30% cả khi tra riêng hoặc kèm eContract. Xem [econtract-reference.md](econtract-reference.md).
 - `invoice_price` được dùng làm giá xuất hóa đơn trong nhánh VNPT-CA doanh nghiệp.
 - Các quy ước này đến từ JavaScript, không được thể hiện bằng ràng buộc trong SQL đã cung cấp.
 

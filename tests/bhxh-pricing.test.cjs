@@ -20,6 +20,7 @@ function selectGroup(state, code) {
 
 test('40 BHXH prices match supplied tables, including confirmed VAN 100 renewal correction', () => {
     const { state, plans } = loadBhxh();
+    state.vatRate = 10; // This price example explicitly uses VAT 10%.
     const standalone = {
         '': [220000, 352000, 418000, 528000],
         _100: [550000, 880000, 1045000, 1320000],
@@ -95,6 +96,7 @@ test('BHXH service, total and copied quote use regional caps, VAT 8/10 and undis
 
 test('BHXH caps take effect before watchers and reset when reselecting the service', () => {
     const app = loadBhxh(), state = app.state;
+    state.vatRate = 10; // This price example explicitly uses VAT 10%.
     state.bhxhRegion = 'major'; state.discountBhxh = 65;
     assert.equal(state.maxBhxhDiscount, 65);
     assert.equal(state.calculateBhxhTotal(220000), 77000);

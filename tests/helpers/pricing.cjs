@@ -35,7 +35,7 @@ function loadPricing() {
         navigator: { clipboard: { writeText(text) { copied = text; return Promise.resolve(); } } }
     };
     vm.createContext(sandbox);
-    for (const file of ['vnptca-data.js', 'bhxh-data.js']) {
+    for (const file of ['vnptca-data.js', 'bhxh-data.js', 'invoice-data.js', 'inbot-data.js', 'pos-data.js', 'econtract-data.js']) {
         vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), sandbox);
     }
     vm.runInContext(script, sandbox);

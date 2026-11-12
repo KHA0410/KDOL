@@ -182,12 +182,22 @@
 }
 
 /* Thanh chiết khấu và kết quả báo giá. */
-.kdol-smartca-custom {
+.kdol-smartca-custom,
+.kdol-invoice-custom,
+.kdol-inbot-custom,
+.kdol-pos-custom,
+.kdol-econtract-custom,
+.kdol-econtract-addons {
     padding-top: 0.625rem;
     border-top: 1px solid var(--kdol-color-border-light);
 }
 
-.kdol-smartca-custom > summary {
+.kdol-smartca-custom > summary,
+.kdol-invoice-custom > summary,
+.kdol-inbot-custom > summary,
+.kdol-pos-custom > summary,
+.kdol-econtract-custom > summary,
+.kdol-econtract-addons > summary {
     color: var(--kdol-color-primary);
     font-size: 0.8125rem;
     font-weight: 600;

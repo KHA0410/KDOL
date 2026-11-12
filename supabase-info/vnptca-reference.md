@@ -26,6 +26,8 @@ Dữ liệu Pro được bổ sung cục bộ, chưa cập nhật CSV/Supabase. 
 
 ## Chiết khấu CA Token
 
+Bảng đăng ký mới (gói thường và Pro) có thêm cột “Giá dịch vụ”, kèm VAT đang chọn và đã trừ chiết khấu phí dịch vụ. Giá gốc được gạch ngang khi có giảm giá. Cột này lấy giá thanh toán gốc trừ Token trước khi tính VAT/chiết khấu; giá dịch vụ sau làm tròn cộng giá Token bằng tổng thanh toán. Gia hạn và Device ID không hiện thêm cột này.
+
 Nguồn: ảnh "Chính sách chiết khấu — Giá cước dịch vụ" người dùng cung cấp.
 
 - Dưới 100 chữ ký số trên 1 hợp đồng: mức chiết khấu tối đa 50%.
