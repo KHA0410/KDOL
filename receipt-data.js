@@ -4,6 +4,7 @@
 window.KDOL_RECEIPT = {
     service: { id: 'bienlai', category_id: 'cntt', name: 'Biên lai điện tử', sort_order: 5 },
     maxDiscount: 30,
+    setupPrice: 1000000,
     storageYears: 10,
     customMinimum: 10001,
     customUnitPrice: 300,

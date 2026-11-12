@@ -4,6 +4,10 @@ Nguồn: ảnh sơ đồ, SQL và ba file CSV do người dùng cung cấp ngày
 
 ## Dữ liệu CSV đã đọc
 
+SmartCA Hộ kinh doanh bổ sung qua `smartca-household-data.js`: Nâng cao 12/24/36 tháng 540.000/1.026.000/1.458.000đ đã VAT 8%; gói 6 tháng miễn phí riêng cho lần đầu kích hoạt. Xem [smartca-reference.md](smartca-reference.md).
+
+SmartCA Cá nhân có thêm gói theo lượt cục bộ qua `smartca-usage-data.js`: PS03/PS20/PS50 giá 16.200/37.800/54.000đ **đã VAT 8%**, PSMAX 982đ/lượt. Hiện chỉ dùng giá gốc theo xác nhận người dùng. Xem [smartca-reference.md](smartca-reference.md).
+
 Biên lai điện tử được bổ sung cục bộ trong mục CNTT qua `receipt-data.js`, không thay số dòng CSV xuất. Sáu gói BL300–BL10.000 và số lượng trên 10.000 × 300đ, lưu trữ 10 năm; VAT mặc định 8%, chiết khấu tối đa 30%, thanh kéo bước 5%. Xem [receipt-reference.md](receipt-reference.md).
 
 | File | Số dòng dữ liệu | Nội dung |
