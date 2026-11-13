@@ -60,9 +60,43 @@
     background-color: var(--kdol-color-primary-light);
 }
 
+/* Xuống dòng theo chiều rộng cột tra cứu, không theo chiều rộng cửa sổ. */
+.kdol-config-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-width: 0;
+}
+
+.kdol-config-header > :first-child { flex: 1 1 15rem; min-width: 0; }
+
+.kdol-config-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    max-width: 100%;
+}
+
+.kdol-config-actions > .kdol-choice-group { flex: 0 0 auto; max-width: 100%; }
+
+.kdol-config-field {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.kdol-config-field > .kdol-select { flex: 1 1 16rem; width: auto; min-width: 0; max-width: 100%; }
+
 /* Nút: class nền chỉ quy định hình dạng, Vue quyết định màu trạng thái. */
 .kdol-choice-group {
     display: flex;
+    flex-shrink: 0;
+    max-width: 100%;
     align-items: center;
     padding: 0.25rem;
     border: 1px solid var(--kdol-color-border);
@@ -89,6 +123,8 @@
     border-bottom: 1px solid #d1d5db;
     border-color: #d1d5db;
 }
+
+.kdol-tabs--wrap { flex-wrap: wrap; overflow-x: visible; }
 
 .kdol-tab {
     flex-shrink: 0;

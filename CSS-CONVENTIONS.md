@@ -11,6 +11,7 @@ Mục đích chính của KDOL là tra cứu nhanh thông tin và giá gói cư�
 - Tránh để class thành phần và utility cùng điều khiển một thuộc tính trên một phần tử. Khi cần một biến thể dùng nhiều lần, thêm class `--...` thay vì phụ thuộc thứ tự CSS.
 - Để Vue điều khiển trạng thái đang chọn, VAT và chiết khấu qua `:class`. Các class nền như `kdol-choice` và `kdol-price` không đặt màu mà Vue đang thay đổi.
 - Viết theo hướng mobile trước. Dùng breakpoint đồng bộ với Tailwind: `sm` = 640px, `md` = 768px, `xl` = 1280px.
+- Hàng cấu hình dùng `kdol-config-header` / `kdol-config-actions` và `flex-wrap` theo chiều rộng cột tra cứu. Không ép hàng ngang bằng `xl:flex-row` vì cửa sổ rộng vẫn có thể chia cột nội dung hẹp. Giữ mỗi cụm nút không co lại, xuống dòng cả cụm khi thiếu chỗ; nhãn và ô chọn dùng `kdol-config-field`.
 - Thứ tự trong CSS: biến dùng chung → tiện ích → thành phần → responsive. Thụt lề 4 dấu cách; không dùng `!important` hoặc selector theo ID để tăng độ ưu tiên.
 - Hiệu ứng tương tác dùng `--kdol-transition-duration` (160ms), hiện nội dung dùng `--kdol-transition-content-duration` (180ms). Chỉ chuyển các thuộc tính cần thiết, tránh `transition: all` và chuyển kích thước bảng/cột. Giá cập nhật ngay, không chạy số đếm.
 - Dấu chọn danh mục dùng phần tử giả, không thêm/bớt độ dày viền làm dịch bố cục. Nút danh mục dùng `<button>` với trạng thái `aria-pressed` để hỗ trợ chuột, cảm ứng và bàn phím.

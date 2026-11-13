@@ -90,7 +90,7 @@
 
                     <!-- VNPT-CA TOKEN -->
                     <div v-if="activeCksSubTab === 'token'">
-                        <div class="kdol-tabs kdol-hide-scrollbar kdol-tabs--spaced">
+                        <div class="kdol-tabs kdol-tabs--spaced kdol-tabs--wrap">
                             <button v-for="tab in [{id: 'canhan', name: 'Cá nhân (Personal ID)'}, {id: 'nhanvien', name: 'Nhân viên (Staff ID)'}, {id: 'doanhnghiep', name: 'Doanh nghiệp (OID)'}, {id: 'device', name: 'Thiết bị (Device ID)'}]" :key="tab.id" 
                                 @click="activeVnptCaTab = tab.id"
                                 :class="['kdol-tab',
@@ -110,7 +110,7 @@
                             <p v-if="vnptCaFeatures.length" class="text-xs text-gray-700">
                                 <span class="font-semibold">Chức năng:</span> {{ vnptCaFeatures.join(' · ') }}
                             </p>
-                            <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+                            <div class="kdol-config-header">
                                 <div>
                                     <p class="font-semibold text-gray-800 text-sm md:text-base">Tùy chọn gói:</p>
                                     <p v-if="activeVnptCaType === 'moi' && activeVnptCaTab !== 'device'" class="text-xs text-vnpt-red font-medium mt-1">
@@ -119,21 +119,21 @@
                                     <p v-else-if="activeVnptCaTab === 'device'" class="text-xs text-gray-600 mt-1">Gói cước dành riêng cho thiết bị/Server</p>
                                     <p v-else class="text-xs text-gray-600 mt-1">Chỉ tính phí gia hạn dịch vụ (Không kèm Token)</p>
                                 </div>
-                                <div class="flex flex-col sm:flex-row gap-2 w-full xl:w-auto">
-                                    <div v-if="activeVnptCaTab !== 'device'" class="kdol-choice-group w-full sm:w-auto">
+                                <div class="kdol-config-actions">
+                                    <div v-if="activeVnptCaTab !== 'device'" class="kdol-choice-group">
                                         <button @click="activeVnptCaType = 'moi'" :class="['kdol-choice kdol-choice--fluid', activeVnptCaType === 'moi' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Đăng ký mới</button>
                                         <button @click="activeVnptCaType = 'giahan'" :class="['kdol-choice kdol-choice--fluid', activeVnptCaType === 'giahan' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Gia hạn</button>
                                     </div>
-                                    <div class="kdol-choice-group w-full sm:w-auto">
+                                    <div class="kdol-choice-group">
                                         <button @click="vatRate = 10" :class="['kdol-choice kdol-choice--fluid', vatRate === 10 ? 'bg-gray-800 text-white' : 'text-gray-500 hover:bg-gray-50']">VAT 10%</button>
                                         <button @click="vatRate = 8" :class="['kdol-choice kdol-choice--fluid', vatRate === 8 ? 'bg-green-600 text-white' : 'text-gray-500 hover:bg-gray-50']">VAT 8%</button>
                                     </div>
                                 </div>
                             </div>
                             <div class="flex flex-col gap-2 mt-1">
-                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <div class="kdol-config-field">
                                     <label for="vnptca-contract-size" class="text-sm font-semibold text-gray-700">Số chữ ký số trên 1 hợp đồng:</label>
-                                    <select id="vnptca-contract-size" v-model="vnptCaContractSize" class="kdol-select w-full sm:w-auto">
+                                    <select id="vnptca-contract-size" v-model="vnptCaContractSize" class="kdol-select">
                                         <option value="under100">Dưới 100 chữ ký số — tối đa 50%</option>
                                         <option value="100plus">Từ 100 chữ ký số — tối đa 60%</option>
                                     </select>
@@ -205,7 +205,7 @@
 
                     <!-- SMARTCA -->
                     <div v-if="activeCksSubTab === 'smartca'">
-                        <div class="kdol-tabs kdol-hide-scrollbar kdol-tabs--spaced">
+                        <div class="kdol-tabs kdol-tabs--spaced kdol-tabs--wrap">
                             <button v-for="tab in smartCaTabs" :key="tab.type" @click="activeSmartCaTab = tab.type"
                                 :class="['kdol-tab',
                                 activeSmartCaTab === tab.type ? 'border-b-2 border-vnpt-blue text-vnpt-blue' : 'text-gray-500 hover:text-gray-700']">
@@ -218,7 +218,7 @@
                                 <button type="button" @click="smartCaPersonalMode = 'term'" :aria-pressed="!isSmartCaUsage" :class="['kdol-choice kdol-choice--fluid', !isSmartCaUsage ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Theo thời hạn</button>
                                 <button type="button" @click="smartCaPersonalMode = 'usage'" :aria-pressed="isSmartCaUsage" :class="['kdol-choice kdol-choice--fluid', isSmartCaUsage ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Theo lượt</button>
                             </div>
-                            <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+                            <div class="kdol-config-header">
                                 <div>
                                     <p class="font-semibold text-gray-800 text-sm md:text-base">Cấu hình gói:</p>
                                     <p v-if="isSmartCaUsage" class="text-xs md:text-sm text-gray-600 mt-1">Gói chữ ký số Cá nhân theo lượt.</p>
@@ -229,12 +229,12 @@
                                     </div>
                                     <div v-else><p class="text-xs md:text-sm text-gray-600 mt-1">Tốc độ: 01 lượt/s - Tối đa: 10 lượt/30 ngày</p></div>
                                 </div>
-                                <div class="flex flex-col sm:flex-row gap-2 w-full xl:w-auto">
-                                    <div v-if="!isSmartCaUsage && !isSmartCaHousehold && activeSmartCaTab !== '1lan'" class="kdol-choice-group w-full sm:w-auto">
+                                <div class="kdol-config-actions">
+                                    <div v-if="!isSmartCaUsage && !isSmartCaHousehold && activeSmartCaTab !== '1lan'" class="kdol-choice-group">
                                         <button @click="isAdvanced = false" :class="['kdol-choice kdol-choice--fluid', !isAdvanced ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Cơ bản</button>
                                         <button @click="isAdvanced = true" :class="['kdol-choice kdol-choice--fluid', isAdvanced ? 'bg-vnpt-red text-white' : 'text-gray-500 hover:bg-gray-50']">Nâng cao</button>
                                     </div>
-                                    <div class="kdol-choice-group w-full sm:w-auto">
+                                    <div class="kdol-choice-group">
                                         <button @click="vatRate = 10" :class="['kdol-choice kdol-choice--fluid', vatRate === 10 ? 'bg-gray-800 text-white' : 'text-gray-500 hover:bg-gray-50']">VAT 10%</button>
                                         <button @click="vatRate = 8" :class="['kdol-choice kdol-choice--fluid', vatRate === 8 ? 'bg-green-600 text-white' : 'text-gray-500 hover:bg-gray-50']">VAT 8%</button>
                                     </div>
@@ -365,7 +365,7 @@
                     </div>
 
                     <div class="kdol-config-panel">
-                        <div class="flex flex-col xl:flex-row justify-between gap-3">
+                        <div class="kdol-config-header">
                             <div>
                                 <p class="font-semibold text-gray-800 text-sm mb-2">Chọn Gói Cước:</p>
                                 <div class="flex flex-wrap gap-2">
@@ -491,7 +491,7 @@
 
                         <!-- CẤU HÌNH CHO VNPT INVOICE & TRUYỀN NHẬN (CƯỚC KHỞI TẠO 1.000.000đ) -->
                         <div class="kdol-config-panel">
-                            <div class="flex flex-col xl:flex-row justify-between gap-3">
+                            <div class="kdol-config-header">
                                 <div class="flex flex-wrap items-center gap-2">
                                     <span class="text-sm font-semibold text-gray-800">Trạng thái:</span>
                                     <div class="kdol-choice-group">
@@ -499,7 +499,7 @@
                                         <button @click="activeInvoiceType = 'giahan'" :class="['kdol-choice', activeInvoiceType === 'giahan' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Gia hạn</button>
                                     </div>
 
-                                    <div v-if="activeInvoiceType === 'moi'" class="flex items-center gap-1.5 ml-0 sm:ml-2">
+                                    <div v-if="activeInvoiceType === 'moi'" class="flex flex-wrap items-center gap-1.5 ml-0 sm:ml-2">
                                         <span class="text-xs font-semibold text-gray-700">Khởi tạo (1.000.000đ):</span>
                                         <div class="kdol-choice-group">
                                             <button @click="activeInvoiceSetupStatus = 'thu'" :class="['kdol-choice kdol-choice--compact', activeInvoiceSetupStatus === 'thu' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Có thu</button>
@@ -674,7 +674,7 @@
                     <!-- TAB 2: VNPT INVOICE-INBOT (HÓA ĐƠN ĐẦU VÀO - PHÍ KHỞI TẠO 300.000đ) -->
                     <div v-if="activeHddtMainTab === 'inbot'">
                         <div class="kdol-config-panel">
-                            <div class="flex flex-col xl:flex-row justify-between gap-3">
+                            <div class="kdol-config-header">
                                 <div class="flex flex-wrap items-center gap-2">
                                     <span class="text-sm font-semibold text-gray-800">Trạng thái:</span>
                                     <div class="kdol-choice-group">
@@ -682,7 +682,7 @@
                                         <button @click="activeInbotType = 'giahan'" :class="['kdol-choice', activeInbotType === 'giahan' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Gia hạn</button>
                                     </div>
 
-                                    <div v-if="activeInbotType === 'moi'" class="flex items-center gap-1.5 ml-0 sm:ml-2">
+                                    <div v-if="activeInbotType === 'moi'" class="flex flex-wrap items-center gap-1.5 ml-0 sm:ml-2">
                                         <span class="text-xs font-semibold text-gray-700">Khởi tạo ({{ formatPrice(inbotSetupPrice) }}):</span>
                                         <div class="kdol-choice-group">
                                             <button type="button" @click="inbotSetupDiscountMode = 'none'" :aria-pressed="inbotSetupDiscountMode === 'none'" :class="['kdol-choice kdol-choice--compact', inbotSetupDiscountMode === 'none' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Giá gốc</button>
