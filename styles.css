@@ -92,6 +92,31 @@
 
 .kdol-config-field > .kdol-select { flex: 1 1 16rem; width: auto; min-width: 0; max-width: 100%; }
 
+/* Ba cụm tùy chọn Token đều nhau; đổi bố cục theo bề rộng thực tế. */
+.kdol-ca-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-width: 0;
+    container: ca-options / inline-size;
+}
+
+.kdol-ca-option-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+    gap: 0.5rem;
+}
+
+.kdol-ca-option-controls > .kdol-choice-group { width: 100%; min-width: 0; }
+.kdol-ca-option-controls > .kdol-choice-group:only-child { grid-column: 1 / -1; justify-self: end; max-width: 14rem; }
+.kdol-ca-option-controls .kdol-choice {
+    flex: 1 1 0%;
+    min-width: 0;
+    min-height: 2.25rem;
+    white-space: nowrap;
+}
+
 /* Nút: class nền chỉ quy định hình dạng, Vue quyết định màu trạng thái. */
 .kdol-choice-group {
     display: flex;
@@ -582,6 +607,10 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 /* Cùng breakpoint sm, md và xl với Tailwind hiện tại. */
+@container ca-options (min-width: 38rem) {
+    .kdol-ca-option-controls { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
 @media (min-width: 640px) {
     .kdol-choice--fluid { flex: none; }
     .kdol-mytv-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
