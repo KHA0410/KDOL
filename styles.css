@@ -153,7 +153,7 @@
     border-color: #d1d5db;
 }
 
-.kdol-tabs--wrap { flex-wrap: wrap; overflow-x: visible; }
+.kdol-tabs--scroll { flex-wrap: nowrap; min-width: 0; max-width: 100%; overflow-x: auto; scrollbar-width: thin; }
 
 .kdol-tab {
     flex-shrink: 0;
@@ -423,6 +423,10 @@ input[type="range"]::-webkit-slider-thumb {
 .kdol-internet-options { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1rem; }
 .kdol-internet-toggle { display: inline-flex; align-items: center; gap: 0.5rem; color: #334155; font-size: 0.8125rem; line-height: 1.25rem; cursor: pointer; }
 .kdol-internet-toggle__input { width: 1rem; height: 1rem; accent-color: var(--kdol-color-primary); }
+.kdol-internet-install-options { display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: 0.75rem; margin-top: 1rem; overflow-x: auto; container: internet-install / inline-size; }
+.kdol-internet-install-options .kdol-internet-toggle { flex: 0 0 auto; gap: 0.1875rem; padding: 0.25rem 0; font-size: clamp(0.625rem, 3.6cqi, 0.8125rem); line-height: 1.125rem; white-space: nowrap; }
+.kdol-internet-install-options .kdol-internet-toggle__input { flex: 0 0 0.75rem; width: 0.75rem; height: 0.75rem; }
+.kdol-internet-install-text { display: inline; white-space: nowrap; }
 .kdol-internet-footnote { margin-top: 0.5rem; }
 .kdol-internet-scroll-hint { margin-bottom: 0.75rem; color: #64748b; font-size: 0.75rem; line-height: 1.125rem; }
 .kdol-internet-section-title { margin-bottom: 0.75rem; color: var(--kdol-color-table-heading); font-size: 1rem; line-height: 1.5rem; font-weight: 700; }

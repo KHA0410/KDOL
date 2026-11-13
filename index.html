@@ -27,7 +27,7 @@
     <script src="pos-data.js"></script>
     <script src="econtract-data.js"></script>
     <script src="receipt-data.js"></script>
-    <link rel="stylesheet" href="styles.css?v=20261113-2">
+    <link rel="stylesheet" href="styles.css?v=20261113-6">
 </head>
 <body class="bg-gray-100 h-screen flex flex-col font-sans">
     <div id="app" v-cloak class="flex flex-col h-full overflow-hidden">
@@ -90,7 +90,7 @@
 
                     <!-- VNPT-CA TOKEN -->
                     <div v-if="activeCksSubTab === 'token'">
-                        <div class="kdol-tabs kdol-tabs--spaced kdol-tabs--wrap kdol-tabs--mobile-row">
+                        <div class="kdol-tabs kdol-tabs--spaced kdol-tabs--scroll kdol-tabs--mobile-row">
                             <button v-for="tab in [{id: 'canhan', name: 'Cá nhân (Personal ID)', shortName: 'Cá nhân'}, {id: 'nhanvien', name: 'Nhân viên (Staff ID)', shortName: 'Nhân viên'}, {id: 'doanhnghiep', name: 'Doanh nghiệp (OID)', shortName: 'Doanh nghiệp'}, {id: 'device', name: 'Thiết bị (Device ID)', shortName: 'Thiết bị'}]" :key="tab.id"
                                 @click="activeVnptCaTab = tab.id"
                                 :class="['kdol-tab',
@@ -218,7 +218,7 @@
 
                     <!-- SMARTCA -->
                     <div v-if="activeCksSubTab === 'smartca'">
-                        <div class="kdol-tabs kdol-tabs--spaced kdol-tabs--wrap">
+                        <div class="kdol-tabs kdol-tabs--spaced kdol-tabs--scroll">
                             <button v-for="tab in smartCaTabs" :key="tab.type" @click="activeSmartCaTab = tab.type"
                                 :class="['kdol-tab',
                                 activeSmartCaTab === tab.type ? 'border-b-2 border-vnpt-blue text-vnpt-blue' : 'text-gray-500 hover:text-gray-700']">
@@ -1263,14 +1263,14 @@
                             </button>
                         </div>
                         <p v-if="internetMonths === 12" class="kdol-internet-footnote">Trả trước 12 tháng, tặng 1 tháng: sử dụng 13 tháng.</p>
-                        <div class="flex flex-wrap gap-x-6 gap-y-3 mt-3">
+                        <div class="kdol-internet-install-options">
                             <label class="kdol-internet-toggle" title="Phí lắp đặt được cộng một lần vào tổng tiền của kỳ đang chọn.">
                                 <input type="checkbox" v-model="includeInternetSetupFee" class="kdol-internet-toggle__input">
-                                {{ internetSetupFee.toLocaleString('en-US') }}đ phí lắp Internet
+                                <span class="kdol-internet-install-text"><span>{{ internetSetupFee.toLocaleString('en-US') }}đ</span> <span>phí lắp Internet</span></span>
                             </label>
                             <label class="kdol-internet-toggle" title="Cộng một lần cho gói Internet có Camera, cộng thêm vào phí lắp đặt Internet nếu cùng chọn.">
                                 <input type="checkbox" v-model="includeInternetCameraSetupFee" class="kdol-internet-toggle__input">
-                                {{ internetCameraSetupFee.toLocaleString('en-US') }}đ phí lắp Camera
+                                <span class="kdol-internet-install-text"><span>{{ internetCameraSetupFee.toLocaleString('en-US') }}đ</span> <span>phí lắp Camera</span></span>
                             </label>
                         </div>
                     </div>
