@@ -27,7 +27,7 @@
     <script src="pos-data.js"></script>
     <script src="econtract-data.js"></script>
     <script src="receipt-data.js"></script>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=20261113-2">
 </head>
 <body class="bg-gray-100 h-screen flex flex-col font-sans">
     <div id="app" v-cloak class="flex flex-col h-full overflow-hidden">
@@ -76,7 +76,7 @@
                     <h2 class="sr-only">Dịch vụ Chữ ký số VNPT</h2>
                     
                     <div class="flex border-b border-gray-300 mb-4 bg-gray-50 p-1 rounded-t-lg">
-                        <button @click="activeCksSubTab = 'token'; discountVnptCa = 0;"
+                        <button @click="activeCksSubTab = 'token'; vnptCaDiscountMode = 'none'; discountVnptCa = 0;"
                             :class="['flex-1 py-2 text-sm font-semibold rounded-md transition-colors text-center', 
                             activeCksSubTab === 'token' ? 'bg-vnpt-blue text-white shadow' : 'text-gray-600 hover:text-gray-900']">
                             Chữ ký số Token (VNPT-CA)
@@ -90,12 +90,13 @@
 
                     <!-- VNPT-CA TOKEN -->
                     <div v-if="activeCksSubTab === 'token'">
-                        <div class="kdol-tabs kdol-tabs--spaced kdol-tabs--wrap">
-                            <button v-for="tab in [{id: 'canhan', name: 'Cá nhân (Personal ID)'}, {id: 'nhanvien', name: 'Nhân viên (Staff ID)'}, {id: 'doanhnghiep', name: 'Doanh nghiệp (OID)'}, {id: 'device', name: 'Thiết bị (Device ID)'}]" :key="tab.id" 
+                        <div class="kdol-tabs kdol-tabs--spaced kdol-tabs--wrap kdol-tabs--mobile-row">
+                            <button v-for="tab in [{id: 'canhan', name: 'Cá nhân (Personal ID)', shortName: 'Cá nhân'}, {id: 'nhanvien', name: 'Nhân viên (Staff ID)', shortName: 'Nhân viên'}, {id: 'doanhnghiep', name: 'Doanh nghiệp (OID)', shortName: 'Doanh nghiệp'}, {id: 'device', name: 'Thiết bị (Device ID)', shortName: 'Thiết bị'}]" :key="tab.id"
                                 @click="activeVnptCaTab = tab.id"
                                 :class="['kdol-tab',
                                 activeVnptCaTab === tab.id ? 'border-b-2 border-vnpt-blue text-vnpt-blue' : 'text-gray-500 hover:text-gray-700']">
-                                {{ tab.name }}
+                                <span class="md:hidden">{{ tab.shortName }}</span>
+                                <span class="hidden md:inline">{{ tab.name }}</span>
                             </button>
                         </div>
 
@@ -113,24 +114,36 @@
                                     <p v-else class="text-xs text-gray-600 mt-1">Chỉ tính phí gia hạn dịch vụ (Không kèm Token)</p>
                                 </div>
                                 <div class="kdol-ca-option-controls">
-                                    <div v-if="activeVnptCaTab !== 'device'" class="kdol-choice-group" role="group" aria-label="Loại gói VNPT-CA">
-                                        <button v-for="tier in [{ id: 'standard', name: 'Gói thường' }, { id: 'pro', name: 'Gói Pro' }]" :key="tier.id"
-                                            type="button" @click="activeVnptCaTier = tier.id" :aria-pressed="activeVnptCaTier === tier.id"
-                                            :class="['kdol-choice kdol-choice--fluid', activeVnptCaTier === tier.id ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">
-                                            {{ tier.name }}
-                                        </button>
+                                    <div v-if="activeVnptCaTab !== 'device'" class="kdol-ca-option-row">
+                                        <span class="kdol-ca-option-label">Gói</span>
+                                        <div class="kdol-choice-group" role="group" aria-label="Loại gói VNPT-CA">
+                                            <button v-for="tier in [{ id: 'standard', name: 'Thường' }, { id: 'pro', name: 'Pro' }]" :key="tier.id" type="button" @click="activeVnptCaTier = tier.id" :aria-label="'Gói ' + tier.name" :aria-pressed="activeVnptCaTier === tier.id" :class="['kdol-choice kdol-choice--compact', activeVnptCaTier === tier.id ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">{{ tier.name }}</button>
+                                        </div>
                                     </div>
-                                    <div v-if="activeVnptCaTab !== 'device'" class="kdol-choice-group" role="group" aria-label="Đăng ký mới hoặc gia hạn VNPT-CA">
-                                        <button @click="activeVnptCaType = 'moi'" :class="['kdol-choice kdol-choice--fluid', activeVnptCaType === 'moi' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Đăng ký mới</button>
-                                        <button @click="activeVnptCaType = 'giahan'" :class="['kdol-choice kdol-choice--fluid', activeVnptCaType === 'giahan' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Gia hạn</button>
+                                    <div v-if="activeVnptCaTab !== 'device'" class="kdol-ca-option-row">
+                                        <span class="kdol-ca-option-label">Đăng ký</span>
+                                        <div class="kdol-choice-group" role="group" aria-label="Đăng ký mới hoặc gia hạn VNPT-CA">
+                                            <button type="button" @click="activeVnptCaType = 'moi'" aria-label="Đăng ký mới" :aria-pressed="activeVnptCaType === 'moi'" :class="['kdol-choice kdol-choice--compact', activeVnptCaType === 'moi' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Mới</button>
+                                            <button type="button" @click="activeVnptCaType = 'giahan'" :aria-pressed="activeVnptCaType === 'giahan'" :class="['kdol-choice kdol-choice--compact', activeVnptCaType === 'giahan' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Gia hạn</button>
+                                        </div>
                                     </div>
-                                    <div class="kdol-choice-group" role="group" aria-label="VAT VNPT-CA">
-                                        <button @click="vatRate = 10" :class="['kdol-choice kdol-choice--fluid', vatRate === 10 ? 'bg-gray-800 text-white' : 'text-gray-500 hover:bg-gray-50']">VAT 10%</button>
-                                        <button @click="vatRate = 8" :class="['kdol-choice kdol-choice--fluid', vatRate === 8 ? 'bg-green-600 text-white' : 'text-gray-500 hover:bg-gray-50']">VAT 8%</button>
+                                    <div class="kdol-ca-option-row">
+                                        <span class="kdol-ca-option-label">VAT</span>
+                                        <div class="kdol-choice-group" role="group" aria-label="VAT VNPT-CA">
+                                            <button type="button" @click="vatRate = 10" aria-label="VAT 10%" :aria-pressed="vatRate === 10" :class="['kdol-choice kdol-choice--compact', vatRate === 10 ? 'bg-gray-800 text-white' : 'text-gray-500 hover:bg-gray-50']">10%</button>
+                                            <button type="button" @click="vatRate = 8" aria-label="VAT 8%" :aria-pressed="vatRate === 8" :class="['kdol-choice kdol-choice--compact', vatRate === 8 ? 'bg-green-600 text-white' : 'text-gray-500 hover:bg-gray-50']">8%</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="flex flex-col gap-2 mt-1">
+                            <div class="flex flex-wrap items-center justify-between gap-2 mt-1">
+                                <span class="text-sm font-semibold text-gray-700">Chiết khấu:</span>
+                                <div class="kdol-choice-group ml-auto" role="group" aria-label="Áp dụng chiết khấu Token">
+                                    <button type="button" @click="vnptCaDiscountMode = 'none'" :aria-pressed="vnptCaDiscountMode === 'none'" :class="['kdol-choice kdol-choice--compact whitespace-nowrap', vnptCaDiscountMode === 'none' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Giá gốc</button>
+                                    <button type="button" @click="vnptCaDiscountMode = 'custom'" :aria-pressed="vnptCaDiscountMode === 'custom'" :aria-expanded="vnptCaDiscountMode === 'custom'" aria-controls="vnptca-discount-options" :class="['kdol-choice kdol-choice--compact whitespace-nowrap', vnptCaDiscountMode === 'custom' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50']">Áp dụng chiết khấu</button>
+                                </div>
+                            </div>
+                            <div v-if="vnptCaDiscountMode === 'custom'" id="vnptca-discount-options" class="flex flex-col gap-2">
                                 <div class="kdol-config-field">
                                     <label for="vnptca-contract-size" class="text-sm font-semibold text-gray-700">Số chữ ký số trên 1 hợp đồng:</label>
                                     <select id="vnptca-contract-size" v-model="vnptCaContractSize" class="kdol-select">
@@ -246,12 +259,12 @@
                             </div>
                             <div v-if="!isSmartCaUsage" class="flex flex-col gap-2 mt-1">
                                 <div class="flex flex-wrap items-center justify-between gap-2">
-                                    <span class="text-sm font-semibold text-gray-700">Ưu đãi:</span>
-                                    <div class="kdol-choice-group" role="group" aria-label="Áp dụng ưu đãi SmartCA">
+                                    <span class="text-sm font-semibold text-gray-700">Chiết khấu:</span>
+                                    <div class="kdol-choice-group" role="group" aria-label="Áp dụng chiết khấu SmartCA">
                                         <button type="button" @click="smartCaDiscountMode = 'none'" :aria-pressed="smartCaDiscountMode === 'none'"
                                             :class="['kdol-choice', smartCaDiscountMode === 'none' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Giá gốc</button>
                                         <button type="button" @click="smartCaDiscountMode === 'none' && (smartCaDiscountMode = 'auto')" :aria-pressed="smartCaDiscountMode !== 'none'"
-                                            :class="['kdol-choice', smartCaDiscountMode !== 'none' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50']">Áp dụng ưu đãi</button>
+                                            :class="['kdol-choice', smartCaDiscountMode !== 'none' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50']">Áp dụng chiết khấu</button>
                                     </div>
                                 </div>
                                 <p v-if="smartCaDiscountMode !== 'none'" class="text-xs text-gray-600">
@@ -259,7 +272,7 @@
                                 </p>
                                 <p v-if="smartCaDiscountMode !== 'none' && selectedSmartCaCondition.id !== 'term'" class="text-xs font-medium text-vnpt-blue">{{ selectedSmartCaCondition.label }}</p>
                                 <details v-if="smartCaDiscountMode !== 'none'" class="kdol-smartca-custom">
-                                    <summary>Tùy chỉnh ưu đãi</summary>
+                                    <summary>Tùy chỉnh chiết khấu</summary>
                                     <div class="flex flex-col gap-2 mt-3">
                                         <label for="smartca-customer-condition" class="text-xs font-semibold text-gray-700">Khách hàng có điều kiện riêng?</label>
                                         <select id="smartca-customer-condition" v-model="smartCaCustomerType" class="kdol-select">
@@ -357,7 +370,7 @@
 
                     <div class="kdol-tabs kdol-hide-scrollbar">
                         <button v-for="tab in [{id: 'doclap', name: 'Chỉ Kê khai BHXH'}, {id: 'tichhop', name: 'Tích hợp BHXH + Chữ ký số'}]" :key="tab.id" 
-                            @click="activeBhxhGroup = tab.id; discountBhxh = 0; activeBhxhVan = '';"
+                            @click="activeBhxhGroup = tab.id; bhxhDiscountMode = 'none'; discountBhxh = 0; activeBhxhVan = '';"
                             :class="['kdol-tab',
                             activeBhxhGroup === tab.id ? 'border-b-2 border-vnpt-blue text-vnpt-blue' : 'text-gray-500 hover:text-gray-700']">
                             {{ tab.name }}
@@ -389,10 +402,17 @@
                             </div>
                         </div>
                         
-                        <div class="mt-2 pt-3 border-t border-blue-200">
-                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mt-1">
+                            <span class="text-sm font-semibold text-gray-700">Chiết khấu:</span>
+                            <div class="kdol-choice-group ml-auto" role="group" aria-label="Áp dụng chiết khấu BHXH">
+                                <button type="button" @click="bhxhDiscountMode = 'none'" :aria-pressed="bhxhDiscountMode === 'none'" :class="['kdol-choice kdol-choice--compact whitespace-nowrap', bhxhDiscountMode === 'none' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Giá gốc</button>
+                                <button type="button" @click="bhxhDiscountMode = 'custom'" :aria-pressed="bhxhDiscountMode === 'custom'" :aria-expanded="bhxhDiscountMode === 'custom'" aria-controls="bhxh-discount-options" :class="['kdol-choice kdol-choice--compact whitespace-nowrap', bhxhDiscountMode === 'custom' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50']">Áp dụng chiết khấu</button>
+                            </div>
+                        </div>
+                        <div v-if="bhxhDiscountMode === 'custom'" id="bhxh-discount-options" class="pt-3 border-t border-blue-200">
+                            <div class="kdol-config-field mb-3">
                                 <label for="bhxh-region" class="text-sm font-semibold text-gray-700">Địa bàn áp dụng:</label>
-                                <select id="bhxh-region" v-model="bhxhRegion" class="kdol-select w-full sm:w-auto">
+                                <select id="bhxh-region" v-model="bhxhRegion" class="kdol-select">
                                     <option value="other">Các địa bàn còn lại</option>
                                     <option value="major">Hà Nội, Đà Nẵng, TP.HCM</option>
                                 </select>
@@ -516,18 +536,18 @@
                             <div class="mt-2 pt-3 border-t border-blue-200">
                                 <div v-if="isInvoiceDiscountPolicy" class="flex flex-col gap-2">
                                     <div class="flex flex-wrap items-center justify-between gap-2">
-                                        <span class="text-sm font-semibold text-gray-700">Ưu đãi giá gói:</span>
-                                        <div class="kdol-choice-group" role="group" aria-label="Áp dụng ưu đãi Invoice">
+                                        <span class="text-sm font-semibold text-gray-700">Chiết khấu:</span>
+                                        <div class="kdol-choice-group" role="group" aria-label="Áp dụng chiết khấu Invoice">
                                             <button type="button" @click="invoiceDiscountMode = 'none'" :aria-pressed="invoiceDiscountMode === 'none'"
                                                 :class="['kdol-choice', invoiceDiscountMode === 'none' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Giá gốc</button>
                                             <button type="button" @click="invoiceDiscountMode === 'none' && (invoiceDiscountMode = 'auto')" :aria-pressed="invoiceDiscountMode !== 'none'"
-                                                :class="['kdol-choice', invoiceDiscountMode !== 'none' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50']">Áp dụng ưu đãi</button>
+                                                :class="['kdol-choice', invoiceDiscountMode !== 'none' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50']">Áp dụng chiết khấu</button>
                                         </div>
                                     </div>
                                     <p v-if="invoiceDiscountMode !== 'none'" class="text-xs text-gray-600">{{ invoiceDiscountMode === 'custom' ? `Chọn giảm ${discountInvoice}%, tự giới hạn theo từng gói.` : 'Tự áp dụng mức giảm phù hợp theo số hóa đơn.' }}</p>
                                     <p v-if="invoiceDiscountMode !== 'none' && selectedInvoiceCondition.id !== 'quantity'" class="text-xs font-medium text-vnpt-blue">{{ selectedInvoiceCondition.label }}</p>
                                     <details v-if="invoiceDiscountMode !== 'none'" class="kdol-invoice-custom">
-                                        <summary>Tùy chỉnh ưu đãi</summary>
+                                        <summary>Tùy chỉnh chiết khấu</summary>
                                         <div class="flex flex-col gap-2 mt-3">
                                             <label for="invoice-customer-condition" class="text-xs font-semibold text-gray-700">Khách hàng có điều kiện riêng?</label>
                                             <select id="invoice-customer-condition" v-model="invoiceCustomerType" class="kdol-select">
@@ -552,10 +572,10 @@
                                     <input type="range" min="0" max="40" step="5" v-model="discountInvoice" class="kdol-discount-slider">
                                 </template>
                                 
-                                <div v-if="activeInvoiceType === 'moi' && activeInvoiceSetupStatus === 'thu'" class="mt-2.5">
+                                <div v-if="activeInvoiceType === 'moi' && activeInvoiceSetupStatus === 'thu' && (!isInvoiceDiscountPolicy || invoiceDiscountMode !== 'none')" id="invoice-setup-discount-options" class="mt-2.5">
                                     <div class="flex justify-between items-center mb-1">
                                         <span class="text-sm font-semibold text-gray-700">Chiết khấu cước Khởi tạo (1.000.000đ):</span>
-                                        <span class="text-sm font-bold text-orange-600">{{ discountInvoiceSetup }}%</span>
+                                        <span class="text-sm font-bold text-orange-600">{{ invoiceSetupDiscount }}%</span>
                                     </div>
                                     <input type="range" min="0" max="100" step="5" v-model="discountInvoiceSetup" class="kdol-discount-slider">
                                 </div>
@@ -686,7 +706,7 @@
                                         <span class="text-xs font-semibold text-gray-700">Khởi tạo ({{ formatPrice(inbotSetupPrice) }}):</span>
                                         <div class="kdol-choice-group">
                                             <button type="button" @click="inbotSetupDiscountMode = 'none'" :aria-pressed="inbotSetupDiscountMode === 'none'" :class="['kdol-choice kdol-choice--compact', inbotSetupDiscountMode === 'none' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Giá gốc</button>
-                                            <button type="button" @click="inbotSetupDiscountMode === 'none' && (inbotSetupDiscountMode = 'auto')" :aria-pressed="inbotSetupDiscountMode !== 'none'" :class="['kdol-choice kdol-choice--compact', inbotSetupDiscountMode !== 'none' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50']">Áp dụng ưu đãi</button>
+                                            <button type="button" @click="inbotSetupDiscountMode === 'none' && (inbotSetupDiscountMode = 'auto')" :aria-pressed="inbotSetupDiscountMode !== 'none'" :class="['kdol-choice kdol-choice--compact', inbotSetupDiscountMode !== 'none' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50']">Áp dụng chiết khấu</button>
                                         </div>
                                     </div>
                                 </div>
@@ -698,17 +718,17 @@
                             
                             <div class="mt-2 pt-3 border-t border-blue-200 flex flex-col gap-2">
                                 <div class="flex flex-wrap items-center justify-between gap-2">
-                                    <span class="text-sm font-semibold text-gray-700">Ưu đãi giá gói:</span>
-                                    <div class="kdol-choice-group" role="group" aria-label="Áp dụng ưu đãi Inbot">
+                                    <span class="text-sm font-semibold text-gray-700">Chiết khấu giá gói:</span>
+                                    <div class="kdol-choice-group" role="group" aria-label="Áp dụng chiết khấu Inbot">
                                         <button type="button" @click="inbotDiscountMode = 'none'" :aria-pressed="inbotDiscountMode === 'none'" :class="['kdol-choice', inbotDiscountMode === 'none' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Giá gốc</button>
-                                        <button type="button" @click="inbotDiscountMode === 'none' && (inbotDiscountMode = 'auto')" :aria-pressed="inbotDiscountMode !== 'none'" :class="['kdol-choice', inbotDiscountMode !== 'none' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50']">Áp dụng ưu đãi</button>
+                                        <button type="button" @click="inbotDiscountMode === 'none' && (inbotDiscountMode = 'auto')" :aria-pressed="inbotDiscountMode !== 'none'" :class="['kdol-choice', inbotDiscountMode !== 'none' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50']">Áp dụng chiết khấu</button>
                                     </div>
                                 </div>
                                 <p v-if="inbotDiscountMode !== 'none'" class="text-xs text-gray-600">{{ inbotDiscountMode === 'custom' ? `Chọn giảm giá gói ${discountInbot}%, tự giới hạn từng gói.` : 'Tự áp dụng mức giảm giá gói theo số hóa đơn.' }}</p>
                                 <p v-if="inbotDiscountMode !== 'none' && selectedInbotCondition.id !== 'quantity'" class="text-xs font-medium text-vnpt-blue">{{ selectedInbotCondition.label }}</p>
                                 <p v-if="activeInbotType === 'moi' && inbotSetupDiscountMode !== 'none'" class="text-xs text-gray-600">{{ inbotSetupDiscountMode === 'custom' ? `Chọn giảm khởi tạo ${discountInbotSetup}%, tự giới hạn theo doanh thu sau giảm giá gói.` : 'Khởi tạo tự giảm 50% hoặc 100% theo doanh thu sau giảm giá gói.' }}</p>
                                 <details v-if="inbotDiscountMode !== 'none' || (activeInbotType === 'moi' && inbotSetupDiscountMode !== 'none')" class="kdol-inbot-custom">
-                                    <summary>Tùy chỉnh ưu đãi</summary>
+                                    <summary>Tùy chỉnh chiết khấu</summary>
                                     <div class="flex flex-col gap-2 mt-3">
                                         <template v-if="inbotDiscountMode !== 'none'">
                                             <label for="inbot-customer-condition" class="text-xs font-semibold text-gray-700">Khách hàng có điều kiện riêng?</label>
@@ -825,10 +845,10 @@
                                 </div>
                             </div>
                             <div class="flex flex-wrap items-center justify-between gap-2">
-                                <span class="text-sm font-semibold text-gray-700">Ưu đãi giá gói và duy trì:</span>
-                                <div class="kdol-choice-group" role="group" aria-label="Áp dụng ưu đãi POS">
+                                <span class="text-sm font-semibold text-gray-700">Chiết khấu giá gói và duy trì:</span>
+                                <div class="kdol-choice-group" role="group" aria-label="Áp dụng chiết khấu POS">
                                     <button type="button" @click="posDiscountMode = 'none'" :aria-pressed="posDiscountMode === 'none'" :class="['kdol-choice', posDiscountMode === 'none' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Giá gốc</button>
-                                    <button type="button" @click="posDiscountMode === 'none' && (posDiscountMode = 'auto')" :aria-pressed="posDiscountMode !== 'none'" :class="['kdol-choice', posDiscountMode !== 'none' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50']">Áp dụng ưu đãi</button>
+                                    <button type="button" @click="posDiscountMode === 'none' && (posDiscountMode = 'auto')" :aria-pressed="posDiscountMode !== 'none'" :class="['kdol-choice', posDiscountMode !== 'none' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50']">Áp dụng chiết khấu</button>
                                 </div>
                             </div>
                             <p class="text-xs text-gray-600">Cước duy trì {{ formatPrice(posMaintenancePrice) }}/lần, chưa VAT.</p>
@@ -836,7 +856,7 @@
                             <p v-if="posDiscountMode === 'custom'" class="text-xs text-gray-600">Chọn giảm gói {{ discountPosPackage }}%, duy trì {{ discountPosMaintenance }}%; tự giới hạn theo điều kiện.</p>
                             <p v-if="posDiscountMode !== 'none' && selectedPosCondition.id !== 'quantity'" class="text-xs font-medium text-vnpt-blue">{{ selectedPosCondition.label }}</p>
                             <details v-if="posDiscountMode !== 'none'" class="kdol-pos-custom">
-                                <summary>Tùy chỉnh ưu đãi</summary>
+                                <summary>Tùy chỉnh chiết khấu</summary>
                                 <div class="flex flex-col gap-2 mt-3">
                                     <label for="pos-customer-condition" class="text-xs font-semibold text-gray-700">Khách hàng có điều kiện riêng?</label>
                                     <select id="pos-customer-condition" v-model="posCustomerType" class="kdol-select">
@@ -947,17 +967,17 @@
                             </div>
                             <template v-if="isEcontractPlatform">
                                 <div class="flex flex-wrap items-center justify-between gap-2">
-                                    <span class="text-sm font-semibold text-gray-700">{{ activeEcontractGroup === 'econtract_onprem' ? 'Ưu đãi cước triển khai:' : 'Ưu đãi dịch vụ và khởi tạo:' }}</span>
-                                    <div class="kdol-choice-group" role="group" aria-label="Áp dụng ưu đãi eContract">
+                                    <span class="text-sm font-semibold text-gray-700">{{ activeEcontractGroup === 'econtract_onprem' ? 'Chiết khấu cước triển khai:' : 'Chiết khấu dịch vụ và khởi tạo:' }}</span>
+                                    <div class="kdol-choice-group" role="group" aria-label="Áp dụng chiết khấu eContract">
                                         <button type="button" @click="econtractDiscountMode = 'none'" :aria-pressed="econtractDiscountMode === 'none'" :class="['kdol-choice', econtractDiscountMode === 'none' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Giá gốc</button>
-                                        <button type="button" @click="econtractDiscountMode === 'none' && (econtractDiscountMode = 'auto')" :aria-pressed="econtractDiscountMode !== 'none'" :class="['kdol-choice', econtractDiscountMode !== 'none' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50']">Áp dụng ưu đãi</button>
+                                        <button type="button" @click="econtractDiscountMode === 'none' && (econtractDiscountMode = 'auto')" :aria-pressed="econtractDiscountMode !== 'none'" :class="['kdol-choice', econtractDiscountMode !== 'none' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50']">Áp dụng chiết khấu</button>
                                     </div>
                                 </div>
                                 <p v-if="econtractDiscountMode !== 'none' && selectedEcontractCondition.id !== 'quantity'" class="text-xs font-medium text-vnpt-blue">{{ selectedEcontractCondition.label }}</p>
                                 <p v-if="econtractDiscountMode === 'custom'" class="text-xs text-gray-600">Mức chọn: dịch vụ {{ activeEcontractGroup === 'econtract_onprem' ? 0 : discountEcontract }}%, khởi tạo/triển khai {{ discountEcontractSetup }}%; tự giới hạn theo từng gói.</p>
-                                <p v-if="econtractDiscountMode === 'auto' && activeEcontractGroup === 'econtract_onprem' && selectedEcontractCondition.id === 'quantity'" class="text-xs text-gray-600">Chọn điều kiện khách hàng trong Tùy chỉnh ưu đãi để xét giảm cước triển khai.</p>
+                                <p v-if="econtractDiscountMode === 'auto' && activeEcontractGroup === 'econtract_onprem' && selectedEcontractCondition.id === 'quantity'" class="text-xs text-gray-600">Chọn điều kiện khách hàng trong Tùy chỉnh chiết khấu để xét giảm cước triển khai.</p>
                                 <details v-if="econtractDiscountMode !== 'none'" class="kdol-econtract-custom">
-                                    <summary>Tùy chỉnh ưu đãi</summary>
+                                    <summary>Tùy chỉnh chiết khấu</summary>
                                     <div class="flex flex-col gap-2 mt-3">
                                         <label for="econtract-customer-condition" class="text-xs font-semibold text-gray-700">Điều kiện khách hàng</label>
                                         <select id="econtract-customer-condition" v-model="econtractCustomerType" class="kdol-select">
@@ -975,49 +995,90 @@
                                     </div>
                                 </details>
                                 <details class="kdol-econtract-addons">
-                                    <summary>Dịch vụ cộng thêm</summary>
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-                                        <div class="bg-white border rounded p-3 flex flex-col gap-2">
-                                            <label for="econtract-sms-count" class="text-xs font-semibold text-gray-800">SMS OTP · {{ econtractCatalog.smsUnitPrice }}đ/tin với Brandname chung</label>
-                                            <select v-model="econtractSmsBrand" class="kdol-select" aria-label="Loại SMS Brandname">
-                                                <option value="shared">Brandname chung VNPT eContract / V.eContract</option>
-                                                <option value="private">Brandname riêng của doanh nghiệp</option>
-                                            </select>
-                                            <input id="econtract-sms-count" type="number" min="0" step="1" inputmode="numeric" v-model.number="addonSmsCount" class="kdol-select" placeholder="Số tin nhắn">
-                                            <template v-if="econtractSmsBrand === 'private'">
-                                                <label for="econtract-private-sms-price" class="text-xs text-gray-600">Đơn giá theo chính sách SMS Brandname riêng, chưa VAT</label>
-                                                <input id="econtract-private-sms-price" type="number" min="0" step="1" inputmode="numeric" v-model="econtractPrivateSmsPrice" class="kdol-select" placeholder="Nhập đơn giá thực tế/tin">
-                                            </template>
-                                        </div>
-                                        <div class="bg-white border rounded p-3 flex flex-col gap-2">
-                                            <label for="econtract-ekyc-count" class="text-xs font-semibold text-gray-800">VNPT eKYC · {{ formatPrice(econtractCatalog.ekycUnitPrice) }}/lượt</label>
-                                            <p class="text-xs text-gray-500">OCR và Face Matching. Tính cả lượt không thành công.</p>
-                                            <input id="econtract-ekyc-count" type="number" min="0" step="1" inputmode="numeric" v-model.number="addonEkycCount" class="kdol-select" placeholder="Số lượt ký">
-                                        </div>
-                                        <div class="bg-white border rounded p-3 flex flex-col gap-2">
-                                            <label for="econtract-storage-count" class="text-xs font-semibold text-gray-800">Thuê thêm {{ econtractCatalog.storageUnitMB }} MB · {{ formatPrice(econtractCatalog.storageUnitPrice) }}/gói</label>
-                                            <p class="text-xs text-gray-500">Lưu trữ {{ econtractCatalog.storageYears }} năm.</p>
-                                            <input id="econtract-storage-count" type="number" min="0" step="1" inputmode="numeric" v-model.number="addonStorageCount" class="kdol-select" placeholder="Số gói lưu trữ">
-                                        </div>
-                                        <div class="bg-white border rounded p-3 flex flex-col gap-2">
-                                            <label for="econtract-ceca-addon" class="text-xs font-semibold text-gray-800">Kèm TSA CeCA</label>
-                                            <select id="econtract-ceca-addon" v-model="addonCecaPackage" class="kdol-select">
-                                                <option v-for="option in econtractCecaAddonOptions" :key="option.id" :value="option.id">{{ option.label }}{{ option.price ? ' · ' + formatPrice(option.price) : '' }}</option>
-                                            </select>
-                                            <template v-if="addonCecaPackage !== 'none'">
-                                                <template v-if="['min', 'max'].includes(addonCecaPackage)">
-                                                    <label for="econtract-tsa-quantity" class="text-xs text-gray-600">Số lượt · {{ addonCecaPackage === 'min' ? '1.000đ' : '500đ' }}/lượt (chưa VAT)</label>
-                                                    <input id="econtract-tsa-quantity" type="number" :min="addonCecaPackage === 'min' ? 1 : 50001" :max="addonCecaPackage === 'min' ? 4999 : undefined" step="1" inputmode="numeric" v-model.number="addonCecaAmount" class="kdol-select">
+                                    <summary>Dịch vụ cộng thêm <span class="kdol-addon-caption">· Chưa VAT</span></summary>
+                                    <div class="kdol-addon-list">
+                                        <div class="kdol-addon-item">
+                                            <div class="kdol-addon-row">
+                                                <label for="econtract-sms-count" class="kdol-addon-label">SMS OTP
+                                                    <span v-if="econtractSmsBrand === 'shared'">{{ formatPrice(econtractCatalog.smsUnitPrice) }}/tin</span>
+                                                    <span v-else>Brandname riêng</span>
+                                                </label>
+                                                <div class="kdol-addon-quantity">
+                                                    <input id="econtract-sms-count" type="number" min="0" step="1" inputmode="numeric" v-model.number="addonSmsCount" class="kdol-select" aria-label="Số tin nhắn SMS OTP">
+                                                    <span>tin</span>
+                                                </div>
+                                            </div>
+                                            <div v-if="addonSmsCount > 0 || econtractSmsBrand === 'private'" class="kdol-addon-extra">
+                                                <select v-model="econtractSmsBrand" class="kdol-select" aria-label="Loại SMS Brandname">
+                                                    <option value="shared">Brandname chung VNPT</option>
+                                                    <option value="private">Brandname riêng doanh nghiệp</option>
+                                                </select>
+                                                <template v-if="econtractSmsBrand === 'private'">
+                                                    <label for="econtract-private-sms-price" class="kdol-addon-caption">Đơn giá riêng, chưa VAT (đ/tin)</label>
+                                                    <input id="econtract-private-sms-price" type="number" min="0" step="1" inputmode="numeric" v-model="econtractPrivateSmsPrice" class="kdol-select" placeholder="Nhập đơn giá thực tế/tin">
                                                 </template>
-                                                <label for="econtract-tsa-discount" class="text-xs font-semibold text-gray-700">Giảm TSA: {{ tsaDiscount }}% · tối đa {{ tsaDiscountLimit }}%</label>
-                                                <input id="econtract-tsa-discount" type="range" min="0" :max="tsaDiscountLimit" step="5" v-model.number="discountTsa" class="kdol-discount-slider">
-                                                <p v-if="econtractTsaAddonPlan" class="text-xs font-semibold text-vnpt-blue">TSA sau giảm: {{ formatPrice(econtractTsaAddonPrice) }} (chưa VAT)</p>
-                                            </template>
+                                            </div>
+                                            <p v-if="addonSmsCount > 0 && econtractAddonSubtotals.sms !== null" class="kdol-addon-subtotal" aria-live="polite"><span>Thành tiền</span><strong>{{ formatPrice(econtractAddonSubtotals.sms) }}</strong></p>
+                                        </div>
+                                        <div class="kdol-addon-item">
+                                            <div class="kdol-addon-row">
+                                                <label for="econtract-ekyc-count" class="kdol-addon-label">VNPT eKYC<span>{{ formatPrice(econtractCatalog.ekycUnitPrice) }}/lượt</span></label>
+                                                <div class="kdol-addon-quantity">
+                                                    <input id="econtract-ekyc-count" type="number" min="0" step="1" inputmode="numeric" v-model.number="addonEkycCount" class="kdol-select" aria-label="Số lượt ký eKYC">
+                                                    <span>lượt</span>
+                                                </div>
+                                            </div>
+                                            <p v-if="addonEkycCount > 0" class="kdol-addon-caption mt-2">Tính cả lượt ký thành công và không thành công.</p>
+                                            <p v-if="addonEkycCount > 0 && econtractAddonSubtotals.ekyc !== null" class="kdol-addon-subtotal" aria-live="polite"><span>Thành tiền</span><strong>{{ formatPrice(econtractAddonSubtotals.ekyc) }}</strong></p>
+                                        </div>
+                                        <div class="kdol-addon-item">
+                                            <div class="kdol-addon-row kdol-addon-row--tsa">
+                                                <label for="econtract-ceca-addon" class="kdol-addon-label">TSA CeCA</label>
+                                                <select id="econtract-ceca-addon" v-model="addonCecaPackage" class="kdol-select">
+                                                    <option v-for="option in econtractCecaAddonOptions" :key="option.id" :value="option.id">{{ option.label }}</option>
+                                                </select>
+                                            </div>
+                                            <div v-if="addonCecaPackage !== 'none'" class="kdol-addon-extra">
+                                                <div v-if="['min', 'max'].includes(addonCecaPackage)" class="kdol-addon-row">
+                                                    <label for="econtract-tsa-quantity" class="kdol-addon-label">Số lượt<span>{{ addonCecaPackage === 'min' ? '1.000đ' : '500đ' }}/lượt · 0: không dùng</span></label>
+                                                    <div class="kdol-addon-quantity">
+                                                        <input id="econtract-tsa-quantity" type="number" min="0" :max="addonCecaPackage === 'min' ? 4999 : undefined" step="1" inputmode="numeric" v-model.number="addonCecaAmount" class="kdol-select" placeholder="0" title="Để trống hoặc nhập 0 nếu không sử dụng TSA">
+                                                        <span>lượt</span>
+                                                    </div>
+                                                </div>
+                                                <details class="kdol-addon-info">
+                                                    <summary>Chiết khấu TSA: {{ tsaDiscount }}%</summary>
+                                                    <div class="kdol-addon-extra">
+                                                        <label for="econtract-tsa-discount" class="kdol-addon-caption">Tối đa {{ tsaDiscountLimit }}%</label>
+                                                        <input id="econtract-tsa-discount" type="range" min="0" :max="tsaDiscountLimit" step="5" v-model.number="discountTsa" class="kdol-discount-slider">
+                                                    </div>
+                                                </details>
+                                                <p v-if="econtractTsaAddonPlan && econtractAddonSubtotals.tsa !== null" class="kdol-addon-subtotal" aria-live="polite"><span>Thành tiền<span v-if="tsaDiscount > 0"> sau CK {{ tsaDiscount }}%</span></span><strong>{{ formatPrice(econtractAddonSubtotals.tsa) }}</strong></p>
+                                            </div>
+                                        </div>
+                                        <div class="kdol-addon-item">
+                                            <div class="kdol-addon-row">
+                                                <label for="econtract-storage-count" class="kdol-addon-label">Lưu trữ<span>{{ formatPrice(econtractCatalog.storageUnitPrice) }}/{{ econtractCatalog.storageUnitMB }} MB · {{ econtractCatalog.storageYears }} năm</span></label>
+                                                <div class="kdol-addon-quantity">
+                                                    <input id="econtract-storage-count" type="number" min="0" step="1" inputmode="numeric" v-model.number="addonStorageCount" class="kdol-select" aria-label="Số gói lưu trữ bổ sung">
+                                                    <span>gói</span>
+                                                </div>
+                                            </div>
+                                            <p v-if="addonStorageCount > 0 && econtractAddonSubtotals.storage !== null" class="kdol-addon-subtotal" aria-live="polite"><span>Thành tiền</span><strong>{{ formatPrice(econtractAddonSubtotals.storage) }}</strong></p>
                                         </div>
                                     </div>
-                                    <p class="text-xs text-gray-500 mt-2">Các đơn giá cộng thêm chưa VAT. Hỗ trợ ký bằng USB Token VNPT-CA hoặc ứng dụng VNPT SmartCA; cước chứng thư/chữ ký số tra riêng tại dịch vụ Chữ ký số.</p>
+                                    <details class="kdol-addon-info mt-2">
+                                        <summary>Thông tin dịch vụ</summary>
+                                        <div class="kdol-addon-extra kdol-addon-caption">
+                                            <p>SMS chung dùng Brandname VNPT eContract / V.eContract. SMS riêng cần nhập đơn giá thực tế, chưa VAT.</p>
+                                            <p>eKYC gồm OCR và Face Matching; tính cả lượt ký thành công và không thành công.</p>
+                                            <p>Lưu trữ {{ econtractCatalog.storageYears }} năm, mỗi gói {{ econtractCatalog.storageUnitMB }} MB. Các đơn giá cộng thêm chưa VAT.</p>
+                                            <p>Hỗ trợ USB Token VNPT-CA hoặc ứng dụng VNPT SmartCA; cước chứng thư/chữ ký số tra riêng tại dịch vụ Chữ ký số.</p>
+                                            <p>TSA chiết khấu tối đa 30%; vượt phân cấp cần gửi đề xuất kèm cơ sở về Phòng Điều hành để trình Ban KHDN xem xét.</p>
+                                        </div>
+                                    </details>
                                 </details>
-                                <p v-if="totalEcontractAddonNoVat > 0" class="text-xs font-semibold text-vnpt-blue">Add-on đã chọn: {{ formatPrice(totalEcontractAddonNoVat) }} (chưa VAT)</p>
+                                <p v-if="totalEcontractAddonNoVat > 0" class="kdol-addon-total">Tổng add-on: <strong>{{ formatPrice(totalEcontractAddonNoVat) }}</strong> <span>(chưa VAT)</span></p>
                                 <p v-if="econtractTsaAddonPlan" class="text-xs text-gray-600">{{ econtractTsaAddonPlan.duration_text }} · Giảm TSA {{ tsaDiscount }}% (tối đa {{ tsaDiscountLimit }}%).</p>
                                 <p v-if="econtractAddonError || totalEcontractAddonNoVat === null" class="text-xs text-vnpt-red" role="status">{{ econtractAddonError || 'Kiểm tra lại số lượng và giá trị add-on.' }}</p>
                             </template>
@@ -1025,7 +1086,7 @@
                                 <label for="ceca-discount" class="text-xs font-semibold text-gray-700">Giảm TSA: {{ tsaDiscount }}% · tối đa {{ tsaDiscountLimit }}%</label>
                                 <input id="ceca-discount" type="range" min="0" :max="tsaDiscountLimit" step="5" v-model.number="discountTsa" class="kdol-discount-slider">
                             </template>
-                            <p v-if="!isEcontractPlatform || addonCecaPackage !== 'none'" class="text-xs text-gray-500">TSA: giá chưa VAT, chiết khấu tối đa 30%. Trường hợp vượt mức cần gửi đề xuất kèm cơ sở về Phòng Điều hành để trình Ban KHDN xem xét.</p>
+                            <p v-if="!isEcontractPlatform" class="text-xs text-gray-500">TSA: giá chưa VAT, chiết khấu tối đa 30%. Trường hợp vượt mức cần gửi đề xuất kèm cơ sở về Phòng Điều hành để trình Ban KHDN xem xét.</p>
                         </div>
 
                         <div class="kdol-table-wrap mb-4">
@@ -1635,6 +1696,7 @@
                     activeBhxhVan: '', 
                     activeBhxhType: 'moi',
                     bhxhRegion: 'other',
+                    bhxhDiscountMode: 'none',
                     discountBhxh: 0,
                     
                     activeSmartCaTab: 'canhan',
@@ -1648,6 +1710,7 @@
                     activeVnptCaTab: 'doanhnghiep',
                     activeVnptCaTier: 'standard',
                     vnptCaContractSize: 'under100',
+                    vnptCaDiscountMode: 'none',
                     discountVnptCa: 0,
                     activeVnptCaType: 'moi'
                 }
@@ -1842,7 +1905,12 @@
                         { id: 'max', label: 'TSA CeCA Max (> 50.000 lượt)', price: 0 }
                     ];
                 },
+                isEcontractTsaAddonRequested() {
+                    if (this.addonCecaPackage === 'none') return false;
+                    return !['min', 'max'].includes(this.addonCecaPackage) || Number(this.addonCecaAmount) !== 0;
+                },
                 econtractTsaAddonPlan() {
+                    if (!this.isEcontractTsaAddonRequested) return null;
                     if (['min', 'max'].includes(this.addonCecaPackage)) return this.getTsaCustomPlan(this.addonCecaPackage, this.addonCecaAmount);
                     return (this.econtractCatalog?.tsa?.plans || []).find(plan => String(plan.quantity) === this.addonCecaPackage) || null;
                 },
@@ -1854,15 +1922,31 @@
                     if (!['shared', 'private'].includes(this.econtractSmsBrand)) return 'Chọn loại SMS Brandname.';
                     if (this.getEcontractAddonCount(this.addonSmsCount) > 0 && this.getEcontractSmsUnitPrice() === null) return 'Nhập đơn giá SMS Brandname riêng theo chính sách SMS Brandname, chưa VAT.';
                     if (!this.econtractCecaAddonOptions.some(option => option.id === this.addonCecaPackage)) return 'Chọn lại gói TSA CeCA cộng thêm.';
-                    if (this.addonCecaPackage !== 'none' && !this.econtractTsaAddonPlan) return this.addonCecaPackage === 'min' ? 'TSA CeCA Min: nhập số lượt nguyên từ 1 đến 4.999.' : 'TSA CeCA Max: nhập số lượt nguyên trên 50.000.';
+                    if (this.isEcontractTsaAddonRequested && !this.econtractTsaAddonPlan) return this.addonCecaPackage === 'min' ? 'TSA CeCA Min: nhập 1–4.999 lượt hoặc để 0 nếu không dùng.' : 'TSA CeCA Max: nhập trên 50.000 lượt hoặc để 0 nếu không dùng.';
                     return '';
+                },
+                econtractAddonSubtotals() {
+                    const subtotal = (value, unitPrice) => {
+                        const quantity = this.getEcontractAddonCount(value);
+                        if (quantity === null) return null;
+                        if (quantity === 0) return 0;
+                        if (!Number.isSafeInteger(unitPrice) || unitPrice < 0) return null;
+                        const total = quantity * unitPrice;
+                        return Number.isSafeInteger(total) ? total : null;
+                    };
+                    const tsa = !this.isEcontractTsaAddonRequested ? 0 : this.econtractTsaAddonPlan ? this.econtractTsaAddonPrice : null;
+                    return {
+                        sms: subtotal(this.addonSmsCount, this.getEcontractSmsUnitPrice()),
+                        ekyc: subtotal(this.addonEkycCount, this.econtractCatalog?.ekycUnitPrice ?? 3000),
+                        storage: subtotal(this.addonStorageCount, this.econtractCatalog?.storageUnitPrice ?? 90000),
+                        tsa: Number.isSafeInteger(tsa) ? tsa : null
+                    };
                 },
                 totalEcontractAddonNoVat() {
                     if (this.econtractAddonError) return null;
-                    const ceca = this.econtractTsaAddonPrice;
-                    const total = this.getEcontractAddonCount(this.addonSmsCount) * (this.getEcontractSmsUnitPrice() ?? 0)
-                        + this.getEcontractAddonCount(this.addonEkycCount) * (this.econtractCatalog?.ekycUnitPrice ?? 3000)
-                        + this.getEcontractAddonCount(this.addonStorageCount) * (this.econtractCatalog?.storageUnitPrice ?? 90000) + ceca;
+                    const subtotals = Object.values(this.econtractAddonSubtotals);
+                    if (subtotals.some(value => value === null)) return null;
+                    const total = subtotals.reduce((sum, value) => sum + value, 0);
                     return Number.isSafeInteger(total) ? total : null;
                 },
                 totalEcontractAddonWithVat() {
@@ -1912,6 +1996,10 @@
                 },
                 isInvoiceDiscountPolicy() {
                     return this.activeHddtMainTab === 'invoice' && this.activeInvoiceSubTab === 'invoice_new';
+                },
+                invoiceSetupDiscount() {
+                    if (this.isInvoiceDiscountPolicy && this.invoiceDiscountMode === 'none') return 0;
+                    return Math.min(100, Math.max(0, Number(this.discountInvoiceSetup) || 0));
                 },
                 selectedInvoiceCondition() {
                     return this.invoiceCatalog?.customerConditions?.find(condition => condition.id === this.invoiceCustomerType)
@@ -2012,6 +2100,7 @@
                     return this.vnptCaContractSize === '100plus' ? 60 : 50;
                 },
                 vnptCaDiscount() {
+                    if (this.vnptCaDiscountMode !== 'custom') return 0;
                     return Math.min(this.maxVnptCaDiscount, Math.max(0, Number(this.discountVnptCa) || 0));
                 },
                 isVnptCaPro() {
@@ -2071,6 +2160,7 @@
                     return this.activeBhxhGroup === 'doclap' ? 50 : 45;
                 },
                 bhxhDiscount() {
+                    if (this.bhxhDiscountMode !== 'custom') return 0;
                     return Math.min(this.maxBhxhDiscount, Math.max(0, Number(this.discountBhxh) || 0));
                 },
                 bhxhRegionName() {
@@ -2209,6 +2299,7 @@
                         this.activeVnptCaTab = 'doanhnghiep'; 
                         this.activeVnptCaTier = 'standard';
                         this.vnptCaContractSize = 'under100';
+                        this.vnptCaDiscountMode = 'none';
                         this.discountVnptCa = 0;
                         this.activeVnptCaType = 'moi';
                     } else if (srv.id === 'bhxh') {
@@ -2216,6 +2307,7 @@
                         this.activeBhxhVan = ''; 
                         this.activeBhxhType = 'moi'; 
                         this.bhxhRegion = 'other';
+                        this.bhxhDiscountMode = 'none';
                         this.discountBhxh = 0;
                     } else if (srv.id === 'hddt') {
                         this.resetPosOptions();
@@ -2436,7 +2528,7 @@
                     }
 
                     let fee = 1000000;
-                    let feeAfterDiscount = fee * (1 - this.discountInvoiceSetup / 100);
+                    let feeAfterDiscount = fee * (1 - this.invoiceSetupDiscount / 100);
                     return feeAfterDiscount * (1 + this.vatRate / 100);
                 },
                 calculateInvoiceTotal(planPrice, plan = null) {

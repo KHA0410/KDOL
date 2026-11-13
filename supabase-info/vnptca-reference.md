@@ -26,6 +26,8 @@ Dữ liệu Pro được bổ sung cục bộ, chưa cập nhật CSV/Supabase. 
 
 ## Chiết khấu CA Token
 
+Phần chiết khấu được thu gọn thành hai nút Giá gốc / Áp dụng chiết khấu, mặc định Giá gốc. Chỉ khi chọn Áp dụng chiết khấu mới hiện quy mô hợp đồng, thanh kéo và ghi chú chính sách. Bật không tự chọn trần giảm: người tư vấn nhập mức bằng thanh kéo bước 5%. Chuyển về Giá gốc ngừng áp dụng mức giảm trong cả bảng giá lẫn báo giá sao chép; mở lại phần chiết khấu giữ mức thủ công đã chọn và tiếp tục giới hạn theo quy mô. Chọn lại dịch vụ Chữ ký số hoặc tab Token đặt lại Giá gốc và mức giảm 0%.
+
 Bảng đăng ký mới (gói thường và Pro) có thêm cột “Giá dịch vụ”, kèm VAT đang chọn và đã trừ chiết khấu phí dịch vụ. Giá gốc được gạch ngang khi có giảm giá. Cột này lấy giá thanh toán gốc trừ Token trước khi tính VAT/chiết khấu; giá dịch vụ sau làm tròn cộng giá Token bằng tổng thanh toán. Gia hạn và Device ID không hiện thêm cột này.
 
 Nguồn: ảnh "Chính sách chiết khấu — Giá cước dịch vụ" người dùng cung cấp.

@@ -27,6 +27,8 @@ VAN 100 tích hợp gia hạn 33 tháng có giá 2.695.100đ theo ảnh gia hạ
 
 ## Trần chính sách theo địa bàn
 
+Phần chiết khấu thu gọn thành Giá gốc / Áp dụng chiết khấu, mặc định Giá gốc. Chỉ bật Áp dụng chiết khấu mới hiện địa bàn, thanh kéo bước 5% và ghi chú Token. Bật không tự chọn mức giảm; dùng mức thủ công đang lưu, ban đầu 0%. Giá gốc ngừng áp dụng mọi mức giảm đang lưu vào giá và nội dung sao chép. Mở lại giữ mức chọn, giới hạn ngay theo địa bàn/loại gói; đổi nhóm độc lập/tích hợp hoặc chọn lại dịch vụ đặt lại Giá gốc và 0%.
+
 | Địa bàn | BHXH độc lập | BHXH + VNPT-CA |
 | --- | ---: | ---: |
 | Hà Nội, Đà Nẵng, TP.HCM | 65% | 55% |

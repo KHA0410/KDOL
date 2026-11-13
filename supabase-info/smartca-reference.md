@@ -23,7 +23,7 @@ Người dùng cung cấp và xác nhận giá **Nâng cao đã gồm VAT 8%**: 
 
 Tab Hộ kinh doanh được bổ sung cục bộ trước tab Dùng 01 lần, không cần bản ghi máy chủ. Chỉ có Nâng cao; ẩn nút Cơ bản/Nâng cao và không nhân giá thêm 1,5 lần. Dữ liệu trong `smartca-household-data.js`. Chọn Lần đầu kích hoạt (mặc định) hiện thêm dòng 6 tháng, giá 0đ; chọn Đã kích hoạt ẩn dòng này và chặn sao chép gói miễn phí cũ nếu trạng thái vừa đổi. Mở lại dịch vụ Chữ ký số đặt lại Lần đầu kích hoạt và VAT 8%.
 
-Các gói trả phí áp dụng bộ tùy chọn ưu đãi SmartCA theo thời hạn hiện có, mặc định giá gốc; từ 12 tháng có trần 30%. Gói miễn phí không áp thêm chiết khấu, không đổi giá hay kéo dài kỳ của các gói trả phí. Không tự thêm tốc độ/hạn mức lượt ký hoặc phí Token/khởi tạo chưa được cung cấp.
+Các gói trả phí áp dụng bộ tùy chọn chiết khấu SmartCA theo thời hạn hiện có, mặc định giá gốc; từ 12 tháng có trần 30%. Gói miễn phí không áp thêm chiết khấu, không đổi giá hay kéo dài kỳ của các gói trả phí. Không tự thêm tốc độ/hạn mức lượt ký hoặc phí Token/khởi tạo chưa được cung cấp.
 
 Công thức: `làm tròn(giá đã VAT 8% × (100 + VAT chọn) × (100 − chiết khấu thực tế) / 10800)`. Giá gốc VAT 10% tương ứng 550.000đ / 1.045.000đ / 1.485.000đ. Giá bị gạch ngang và báo giá sao chép dùng đúng cơ sở VAT của gói; sao chép luôn ghi Nâng cao và điều kiện lần đầu kích hoạt cho gói miễn phí.
 
@@ -43,10 +43,10 @@ Nguồn: ảnh "IV. Chính sách phân cấp tăng giá, chiết khấu thương
 
 Các điều kiện trong bảng nối bằng "hoặc". Mỗi gói được áp dụng mức tối đa cao nhất giữa điều kiện thời hạn và điều kiện khách hàng được chọn; không cộng dồn các mức chiết khấu.
 
-Giao diện chính chỉ có "Giá gốc / Áp dụng ưu đãi", mặc định giá gốc. Bấm "Áp dụng ưu đãi" để tự áp dụng mức tối đa phù hợp cho từng gói: gói 6 tháng giảm 20%, gói 1–3 tháng hoặc dùng một lần giảm 10%, gói từ 12 tháng giảm 30%. Chế độ tự động tính lại theo từng gói khi đổi nhóm, VAT hoặc cơ bản/nâng cao; không bị giữ mức thấp của nhóm vừa xem trước đó.
+Giao diện chính chỉ có "Giá gốc / Áp dụng chiết khấu", mặc định giá gốc. Bấm "Áp dụng chiết khấu" để tự áp dụng mức tối đa phù hợp cho từng gói: gói 6 tháng giảm 20%, gói 1–3 tháng hoặc dùng một lần giảm 10%, gói từ 12 tháng giảm 30%. Chế độ tự động tính lại theo từng gói khi đổi nhóm, VAT hoặc cơ bản/nâng cao; không bị giữ mức thấp của nhóm vừa xem trước đó.
 
-"Tùy chỉnh ưu đãi" mặc định thu gọn, chứa điều kiện khách hàng riêng và lựa chọn giảm thấp hơn mức tối đa. Khi chọn mức 30% thủ công, gói 6 tháng vẫn chỉ giảm 20% nếu chỉ xét thời hạn. Khách hàng có điều kiện cạnh tranh giá hoặc doanh thu cao có thể được áp dụng trần cao hơn trên gói ngắn khi chọn đúng điều kiện. Điều kiện khách hàng riêng và mức chọn thủ công luôn được tóm tắt bên ngoài phần tùy chỉnh để không bị ẩn khi đóng lại. Khi chỉ có gói dùng một lần và không có điều kiện khách hàng riêng, nút chọn thủ công 20%/30% bị khóa.
+"Tùy chỉnh chiết khấu" mặc định thu gọn, chứa điều kiện khách hàng riêng và lựa chọn giảm thấp hơn mức tối đa. Khi chọn mức 30% thủ công, gói 6 tháng vẫn chỉ giảm 20% nếu chỉ xét thời hạn. Khách hàng có điều kiện cạnh tranh giá hoặc doanh thu cao có thể được áp dụng trần cao hơn trên gói ngắn khi chọn đúng điều kiện. Điều kiện khách hàng riêng và mức chọn thủ công luôn được tóm tắt bên ngoài phần tùy chỉnh để không bị ẩn khi đóng lại. Khi chỉ có gói dùng một lần và không có điều kiện khách hàng riêng, nút chọn thủ công 20%/30% bị khóa.
 
-Mỗi dòng chỉ hiển thị giá và "Giảm X%" khi có ưu đãi; bỏ các dòng nhắc trần lặp lại. Công thức và nội dung sao chép dùng cùng mức thực tế, bản sao chép ghi cả lý do. Chọn lại "Giá gốc" tắt toàn bộ chiết khấu SmartCA, kể cả khi trước đó đã chọn điều kiện khách hàng riêng. Điều kiện và mức thủ công vẫn được giới hạn ngay trong công thức.
+Mỗi dòng chỉ hiển thị giá và "Giảm X%" khi có chiết khấu; bỏ các dòng nhắc trần lặp lại. Công thức và nội dung sao chép dùng cùng mức thực tế, bản sao chép ghi cả lý do. Chọn lại "Giá gốc" tắt toàn bộ chiết khấu SmartCA, kể cả khi trước đó đã chọn điều kiện khách hàng riêng. Điều kiện và mức thủ công vẫn được giới hạn ngay trong công thức.
 
 Ứng dụng chưa có dữ liệu khách hàng để tự xác minh doanh thu hoặc cạnh tranh giá. Người tư vấn chọn điều kiện khách hàng; thời hạn gói được kiểm tra từ dữ liệu giá. Không suy diễn mức giảm theo thời hạn chưa có trong chính sách. Khi chọn lại dịch vụ Chữ ký số, điều kiện trở về "Chỉ xét thời hạn gói", hiển thị giá gốc.

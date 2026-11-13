@@ -2,6 +2,44 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 const { readPlans, loadPricing, roundFraction } = require('./helpers/pricing.cjs');
 
+test('Invoice original price disables setup discounts in fixed/MAX prices and copied quotes', () => {
+    const app = loadInvoice(), state = app.state;
+    const plan = state.currentInvoicePlans.find(plan => state.getInvoiceQuantity(plan) === 300);
+    state.discountInvoice = 40; state.invoiceMaxAmount = 10001;
+    for (const vat of [8, 10]) for (const requested of [-5, 0, 50, 100, 150]) {
+        state.vatRate = vat; state.discountInvoiceSetup = requested;
+        for (const mode of ['none', 'auto', 'custom', 'none']) {
+            state.invoiceDiscountMode = mode;
+            const setupDiscount = mode === 'none' ? 0 : Math.min(100, Math.max(0, requested));
+            assert.equal(state.invoiceSetupDiscount, setupDiscount);
+            for (const [type, setupStatus] of [['moi', 'thu'], ['moi', 'khong'], ['giahan', 'thu']]) {
+                state.activeInvoiceType = type; state.activeInvoiceSetupStatus = setupStatus;
+                const setupBase = type === 'moi' && setupStatus === 'thu' ? 1000000 : 0;
+                const fee = roundFraction(BigInt(setupBase) * BigInt(100 - setupDiscount) * BigInt(100 + vat), 10000n);
+                assert.equal(Math.round(state.calculateInvoiceSetupFee()), fee);
+                const packageDiscount = mode === 'none' ? 0 : 20;
+                const expected = roundFraction(390000n * BigInt(100 - packageDiscount) * BigInt(100 + vat)
+                    + BigInt(setupBase) * BigInt(100 - setupDiscount) * BigInt(100 + vat), 10000n);
+                assert.equal(Math.round(state.calculateInvoiceTotal(plan.price, plan)), expected);
+                state.executeInvoiceCopy(plan);
+                assert.ok(app.copied().includes(state.formatPrice(expected)));
+                if (fee) assert.ok(app.copied().includes('Khởi tạo: ' + state.formatPrice(fee)));
+                const maxDiscount = mode === 'none' ? 0 : 40;
+                const expectedMax = roundFraction(BigInt(10001 * 390) * BigInt(100 - maxDiscount) * BigInt(100 + vat)
+                    + BigInt(setupBase) * BigInt(100 - setupDiscount) * BigInt(100 + vat), 10000n);
+                assert.equal(Math.round(state.calculateInvoiceMaxTotal()), expectedMax);
+                state.executeInvoiceMaxCopy();
+                assert.ok(app.copied().includes(state.formatPrice(expectedMax)));
+                if (fee) assert.ok(app.copied().includes('Khởi tạo: ' + state.formatPrice(fee)));
+            }
+        }
+    }
+    state.activeInvoiceSubTab = 'invoice_nt'; state.invoiceDiscountMode = 'none';
+    state.activeInvoiceType = 'moi'; state.activeInvoiceSetupStatus = 'thu';
+    state.vatRate = 8; state.discountInvoiceSetup = 50;
+    assert.equal(state.calculateInvoiceSetupFee(), 540000);
+});
+
 function loadInvoice() {
     const app = loadPricing();
     app.state.invoiceData = Object.values(readPlans(['invoice']).reduce((groups, plan) => {
@@ -36,8 +74,9 @@ test('Invoice fixed packages enforce quantity/customer rules in prices and copie
                 assert.equal(state.getInvoiceMaxDiscount(plan), cap);
                 assert.equal(state.getInvoiceDiscount(plan), applied);
                 const setupBase = type === 'moi' && setup === 'thu' ? 1000000 : 0;
+                const appliedSetupDiscount = mode === 'none' ? 0 : setupDiscount;
                 const numerator = BigInt(plan.price) * BigInt(100 - applied) * BigInt(100 + vat)
-                    + BigInt(setupBase) * BigInt(100 - setupDiscount) * BigInt(100 + vat);
+                    + BigInt(setupBase) * BigInt(100 - appliedSetupDiscount) * BigInt(100 + vat);
                 const expected = roundFraction(numerator, 10000n);
                 assert.equal(Math.round(state.calculateInvoiceTotal(plan.price, plan)), expected);
                 assert.equal(Math.round(state.calculateInvoicePackagePrice(plan)), roundFraction(BigInt(plan.price) * BigInt(100 - applied), 100n));

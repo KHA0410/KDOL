@@ -4,7 +4,7 @@ Nguồn: các ảnh triển khai, bảng giá khởi tạo/SaaS/OnPremise, dịc
 
 ## SaaS trên hạ tầng VNPT
 
-Khởi tạo: 2.000.000đ, gồm khảo sát, tư vấn và khởi tạo phần mềm. Không có miễn phí khởi tạo vô điều kiện; khi áp dụng ưu đãi, từng gói bị giới hạn theo chính sách bên dưới.
+Khởi tạo: 2.000.000đ, gồm khảo sát, tư vấn và khởi tạo phần mềm. Không có miễn phí khởi tạo vô điều kiện; khi áp dụng chiết khấu, từng gói bị giới hạn theo chính sách bên dưới.
 
 | Gói | Số hợp đồng | Lưu trữ kèm gói (MB) | Giá dịch vụ |
 | --- | ---: | ---: | ---: |
@@ -62,6 +62,8 @@ Min nhận số nguyên 1–4.999; Max từ 50.001. Bảng TSA riêng hiển th�
 
 Số lượng SMS/lượt eKYC/gói lưu trữ phải nguyên không âm. Không có đơn giá SMS riêng hoặc có số lượng không hợp lệ thì chặn tổng hoàn chỉnh và sao chép cho SaaS/OnPremise, kể cả Emax. Chọn CeCA riêng không bị ảnh hưởng bởi các giá trị add-on đang nhập ở tab phần mềm.
 
+TSA kèm phần mềm là tùy chọn: Không kèm, hoặc chọn Min/Max nhưng để trống/0 lượt đều tính TSA 0đ và không chặn tổng các add-on khác. Không ghi TSA vào báo giá sao chép khi không sử dụng. Nếu nhập số lượt khác 0 thì vẫn kiểm tra số nguyên dương và giới hạn Min 1–4.999 / Max từ 50.001; gói cố định vẫn tính đúng giá khi được chọn. Quy tắc trống/0 này chỉ dành cho add-on, không thay giới hạn gói TSA tra riêng.
+
 ## Chiết khấu SaaS
 
 | Điều kiện (nối bằng "hoặc") | Dịch vụ tối đa | Khởi tạo tối đa |
@@ -84,7 +86,11 @@ Số hợp đồng không tự làm tăng trần giảm cước triển khai OnP
 
 ## Giao diện và tổng tiền
 
-Ba lựa chọn triển khai: SaaS / OnPremise / TSA CeCA. SaaS và OnPremise có "Giá gốc / Áp dụng ưu đãi", mặc định giá gốc; điều kiện khách hàng và mức giảm thấp hơn nằm trong phần tùy chỉnh thu gọn. Phần dịch vụ cộng thêm cũng thu gọn, tổng add-on, mức giảm TSA hoặc lỗi nhập luôn được nhắc bên ngoài khi cần. Đổi hình thức đặt lại chiết khấu phần mềm và điều kiện khách hàng, giữ mức giảm TSA đã chọn; chọn lại dịch vụ đặt lại cả chiết khấu TSA, số lượng add-on/Emax và đơn giá SMS riêng.
+Dịch vụ cộng thêm hiển thị thành bốn dòng gọn theo thứ tự SMS OTP / eKYC / TSA CeCA / Lưu trữ; đơn giá bên trái, ô số lượng bên phải. Brandname chỉ hiện khi có số SMS hoặc đang chọn loại riêng, tránh giấu cấu hình còn hiệu lực. Khi eKYC có số lượng, hiện nhắc tính cả lượt không thành công. TSA có menu chọn gói, số lượt Min/Max hiện khi cần, thanh chiết khấu nằm trong phần thu gọn riêng. Chú thích dài vào Thông tin dịch vụ; tổng add-on, mức giảm TSA đã chọn và lỗi nhập vẫn hiện bên ngoài. Tổng add-on căn phải toàn khung, số tiền lớn và đậm hơn. Cách tính và điều kiện giá không đổi.
+
+Khi nhập số lượng dương hợp lệ, từng dòng hiện Thành tiền chưa VAT: SMS = số tin × đơn giá Brandname đang chọn; eKYC = số lượt × 3.000đ; lưu trữ = số gói × 90.000đ; TSA dùng giá sau chiết khấu TSA. `econtractAddonSubtotals` là nguồn chung cho giá từng dòng và tổng add-on. Số lượng không hợp lệ, đơn giá SMS riêng còn thiếu hoặc phép tính vượt giới hạn số nguyên an toàn thì dòng đó trả về null, không hiện thành tiền gây nhầm lẫn và không cho chốt tổng hoàn chỉnh. Số lượng 0 không phát sinh phí kể cả khi chưa nhập đơn giá riêng. Giá từng dòng chưa VAT nên giữ nguyên khi đổi VAT; tổng thanh toán tính VAT theo lựa chọn hiện có.
+
+Ba lựa chọn triển khai: SaaS / OnPremise / TSA CeCA. SaaS và OnPremise có "Giá gốc / Áp dụng chiết khấu", mặc định giá gốc; điều kiện khách hàng và mức giảm thấp hơn nằm trong phần tùy chỉnh thu gọn. Phần dịch vụ cộng thêm cũng thu gọn, tổng add-on, mức giảm TSA hoặc lỗi nhập luôn được nhắc bên ngoài khi cần. Đổi hình thức đặt lại chiết khấu phần mềm và điều kiện khách hàng, giữ mức giảm TSA đã chọn; chọn lại dịch vụ đặt lại cả chiết khấu TSA, số lượng add-on/Emax và đơn giá SMS riêng.
 
 Tổng phần mềm = làm tròn đến đồng của `(giá sử dụng × (100 − giảm dịch vụ) + khởi tạo/triển khai × (100 − giảm khởi tạo) + add-on × 100) × (100 + VAT) / 10000`. Mọi giá gốc chưa VAT; chọn VAT 8% nhân 1,08, chọn VAT 10% nhân 1,10. Không làm tròn ở các bước trung gian.
 

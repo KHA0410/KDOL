@@ -31,7 +31,7 @@ Cước duy trì: 50.000đ/lần, cộng một lần trong báo giá, không nh�
 
 Áp dụng điều kiện "hoặc", lấy trần cao nhất mà gói hoặc khách hàng thỏa mãn, không cộng dồn các tỷ lệ. Ảnh chỉ nêu gói 50.000 HĐ cho mức giữa; không tự suy diễn mức số lượng ở khoảng 10.001–49.999 hoặc 50.001–99.999 HĐ. Các khoảng này không có trong danh sách gói cố định/MAX hiện tại; điều kiện khách hàng riêng vẫn có thể đủ điều kiện.
 
-Giao diện có "Giá gốc / Áp dụng ưu đãi" cho cả giá gói và duy trì. Tùy chỉnh thu gọn cho phép chọn điều kiện khách hàng và yêu cầu tỷ lệ riêng; công thức luôn chặn theo từng trần. Điều kiện doanh thu/cạnh tranh giá do người tư vấn chọn vì chưa có dữ liệu để xác minh tự động. Phí khởi tạo đã do đơn vị bán hàng quyết định nên không áp thêm tỷ lệ giảm từ hai cột chính sách trên.
+Giao diện có "Giá gốc / Áp dụng chiết khấu" cho cả giá gói và duy trì. Tùy chỉnh thu gọn cho phép chọn điều kiện khách hàng và yêu cầu tỷ lệ riêng; công thức luôn chặn theo từng trần. Điều kiện doanh thu/cạnh tranh giá do người tư vấn chọn vì chưa có dữ liệu để xác minh tự động. Phí khởi tạo đã do đơn vị bán hàng quyết định nên không áp thêm tỷ lệ giảm từ hai cột chính sách trên.
 
 Tổng tiền = làm tròn đến đồng của `(giá gói × (100 − giảm gói) + 50000 × (100 − giảm duy trì) + phí khởi tạo đã nhập × 100) × (100 + VAT) / 10000`. Giá trị duy trì và khởi tạo hiển thị/copy là giá sau VAT, đã nằm trong tổng thanh toán. Mặc định chưa áp dụng chiết khấu, phí khởi tạo tạm tính 1.000.000đ chưa VAT. Không dùng cấu hình phí/chiết khấu Invoice TT78 hoặc Inbot cho POS.
 

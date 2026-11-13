@@ -64,6 +64,7 @@ test('40 BHXH prices match supplied tables, including confirmed VAN 100 renewal 
 
 test('BHXH service, total and copied quote use regional caps, VAT 8/10 and undiscounted Token', () => {
     const app = loadBhxh(), state = app.state;
+    state.bhxhDiscountMode = 'custom';
     let cases = 0;
     for (const group of state.bhxhData) {
         selectGroup(state, group.type);
@@ -96,6 +97,7 @@ test('BHXH service, total and copied quote use regional caps, VAT 8/10 and undis
 
 test('BHXH caps take effect before watchers and reset when reselecting the service', () => {
     const app = loadBhxh(), state = app.state;
+    state.bhxhDiscountMode = 'custom';
     state.vatRate = 10; // This price example explicitly uses VAT 10%.
     state.bhxhRegion = 'major'; state.discountBhxh = 65;
     assert.equal(state.maxBhxhDiscount, 65);
@@ -120,4 +122,34 @@ test('BHXH caps take effect before watchers and reset when reselecting the servi
     state.selectService({ id: 'bhxh' });
     assert.equal(state.bhxhRegion, 'other'); assert.equal(state.discountBhxh, 0);
     assert.equal(state.activeBhxhGroup, 'doclap'); assert.equal(state.vatRate, 8);
+    assert.equal(state.bhxhDiscountMode, 'none');
+});
+
+test('BHXH original-price switch stops hidden discounts and preserves the capped manual choice when reopened', () => {
+    const app = loadBhxh(), state = app.state;
+    assert.equal(state.bhxhDiscountMode, 'none');
+    for (const code of ['bhxh_doclap', 'tichhop_moi', 'tichhop_giahan']) {
+        selectGroup(state, code);
+        const plan = state.currentBhxhPlans[0];
+        for (const region of ['other', 'major']) for (const vat of [8, 10]) {
+            state.bhxhRegion = region; state.vatRate = vat; state.discountBhxh = 65;
+            const cap = code === 'bhxh_doclap' ? (region === 'major' ? 65 : 50) : (region === 'major' ? 55 : 45);
+            const token = code === 'tichhop_moi' ? (vat === 8 ? 540000 : 550000) : 0;
+            for (const mode of ['none', 'custom', 'none', 'custom']) {
+                state.bhxhDiscountMode = mode;
+                const discount = mode === 'none' ? 0 : cap;
+                const expected = roundFraction(BigInt(plan.price) * BigInt(100 + vat) * BigInt(100 - discount), 11000n) + token;
+                assert.equal(state.bhxhDiscount, discount);
+                assert.equal(state.bhxhTokenPrice, token);
+                assert.equal(state.calculateBhxhTotal(plan.price), expected);
+                state.executeBhxhCopy(plan);
+                assert.ok(app.copied().includes(state.formatPrice(expected)));
+                if (discount) assert.ok(app.copied().includes('Đã CK ' + discount + '% dịch vụ'));
+                else assert.ok(!app.copied().includes('Đã CK'));
+            }
+        }
+    }
+    state.selectService({ id: 'bhxh' });
+    assert.equal(state.bhxhDiscountMode, 'none'); assert.equal(state.bhxhDiscount, 0);
+    assert.equal(state.discountBhxh, 0); assert.equal(state.bhxhRegion, 'other');
 });

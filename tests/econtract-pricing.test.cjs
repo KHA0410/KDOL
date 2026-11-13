@@ -2,6 +2,59 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 const { readPlans, loadPricing, roundFraction } = require('./helpers/pricing.cjs');
 
+test('eContract per-add-on subtotals match displayed quantities, rates, TSA discount and the combined total', () => {
+    const { state } = loadPricing();
+    state.addonSmsCount = 100; state.addonEkycCount = 100;
+    state.addonCecaPackage = 'min'; state.addonCecaAmount = 300;
+    assert.deepEqual({ ...state.econtractAddonSubtotals }, { sms: 80000, ekyc: 300000, storage: 0, tsa: 300000 });
+    assert.equal(state.totalEcontractAddonNoVat, 680000);
+    for (const deployment of ['econtract_saas', 'econtract_onprem']) {
+        state.selectEcontractMode(deployment);
+        state.econtractDiscountMode = 'auto'; state.econtractCustomerType = 'competition';
+        for (const brand of ['shared', 'private']) for (const vat of [8, 10]) for (const discount of [0, 15, 30]) {
+            state.econtractSmsBrand = brand; state.econtractPrivateSmsPrice = 450;
+            state.addonStorageCount = 2; state.vatRate = vat; state.discountTsa = discount;
+            for (const [type, quantity, tsaBase] of [['min', 300, 300000], ['5000', '', 4500000], ['max', 50001, 25000500]]) {
+                state.addonCecaPackage = type; state.addonCecaAmount = quantity;
+                const prices = { sms: brand === 'shared' ? 80000 : 45000, ekyc: 300000, storage: 180000, tsa: tsaBase * (100 - discount) / 100 };
+                assert.deepEqual({ ...state.econtractAddonSubtotals }, prices);
+                const total = Object.values(prices).reduce((sum, price) => sum + price, 0);
+                assert.equal(state.totalEcontractAddonNoVat, total);
+                assert.equal(state.totalEcontractAddonWithVat, roundFraction(BigInt(total) * BigInt(100 + vat), 100n));
+            }
+        }
+    }
+});
+
+test('invalid add-on inputs suppress their subtotals without hiding other valid line prices', () => {
+    const { state } = loadPricing();
+    state.addonSmsCount = 100; state.addonEkycCount = 100; state.addonStorageCount = 1;
+    state.econtractSmsBrand = 'private'; state.econtractPrivateSmsPrice = '';
+    assert.equal(state.econtractAddonSubtotals.sms, null);
+    assert.equal(state.econtractAddonSubtotals.ekyc, 300000);
+    assert.equal(state.econtractAddonSubtotals.storage, 90000);
+    assert.equal(state.totalEcontractAddonNoVat, null);
+    state.addonSmsCount = 0;
+    assert.equal(state.econtractAddonSubtotals.sms, 0);
+    assert.equal(state.totalEcontractAddonNoVat, 390000);
+    state.econtractSmsBrand = 'shared';
+    for (const [field, key] of [['addonSmsCount', 'sms'], ['addonEkycCount', 'ekyc'], ['addonStorageCount', 'storage']]) {
+        const original = state[field];
+        for (const value of [-1, 0.5, 'abc', Infinity, Number.MAX_SAFE_INTEGER]) {
+            state[field] = value;
+            assert.equal(state.econtractAddonSubtotals[key], null);
+            assert.equal(state.totalEcontractAddonNoVat, null);
+        }
+        state[field] = original;
+    }
+    state.addonCecaPackage = 'min'; state.addonCecaAmount = 5000;
+    assert.equal(state.econtractAddonSubtotals.tsa, null);
+    assert.equal(state.totalEcontractAddonNoVat, null);
+    state.addonCecaPackage = 'none';
+    assert.equal(state.econtractAddonSubtotals.tsa, 0);
+    assert.equal(state.totalEcontractAddonNoVat, 390000);
+});
+
 const source = [
     ['E50', 50, 250, 350000], ['E100', 100, 500, 650000], ['E200', 200, 1000, 1200000],
     ['E500', 500, 2500, 2900000], ['E1000', 1000, 5000, 5600000],

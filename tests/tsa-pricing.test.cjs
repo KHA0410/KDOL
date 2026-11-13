@@ -2,6 +2,44 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 const { loadPricing, roundFraction } = require('./helpers/pricing.cjs');
 
+test('optional blank/zero TSA never blocks customers purchasing other add-ons or adds TSA to their quote', () => {
+    const app = loadPricing(), state = app.state;
+    for (const mode of ['econtract_saas', 'econtract_onprem']) {
+        state.selectEcontractMode(mode);
+        const plan = state.currentEcontractPlans[0];
+        for (const type of ['none', 'min', 'max']) for (const quantity of ['', 0, '0', ' ']) {
+            state.addonCecaPackage = type; state.addonCecaAmount = quantity; state.discountTsa = 30;
+            for (const [sms, ekyc, storage] of [[1000, 233, 0], [1000, 0, 0], [0, 233, 2], [0, 0, 0]]) {
+                state.addonSmsCount = sms; state.addonEkycCount = ekyc; state.addonStorageCount = storage;
+                const addons = sms * 800 + ekyc * 3000 + storage * 90000;
+                assert.equal(state.isEcontractTsaAddonRequested, false);
+                assert.equal(state.econtractTsaAddonPlan, null);
+                assert.equal(state.econtractAddonSubtotals.tsa, 0);
+                assert.equal(state.econtractAddonError, '');
+                assert.equal(state.totalEcontractAddonNoVat, addons);
+                for (const vat of [8, 10]) {
+                    state.vatRate = vat;
+                    const expected = roundFraction(BigInt(plan.price + (mode === 'econtract_saas' ? 2000000 : 100000000) + addons) * BigInt(100 + vat), 100n);
+                    assert.equal(state.calculateEcontractTotal(plan), expected);
+                    state.executeEcontractCopy(plan);
+                    assert.ok(app.copied().includes(state.formatPrice(expected)));
+                    assert.ok(!app.copied().includes('TSA'));
+                }
+            }
+        }
+    }
+    state.addonCecaPackage = '5000'; state.addonCecaAmount = 0;
+    assert.equal(state.isEcontractTsaAddonRequested, true);
+    assert.equal(state.econtractAddonSubtotals.tsa, 3150000);
+    state.addonCecaPackage = 'min'; state.addonCecaAmount = 0;
+    state.addonSmsCount = 1000; state.addonEkycCount = 233;
+    assert.equal(state.totalEcontractAddonNoVat, 1499000);
+    state.addonCecaAmount = 1000; state.discountTsa = 0;
+    assert.equal(state.totalEcontractAddonNoVat, 2499000);
+    state.addonCecaAmount = 5000;
+    assert.ok(state.econtractAddonError); assert.equal(state.totalEcontractAddonNoVat, null);
+});
+
 test('TSA source prices, unit rates and strict Min/Max boundaries match the supplied table', () => {
     const { state } = loadPricing();
     const source = [[5000, 900, 4500000], [10000, 800, 8000000], [20000, 700, 14000000], [50000, 600, 30000000]];
@@ -77,7 +115,7 @@ test('bundled TSA Min/Max require valid counts, prevent incomplete quotes, and r
             assert.ok(app.copied().includes(new Intl.NumberFormat('vi-VN').format(quantity)));
         }
     }
-    for (const [type, quantity] of [['min', ''], ['min', 5000], ['min', -1], ['min', 1.5], ['max', 50000], ['max', 'abc']]) {
+    for (const [type, quantity] of [['min', 5000], ['min', -1], ['min', 1.5], ['max', 50000], ['max', 'abc']]) {
         state.addonCecaPackage = type; state.addonCecaAmount = quantity;
         assert.ok(state.econtractAddonError); assert.equal(state.totalEcontractAddonNoVat, null);
         assert.equal(state.calculateEcontractTotal(plan), null);

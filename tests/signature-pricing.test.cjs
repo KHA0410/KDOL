@@ -2,10 +2,37 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 const { readPlans, loadPricing, roundFraction } = require('./helpers/pricing.cjs');
 
+test('Token original-price switch disables hidden discounts and reopens the same capped manual rate', () => {
+    const app = loadPricing(), state = app.state;
+    const plan = { duration_text: '12', price: 1823000, invoice_price: 1823000 };
+    assert.equal(state.vnptCaDiscountMode, 'none');
+    for (const vat of [8, 10]) for (const tier of ['under100', '100plus']) {
+        state.activeVnptCaTab = 'doanhnghiep'; state.activeVnptCaType = 'moi';
+        state.vatRate = vat; state.vnptCaContractSize = tier; state.discountVnptCa = 60;
+        const token = roundFraction(550000n * BigInt(100 + vat), 110n);
+        for (const mode of ['none', 'custom', 'none', 'custom']) {
+            state.vnptCaDiscountMode = mode;
+            const applied = mode === 'none' ? 0 : tier === '100plus' ? 60 : 50;
+            const expected = roundFraction(1273000n * BigInt(100 + vat) * BigInt(100 - applied), 11000n) + token;
+            assert.equal(state.vnptCaDiscount, applied);
+            assert.equal(state.vnptCaTokenPrice, token);
+            assert.equal(state.calculateVnptCaPrice(plan.price), expected);
+            state.executeCaCopy(plan);
+            assert.ok(app.copied().includes(state.formatPrice(expected)));
+            if (applied) assert.ok(app.copied().includes('Đã giảm ' + applied + '% phí dịch vụ'));
+            else assert.ok(!app.copied().includes('Đã giảm'));
+        }
+    }
+    state.selectService({ id: 'cks' });
+    assert.equal(state.vnptCaDiscountMode, 'none'); assert.equal(state.vnptCaDiscount, 0);
+    assert.equal(state.discountVnptCa, 0); assert.equal(state.vatRate, 8);
+});
+
 test('all signature plans: VAT 8/10, both CA contract tiers, fixed Token and copied prices', () => {
     const app = loadPricing(), state = app.state, plans = readPlans();
     let priceCases = 0, copyCases = 0;
     function checkTokenPlan(plan, tokenBase) {
+        state.vnptCaDiscountMode = 'custom';
         for (const tier of ['under100', '100plus']) for (const vat of [8, 10]) for (const discount of [0, 10, 20, 30, 40, 50, ...(tier === '100plus' ? [60] : [])]) {
             state.vnptCaContractSize = tier;
             state.vatRate = vat; state.discountVnptCa = discount;
@@ -88,6 +115,7 @@ test('all signature plans: VAT 8/10, both CA contract tiers, fixed Token and cop
 
 test('VAT switches do not accumulate changes; one-dong rounding regressions', () => {
     const { state } = loadPricing();
+    state.vnptCaDiscountMode = 'custom';
     state.activeVnptCaTab = 'doanhnghiep'; state.activeVnptCaType = 'moi'; state.discountVnptCa = 30;
     for (const vat of [10, 8, 10, 8]) {
         state.vatRate = vat;
@@ -102,6 +130,7 @@ test('VAT switches do not accumulate changes; one-dong rounding regressions', ()
 
 test('CA discount caps apply to prices and copy immediately when contract tier changes', () => {
     const app = loadPricing(), state = app.state;
+    state.vnptCaDiscountMode = 'custom';
     state.vatRate = 10; // This price example explicitly uses VAT 10%.
     const plan = { duration_text: '12', price: 1823000, invoice_price: 1823000 };
     assert.equal(state.vnptCaContractSize, 'under100');
@@ -132,6 +161,7 @@ test('CA discount caps apply to prices and copy immediately when contract tier c
     assert.equal(state.vatRate, 8);
     assert.equal(state.vnptCaContractSize, 'under100');
     assert.equal(state.discountVnptCa, 0);
+    assert.equal(state.vnptCaDiscountMode, 'none');
 });
 
 test('SmartCA limits each duration and copied quote when 30% is selected', () => {

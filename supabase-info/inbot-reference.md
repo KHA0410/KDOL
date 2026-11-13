@@ -12,7 +12,7 @@ Nguồn: ảnh bảng giá người dùng cung cấp trong cuộc trò chuyện.
 | VNPT Invoice-Inbot_10000 | 10.000 | 400 | 4.000.000 |
 | VNPT Invoice-Inbot_MAX | Trên 10.000 | 350 | Số lượng × 350 |
 
-Phí cài đặt/khởi tạo gốc: 300.000đ/lần, chưa VAT, áp dụng khi đăng ký mới. Phí này cộng một lần, không nhân theo số hóa đơn; gia hạn không cộng. Khi chưa áp dụng ưu đãi khởi tạo, VAT 10% cho phí 330.000đ; VAT 8% cho 324.000đ. Mức giảm bị giới hạn theo doanh thu sau giảm giá gói như chính sách bên dưới; không có lựa chọn miễn phí vô điều kiện.
+Phí cài đặt/khởi tạo gốc: 300.000đ/lần, chưa VAT, áp dụng khi đăng ký mới. Phí này cộng một lần, không nhân theo số hóa đơn; gia hạn không cộng. Khi chưa áp dụng chiết khấu khởi tạo, VAT 10% cho phí 330.000đ; VAT 8% cho 324.000đ. Mức giảm bị giới hạn theo doanh thu sau giảm giá gói như chính sách bên dưới; không có lựa chọn miễn phí vô điều kiện.
 
 `inbot-data.js` là bảng giá dùng trên giao diện, cập nhật đủ sáu gói và xếp theo số lượng tăng dần. Tên gói trên giao diện, trong CSV và nội dung sao chép giữ đầy đủ `VNPT Invoice-Inbot_...` đúng văn bản, không viết tắt `IB` hoặc thêm dấu chấm vào phần số của tên. Các giá và ghi chú của `inbot_goi` trong CSV đã được sửa; bổ sung bản ghi VNPT Invoice-Inbot_300. Giao diện dùng cấu hình cục bộ để không hiển thị lại năm gói/giá cũ khi Supabase chưa cập nhật. Chưa ghi thay đổi lên Supabase online.
 
@@ -47,8 +47,8 @@ Ví dụ VNPT Invoice-Inbot_1000 có giá gốc 540.000đ: nếu không giảm g
 
 ## Giao diện và cách tính
 
-Mặc định giá gốc cho cả gói dịch vụ và khởi tạo. Hai lựa chọn "Áp dụng ưu đãi" riêng cho gói và khởi tạo tự áp dụng mức tối đa hợp lệ từng dòng. "Tùy chỉnh ưu đãi" mặc định thu gọn, có điều kiện khách hàng, mức giảm giá gói và thanh giảm khởi tạo; mọi mức chọn thủ công đều bị giới hạn trong công thức. Mức đang chọn và điều kiện riêng vẫn hiện tóm tắt khi đóng phần tùy chỉnh.
+Mặc định giá gốc cho cả gói dịch vụ và khởi tạo. Hai lựa chọn "Áp dụng chiết khấu" riêng cho gói và khởi tạo tự áp dụng mức tối đa hợp lệ từng dòng. "Tùy chỉnh chiết khấu" mặc định thu gọn, có điều kiện khách hàng, mức giảm giá gói và thanh giảm khởi tạo; mọi mức chọn thủ công đều bị giới hạn trong công thức. Mức đang chọn và điều kiện riêng vẫn hiện tóm tắt khi đóng phần tùy chỉnh.
 
 Gói MAX vẫn nằm cuối bảng, chỉ nhận số hóa đơn nguyên lớn hơn 10.000 và giá trị gói trong giới hạn số nguyên an toàn. Dòng phí khởi tạo cho biết giá sau VAT và mức giảm thực tế, kể cả khi được giảm 100% còn 0đ. Báo giá sao chép giữ đúng tên gói trong văn bản, giá cuối, mức giảm giá gói, điều kiện và mức giảm khởi tạo. Gia hạn không tính phí khởi tạo.
 
-Tổng tiền = làm tròn đến đồng của `(giá gói × (100 − giảm gói) + phí khởi tạo gốc × (100 − giảm khởi tạo)) × (100 + VAT) / 10000`; phí khởi tạo gốc bằng 0 khi gia hạn. Không làm tròn trung gian trước khi tính tổng hoặc xét ngưỡng. Khi chọn lại dịch vụ Hóa đơn hoặc đổi tab chính, ưu đãi trở về giá gốc, điều kiện theo số hóa đơn.
+Tổng tiền = làm tròn đến đồng của `(giá gói × (100 − giảm gói) + phí khởi tạo gốc × (100 − giảm khởi tạo)) × (100 + VAT) / 10000`; phí khởi tạo gốc bằng 0 khi gia hạn. Không làm tròn trung gian trước khi tính tổng hoặc xét ngưỡng. Khi chọn lại dịch vụ Hóa đơn hoặc đổi tab chính, chiết khấu trở về giá gốc, điều kiện theo số hóa đơn.
