@@ -96,4 +96,6 @@ Tổng phần mềm = làm tròn đến đồng của `(giá sử dụng × (100
 
 Ví dụ không add-on, VAT 10%: E50 SaaS giá gốc thanh toán (350.000 + 2.000.000) × 1,10 = 2.585.000đ. E5000 OnPremise khi khách đủ điều kiện cạnh tranh giá: dịch vụ 13.000.000đ, triển khai giảm 30% còn 70.000.000đ, tổng 91.300.000đ.
 
-Giá hiển thị, Emax và báo giá sao chép dùng cùng công thức, tỷ lệ thực tế và phạm vi đã tính; không có nút bỏ phí khởi tạo vượt chính sách. Các dữ liệu OnPremise/add-on/chính sách mới là cấu hình cục bộ, chưa cập nhật Supabase online.
+SaaS và OnPremise có nút Đăng ký mới / Gia hạn cạnh phần VAT, mặc định Đăng ký mới. Gia hạn không cộng phí khởi tạo/triển khai ban đầu, không hiển thị thanh giảm phí này; giá sử dụng, chiết khấu dịch vụ và các add-on vẫn tính theo lựa chọn. Báo giá ghi rõ trạng thái, cùng cách tính cho các gói cố định và Emax. Chuyển SaaS/OnPremise giữ trạng thái; chọn lại dịch vụ eContract đặt lại Đăng ký mới. TSA CeCA riêng không dùng trạng thái này.
+
+Giá hiển thị, Emax và báo giá sao chép dùng cùng công thức, tỷ lệ thực tế và phạm vi đã tính. Các dữ liệu OnPremise/add-on/chính sách mới là cấu hình cục bộ, chưa cập nhật Supabase online.

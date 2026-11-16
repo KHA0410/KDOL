@@ -20,6 +20,12 @@ Dòng số lượng 2.000 HĐ trong ảnh có tên "HD 3,000 NEW" nhưng số l�
 
 Thông tin thành phần đơn giá được bổ sung cục bộ, chưa thêm cột hoặc sửa dữ liệu Supabase.
 
+## Thiết kế mẫu hóa đơn theo yêu cầu
+
+Theo yêu cầu bổ sung của người dùng: 1.000.000đ chưa VAT, lưu tại `KDOL_INVOICE.templateDesignPrice`. Invoice TT78 và HD_MAX NEW có ô chọn riêng, mặc định bỏ chọn. Khi chọn, cộng một lần vào tổng của gói đang tra cứu và ghi riêng trong báo giá sao chép; áp dụng cả đăng ký mới và gia hạn nếu có yêu cầu thiết kế.
+
+Phí thiết kế tách biệt với phí khởi tạo phần mềm và đơn giá tạo lập từng hóa đơn. Không áp chiết khấu gói hoặc khởi tạo vào phí này vì chưa có chính sách giảm phí thiết kế. Với VAT 8%, cộng 1.080.000đ; với VAT 10%, cộng 1.100.000đ. Chuyển tab hoặc chọn lại dịch vụ Hóa đơn đặt lại ô chọn. TVAN, Inbot, POS và Biên lai không cộng phí thiết kế này.
+
 ## Chiết khấu thương mại Invoice
 
 Nguồn: ảnh "2. Chính sách chiết khấu thương mại" người dùng cung cấp bổ sung.

@@ -3,6 +3,7 @@
  * Chi tiết: supabase-info/invoice-reference.md.
  */
 window.KDOL_INVOICE = {
+    templateDesignPrice: 1000000,
     customerConditions: [
         { id: 'quantity', label: 'Theo số hóa đơn đăng ký', maxDiscount: 0 },
         { id: 'existing', label: 'Khách hàng hiện hữu còn lại của VNPT · tối đa 20%', maxDiscount: 20 },

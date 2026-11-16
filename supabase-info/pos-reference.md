@@ -21,6 +21,8 @@ Cước duy trì: 50.000đ/lần, cộng một lần trong báo giá, không nh�
 
 Ảnh có đồng thời gói MTT 500.000 giá 65.000.000đ và MTT Max từ 500.000 HĐ giá 100đ/HĐ (50.000.000đ tại đúng 500.000 HĐ). Giữ cả hai đúng nguồn, không tự đổi mốc MAX sang 500.001 hoặc sửa giá gói cố định.
 
+Theo yêu cầu bổ sung của người dùng, POS có nút Đăng ký mới / Gia hạn, mặc định Đăng ký mới. Gia hạn ẩn ô nhập phí khởi tạo và tính phí này bằng 0, kể cả giá trị đã nhập đang trống hoặc không hợp lệ; tổng tiền và báo giá cố định/MAX vẫn có giá gói, duy trì và chiết khấu tương ứng. Báo giá ghi rõ trạng thái, không ghi phí khởi tạo khi gia hạn. Chuyển về Đăng ký mới giữ lại phí đã nhập để sửa tiếp và kiểm tra hợp lệ như trước. Đặt lại cấu hình hoặc mở lại tab POS trở về Đăng ký mới với phí mặc định 1.000.000đ.
+
 ## Chiết khấu
 
 | Điều kiện | Giá gói tối đa | Duy trì tối đa |

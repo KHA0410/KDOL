@@ -8,6 +8,55 @@ const source = [
     [50000, 220, 11000000], [100000, 180, 18000000], [500000, 130, 65000000]
 ];
 
+test('POS renewal ignores missing or invalid setup, preserves usage and maintenance discounts, and copies fixed/MAX quotes', () => {
+    const app = loadPricing(), state = app.state;
+    assert.equal(state.posRegistrationType, 'moi');
+    state.activeHddtMainTab = 'pos';
+    state.posMaxAmount = 500000;
+    for (const vat of [8, 10]) for (const mode of ['none', 'auto', 'custom']) {
+        state.vatRate = vat; state.posDiscountMode = mode;
+        state.discountPosPackage = 25; state.discountPosMaintenance = 45;
+        for (const customer of ['quantity', 'revenue10to30', 'competition']) {
+            state.posCustomerType = customer;
+            for (const setup of ['', ' ', -1, 0.5, 'abc', Infinity, 0, 175000, 1000000]) {
+                state.posSetupAmount = setup;
+                state.posRegistrationType = 'giahan';
+                assert.equal(state.posSetupPrice, 0);
+                assert.equal(state.posSetupFee, 0);
+                for (const plan of [...state.currentPosPlans, state.posMaxPlan]) {
+                    const packageDiscount = state.getPosPackageDiscount(plan);
+                    const maintenanceDiscount = state.getPosMaintenanceDiscount(plan);
+                    const expected = roundFraction((BigInt(plan.price) * BigInt(100 - packageDiscount)
+                        + 50000n * BigInt(100 - maintenanceDiscount)) * BigInt(100 + vat), 10000n);
+                    assert.equal(state.calculatePosTotal(plan), expected);
+                    assert.equal(state.calculateInvoiceTotal(plan.price, plan), expected);
+                    if (plan.duration_text === 'MTT Max') {
+                        assert.equal(state.calculateInvoiceMaxTotal(), expected);
+                        state.executeInvoiceMaxCopy();
+                    } else state.executeInvoiceCopy(plan);
+                    assert.ok(app.copied().includes('(Gia hạn)'));
+                    assert.ok(app.copied().includes(state.formatPrice(expected)));
+                    assert.ok(app.copied().includes('duy trì '));
+                    assert.ok(!app.copied().includes('khởi tạo'));
+                }
+                assert.equal(state.posSetupAmount, setup);
+            }
+        }
+    }
+    state.posSetupAmount = 175000;
+    state.posRegistrationType = 'moi';
+    assert.equal(state.posSetupPrice, 175000);
+    state.executePosCopy(state.currentPosPlans[0]);
+    assert.ok(app.copied().includes('(Đăng ký mới)'));
+    assert.ok(app.copied().includes('khởi tạo ' + state.formatPrice(state.posSetupFee)));
+    state.posSetupAmount = '';
+    assert.equal(state.calculatePosTotal(state.currentPosPlans[0]), null);
+    state.posRegistrationType = 'giahan';
+    state.resetPosOptions();
+    assert.equal(state.posRegistrationType, 'moi');
+    assert.equal(state.posSetupPrice, 1000000);
+});
+
 test('POS nine fixed packages, maintenance and MAX match supplied prices', () => {
     const { state } = loadPricing();
     const csv = readPlans(['invoice']).filter(plan => plan.plan_group === 'invoice_pos');

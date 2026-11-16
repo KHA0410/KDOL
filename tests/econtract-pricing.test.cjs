@@ -70,6 +70,62 @@ function loadEcontract() {
     return app;
 }
 
+test('eContract renewals exclude initial setup in fixed/Emax prices and quotes while retaining usage and add-ons', () => {
+    const app = loadEcontract(), state = app.state;
+    assert.equal(state.econtractRegistrationType, 'moi');
+    for (const deployment of ['econtract_saas', 'econtract_onprem']) {
+        state.selectEcontractMode(deployment);
+        state.econtractEmaxAmount = 10000;
+        for (const vat of [8, 10]) for (const mode of ['none', 'auto', 'custom']) {
+            state.vatRate = vat; state.econtractDiscountMode = mode;
+            state.discountEcontract = 25; state.discountEcontractSetup = 100;
+            state.addonSmsCount = 100; state.addonEkycCount = 23;
+            state.addonCecaPackage = 'min'; state.addonCecaAmount = 0;
+            for (const customer of ['quantity', 'revenue10to30', 'competition']) {
+                state.econtractCustomerType = customer;
+                for (const plan of [...state.currentEcontractPlans, state.econtractEmaxPlan]) {
+                    state.econtractRegistrationType = 'moi';
+                    const newTotal = state.calculateEcontractTotal(plan);
+                    const setupFee = state.calculateEcontractSetupFee(plan);
+                    const serviceDiscount = state.getEcontractServiceDiscount(plan);
+                    state.econtractRegistrationType = 'giahan';
+                    assert.equal(state.econtractSetupBase, 0);
+                    assert.equal(state.calculateEcontractSetupFee(plan), 0);
+                    assert.equal(state.getEcontractSetupDiscount(plan), 0);
+                    assert.equal(state.getEcontractServiceDiscount(plan), serviceDiscount);
+                    assert.equal(state.totalEcontractAddonNoVat, 149000);
+                    const expected = roundFraction((BigInt(plan.price) * BigInt(100 - serviceDiscount) + 14900000n) * BigInt(100 + vat), 10000n);
+                    assert.equal(state.calculateEcontractTotal(plan), expected);
+                    assert.equal(newTotal - expected, setupFee);
+                    if (plan.duration_text === 'Emax') {
+                        assert.equal(state.calculateEcontractEmaxTotal(), expected);
+                        state.executeEcontractEmaxCopy();
+                    } else state.executeEcontractCopy(plan);
+                    assert.ok(app.copied().includes('(Gia hạn)'));
+                    assert.ok(app.copied().includes(state.formatPrice(expected)));
+                    assert.ok(!app.copied().includes('khởi tạo/triển khai'));
+                    assert.ok(app.copied().includes('add-on '));
+                    state.econtractRegistrationType = 'moi';
+                    assert.equal(state.calculateEcontractTotal(plan), newTotal);
+                    state.executeEcontractCopy(plan);
+                    assert.ok(app.copied().includes('(Đăng ký mới)'));
+                }
+            }
+        }
+    }
+    state.econtractRegistrationType = 'giahan';
+    state.selectEcontractMode('econtract_ceca_tab');
+    const tsa = state.currentTsaPlans[0];
+    const tsaTotal = state.calculateEcontractTotal(tsa);
+    state.econtractRegistrationType = 'moi';
+    assert.equal(state.calculateEcontractTotal(tsa), tsaTotal);
+    state.executeEcontractCopy(tsa);
+    assert.ok(!app.copied().includes('(Đăng ký mới)'));
+    state.econtractRegistrationType = 'giahan';
+    state.selectService({ id: 'econtract' });
+    assert.equal(state.econtractRegistrationType, 'moi');
+});
+
 test('eContract supplied SaaS prices, storage, setup and OnPremise 50% usage are exact', () => {
     const { state } = loadEcontract();
     const csv = readPlans(['econtract']).filter(plan => plan.plan_group === 'econtract_saas');

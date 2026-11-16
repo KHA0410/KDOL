@@ -51,6 +51,45 @@ function loadInvoice() {
     return app;
 }
 
+test('optional Invoice template design is charged once with VAT, independently of setup and package discounts', () => {
+    const app = loadInvoice(), state = app.state;
+    assert.equal(state.includeInvoiceDesign, false);
+    state.invoiceMaxAmount = 10001;
+    state.discountInvoice = 40;
+    for (const vat of [8, 10]) for (const type of ['moi', 'giahan']) for (const setup of ['thu', 'khong']) {
+        for (const mode of ['none', 'auto', 'custom']) for (const setupDiscount of [0, 50, 100]) {
+            state.vatRate = vat; state.activeInvoiceType = type; state.activeInvoiceSetupStatus = setup;
+            state.invoiceDiscountMode = mode; state.discountInvoiceSetup = setupDiscount;
+            const designFee = vat === 8 ? 1080000 : 1100000;
+            for (const plan of state.currentInvoicePlans) {
+                state.includeInvoiceDesign = false;
+                const original = Math.round(state.calculateInvoiceTotal(plan.price, plan));
+                state.executeInvoiceCopy(plan);
+                assert.ok(!app.copied().includes('Thiết kế mẫu:'));
+                state.includeInvoiceDesign = true;
+                assert.equal(state.invoiceDesignFee, designFee);
+                assert.equal(Math.round(state.calculateInvoiceTotal(plan.price, plan)), original + designFee);
+                state.executeInvoiceCopy(plan);
+                assert.ok(app.copied().includes('Thiết kế mẫu: ' + state.formatPrice(designFee)));
+                assert.ok(app.copied().includes(state.formatPrice(original + designFee)));
+            }
+            state.includeInvoiceDesign = false;
+            const originalMax = Math.round(state.calculateInvoiceMaxTotal());
+            state.includeInvoiceDesign = true;
+            assert.equal(Math.round(state.calculateInvoiceMaxTotal()), originalMax + designFee);
+            state.executeInvoiceMaxCopy();
+            assert.ok(app.copied().includes('Thiết kế mẫu: ' + state.formatPrice(designFee)));
+            assert.ok(app.copied().includes(state.formatPrice(originalMax + designFee)));
+        }
+    }
+    for (const [tab, subTab] of [['invoice', 'invoice_nt'], ['inbot', 'invoice_new'], ['pos', 'invoice_new']]) {
+        state.activeHddtMainTab = tab; state.activeInvoiceSubTab = subTab;
+        assert.equal(state.invoiceDesignFee, 0);
+    }
+    state.selectService({ id: 'hddt' });
+    assert.equal(state.includeInvoiceDesign, false);
+});
+
 test('Invoice fixed packages enforce quantity/customer rules in prices and copied quotes', () => {
     const app = loadInvoice(), state = app.state;
     const conditions = { quantity: 0, existing: 20, revenue10to30: 30, largeExisting: 40, competition: 40 };
