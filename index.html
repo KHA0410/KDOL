@@ -29,7 +29,7 @@
     <script src="receipt-data.js"></script>
     <script src="hkd-data.js"></script>
     <script src="internet-data.js"></script>
-    <link rel="stylesheet" href="styles.css?v=20261113-6">
+    <link rel="stylesheet" href="styles.css?v=20261116-2">
 </head>
 <body class="bg-gray-100 h-screen flex flex-col font-sans">
     <div id="app" v-cloak class="flex flex-col h-full overflow-hidden">
@@ -1227,21 +1227,26 @@
                                     <th scope="col" class="kdol-table-heading text-right">{{ activeHkdGroup === 'free' ? 'Giá trị gói (chưa VAT)' : 'Giá gói (chưa VAT)' }}</th>
                                     <th scope="col" class="kdol-table-heading text-right">{{ activeHkdGroup === 'free' ? 'Thanh toán' : 'Thanh toán (có VAT)' }}</th>
                                 </tr></thead>
-                                <tbody class="divide-y divide-gray-200 bg-white">
-                                    <tr v-for="plan in currentHkdPlans" :key="plan.id" class="hover:bg-gray-50">
+                                <tbody v-for="family in hkdPlanFamilies" :key="family.id" class="divide-y divide-gray-200 bg-white">
+                                    <tr>
+                                        <th scope="rowgroup" colspan="3" class="kdol-hkd-family-heading">
+                                            <div class="kdol-hkd-family-services">
+                                                <span v-for="service in family.services" :key="service.id" class="kdol-hkd-family-service" :class="'kdol-hkd-component--' + service.type">{{ service.label }}</span>
+                                                <span class="kdol-hkd-family-count">{{ family.plans.length }} gói</span>
+                                            </div>
+                                        </th>
+                                    </tr>
+                                    <tr v-for="plan in family.plans" :key="plan.id" class="hover:bg-gray-50">
                                         <th scope="row" class="py-4 pl-4 pr-3 text-sm font-medium text-gray-900 text-left">
                                             {{ plan.name }}
                                             <p class="text-xs text-gray-500 font-normal mt-1">{{ plan.months ? plan.months + ' tháng' : 'HĐ 12 tháng · HKD 6 tháng' }} · {{ new Intl.NumberFormat('vi-VN').format(plan.invoiceQuantity) }} HĐ</p>
-                                            <p v-if="plan.firstUseOnly" class="text-xs text-vnpt-blue font-normal mt-1">Chỉ dành cho lần đầu sử dụng</p>
                                             <details class="mt-2 text-xs font-normal">
                                                 <summary class="text-vnpt-blue cursor-pointer">Thành phần &amp; điều kiện</summary>
                                                 <div class="flex flex-col gap-1 mt-2 text-gray-600">
-                                                    <p v-for="part in plan.components" :key="part">{{ part }}</p>
-                                                    <p v-if="plan.firstUseOnly">Thời hạn trên đã bao gồm 6 tháng miễn phí. Không tặng kèm CB_HKD_UD hoặc CB HKD_UD2.</p>
-                                                    <p v-else-if="plan.group === 'new'">Dành cho khách hàng mua đồng thời nhiều dịch vụ.</p>
-                                                    <p v-else-if="plan.group === 'renewal'">Dành cho khách hàng gia hạn từ năm thứ 2.</p>
-                                                    <p>Hiệu lực: {{ plan.effectiveFrom }} · {{ plan.endsOn ? 'Đến ' + plan.endsOn : 'Đến khi có thông báo mới' }}.</p>
-                                                    <p>Văn bản: {{ plan.document }}.</p>
+                                                    <p v-for="part in plan.components" :key="part" class="kdol-hkd-component" :class="'kdol-hkd-component--' + getHkdComponentType(part)">{{ part }}</p>
+                                                    <p v-if="plan.firstUseOnly" class="kdol-hkd-component kdol-hkd-component--condition">Thời hạn trên đã bao gồm 6 tháng miễn phí. Không tặng kèm CB_HKD_UD hoặc CB HKD_UD2.</p>
+                                                    <p v-else-if="plan.group === 'new'" class="kdol-hkd-component kdol-hkd-component--condition">Dành cho khách hàng mua đồng thời nhiều dịch vụ.</p>
+                                                    <p v-else-if="plan.group === 'renewal'" class="kdol-hkd-component kdol-hkd-component--condition">Dành cho khách hàng gia hạn từ năm thứ 2.</p>
                                                 </div>
                                             </details>
                                         </th>
@@ -1974,6 +1979,24 @@
                 },
                 currentHkdPlans() {
                     return (this.hkdCatalog?.plans || []).filter(plan => plan.group === this.selectedHkdGroup.id);
+                },
+                hkdPlanFamilies() {
+                    const families = new Map();
+                    for (const plan of this.currentHkdPlans) {
+                        const software = plan.components.find(part => this.getHkdComponentType(part) === 'software');
+                        const comprehensive = software && /toàn diện/i.test(software);
+                        const services = [];
+                        if (software) services.push({ id: comprehensive ? 'comprehensive' : 'advanced', type: 'software', label: comprehensive ? 'HKD toàn diện' : 'HKD nâng cao' });
+                        if (plan.components.some(part => this.getHkdComponentType(part) === 'invoice')) services.push({ id: 'invoice', type: 'invoice', label: 'Hóa đơn' });
+                        if (plan.components.some(part => this.getHkdComponentType(part) === 'signature')) services.push({ id: 'signature', type: 'signature', label: 'Chữ ký số' });
+                        const id = services.map(service => service.id).join('-') || 'other';
+                        if (!families.has(id)) families.set(id, { id, services, rank: comprehensive ? 0 : software ? 1 : 2, plans: [] });
+                        families.get(id).plans.push(plan);
+                    }
+                    return [...families.values()].map(family => ({
+                        ...family,
+                        plans: family.plans.sort((a, b) => (a.months || 0) - (b.months || 0) || a.invoiceQuantity - b.invoiceQuantity || a.name.localeCompare(b.name, 'vi', { numeric: true }))
+                    })).sort((a, b) => a.rank - b.rank || b.services.length - a.services.length);
                 },
                 hkdDiscount() {
                     if (this.activeHkdGroup === 'free' || this.hkdDiscountMode !== 'custom') return 0;
@@ -2988,6 +3011,12 @@
                     this.activeHkdGroup = group;
                     this.hkdDiscountMode = 'none';
                     this.discountHkd = 0;
+                },
+                getHkdComponentType(part) {
+                    if (/^VNPT HKD\b/i.test(part)) return 'software';
+                    if (/^(?:VNPT Invoice|Hóa đơn)/i.test(part)) return 'invoice';
+                    if (/^(?:Chữ ký số|VNPT SmartCA|VNPT CA)/i.test(part)) return 'signature';
+                    return 'neutral';
                 },
                 getHkdDiscount(plan) {
                     return plan?.group === 'free' ? 0 : this.hkdDiscount;

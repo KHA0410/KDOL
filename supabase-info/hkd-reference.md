@@ -35,7 +35,11 @@ Giữ thứ tự các dòng theo PDF. Thành phần từng gói và loại chữ
 
 ## Tra cứu và tính giá
 
-Ba nút Đăng ký mới / Gia hạn / Miễn phí lọc cùng một bảng. Mặc định Đăng ký mới và VAT 8% theo yêu cầu chung của ứng dụng; có nút đổi VAT 10%. Bảng hiện thời hạn, số hóa đơn, giá gói và thanh toán; thành phần, điều kiện, văn bản nằm trong phần mở theo nhu cầu.
+Ba nút Đăng ký mới / Gia hạn / Miễn phí lọc cùng một bảng. Mặc định Đăng ký mới và VAT 8% theo yêu cầu chung của ứng dụng; có nút đổi VAT 10%. Bảng hiện thời hạn, số hóa đơn, giá gói và thanh toán; thành phần, điều kiện nằm trong phần mở theo nhu cầu. Theo yêu cầu rút gọn, không hiện các dòng Hiệu lực, Văn bản hoặc nhãn Chỉ dành cho lần đầu sử dụng dưới tên gói.
+
+Màu thành phần nhất quán theo dịch vụ trong mọi gói: phần mềm VNPT HKD màu xanh dương, Invoice/hóa đơn màu tím, chữ ký số/SmartCA màu xanh lá. Các dòng điều kiện dùng màu cam nâu và vạch nét đứt bên trái; từng thành phần có vạch liền để dễ quét, vẫn giữ nguyên nội dung văn bản và cách tính giá.
+
+Các gói trong bảng được gom theo thành phần chung, với tiêu đề nhóm ngay trong bảng, không thêm nút chuyển. Đăng ký mới gồm ba nhóm: HKD toàn diện + Hóa đơn + Chữ ký số (CB8, CB7, CB10, CB11); HKD nâng cao + Hóa đơn + Chữ ký số (CB3–CB6); Hóa đơn + Chữ ký số (CB1–CB2). Trong mỗi nhóm xếp theo thời hạn, số hóa đơn, rồi tên gói. Gia hạn gồm một nhóm toàn diện, giữ 12/24/36 tháng. Miễn phí tách đúng hai cấu hình có/không có chữ ký số, không tự thêm thành phần còn thiếu. Tên gói, chi tiết, giá, VAT, chiết khấu và báo giá sao chép giữ nguyên.
 
 Tất cả 13 gói thu tiền có mức chiết khấu tối đa 40%, không có các điều kiện phân tầng khác trong PDF. Mặc định Giá gốc; Áp dụng chiết khấu mở thanh 0–40%, bước 5%. Đổi nhóm hoặc chọn lại dịch vụ đặt lại chiết khấu về 0. Tổng thanh toán = làm tròn một lần đến đồng của `giá gói × (100 − chiết khấu) × (100 + VAT) / 10000`. Ví dụ CB8: VAT 8% giá gốc 1.283.040đ; giảm 40% còn 769.824đ.
 

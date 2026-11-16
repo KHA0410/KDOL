@@ -8,6 +8,9 @@
     --kdol-color-primary: #0055a5;
     --kdol-color-primary-light: #e6f0fa;
     --kdol-color-danger: #ed1c24;
+    --kdol-color-invoice: #6d28d9;
+    --kdol-color-signature: #047857;
+    --kdol-color-condition: #92400e;
     --kdol-color-border: #e5e7eb;
     --kdol-color-border-light: #dbeafe;
     --kdol-color-surface: #ffffff;
@@ -192,6 +195,49 @@
 }
 
 .kdol-primary-button:hover { background-color: #1d4ed8; }
+
+/* Thành phần combo HKD: giữ cùng màu dịch vụ giữa các gói khác nhau. */
+.kdol-hkd-component {
+    border-left: 2px solid currentColor;
+    padding-left: 0.5rem;
+    line-height: 1.5;
+    font-weight: 500;
+}
+.kdol-hkd-component--software { color: var(--kdol-color-primary); }
+.kdol-hkd-component--invoice { color: var(--kdol-color-invoice); }
+.kdol-hkd-component--signature { color: var(--kdol-color-signature); }
+.kdol-hkd-component--condition {
+    color: var(--kdol-color-condition);
+    border-left-style: dashed;
+    font-weight: 400;
+}
+.kdol-hkd-family-heading {
+    padding: 0.625rem 1rem;
+    background-color: var(--kdol-color-control);
+    border-top: 1px solid var(--kdol-color-border);
+    text-align: left;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    font-weight: 600;
+}
+.kdol-hkd-family-services {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 0.375rem;
+    row-gap: 0.125rem;
+}
+.kdol-hkd-family-service + .kdol-hkd-family-service::before {
+    content: '+ ';
+    color: #64748b;
+}
+.kdol-hkd-family-count {
+    margin-left: auto;
+    color: #64748b;
+    font-size: 0.6875rem;
+    font-weight: 400;
+    white-space: nowrap;
+}
 
 /* Bảng giá: giữ các tiện ích width/alignment riêng tại nơi sử dụng. */
 .kdol-table-wrap {
