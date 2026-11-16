@@ -27,6 +27,7 @@
     <script src="pos-data.js"></script>
     <script src="econtract-data.js"></script>
     <script src="receipt-data.js"></script>
+    <script src="hkd-data.js"></script>
     <link rel="stylesheet" href="styles.css?v=20261113-6">
 </head>
 <body class="bg-gray-100 h-screen flex flex-col font-sans">
@@ -1187,6 +1188,87 @@
                 </section>
 
                 <!-- BIÊN LAI ĐIỆN TỬ -->
+                <section v-else-if="activeService?.id === 'hkd'" aria-labelledby="hkd-title">
+                    <h2 id="hkd-title" class="sr-only">Combo hộ kinh doanh VNPT</h2>
+                    <template v-if="hkdCatalog">
+                        <div class="kdol-config-panel">
+                            <div class="flex flex-wrap items-center justify-between gap-3">
+                                <div class="kdol-choice-group" role="group" aria-label="Nhóm combo HKD">
+                                    <button v-for="group in hkdCatalog.groups" :key="group.id" type="button" @click="selectHkdGroup(group.id)" :aria-pressed="activeHkdGroup === group.id" :class="['kdol-choice', activeHkdGroup === group.id ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">{{ group.label }}</button>
+                                </div>
+                                <div v-if="activeHkdGroup !== 'free'" class="kdol-choice-group" role="group" aria-label="VAT combo HKD">
+                                    <button type="button" @click="vatRate = 10" :class="['kdol-choice', vatRate === 10 ? 'bg-gray-800 text-white' : 'text-gray-500 hover:bg-gray-50']">VAT 10%</button>
+                                    <button type="button" @click="vatRate = 8" :class="['kdol-choice', vatRate === 8 ? 'bg-green-600 text-white' : 'text-gray-500 hover:bg-gray-50']">VAT 8%</button>
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-600">Áp dụng tại {{ hkdCatalog.area }}. Giá chưa gồm USB Token.</p>
+                            <template v-if="activeHkdGroup !== 'free'">
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <span class="text-sm font-semibold text-gray-700">Chiết khấu:</span>
+                                    <div class="kdol-choice-group" role="group" aria-label="Áp dụng chiết khấu HKD">
+                                        <button type="button" @click="hkdDiscountMode = 'none'" :aria-pressed="hkdDiscountMode === 'none'" :class="['kdol-choice', hkdDiscountMode === 'none' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Giá gốc</button>
+                                        <button type="button" @click="hkdDiscountMode = 'custom'" :aria-pressed="hkdDiscountMode === 'custom'" :class="['kdol-choice', hkdDiscountMode === 'custom' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50']">Áp dụng chiết khấu</button>
+                                    </div>
+                                </div>
+                                <div v-if="hkdDiscountMode === 'custom'">
+                                    <label for="hkd-discount" class="flex items-center justify-between text-xs text-gray-700 mb-2"><span>Chiết khấu giá combo</span><strong class="text-orange-600">{{ hkdDiscount }}%</strong></label>
+                                    <input id="hkd-discount" type="range" min="0" :max="hkdCatalog.maxDiscount" step="5" v-model.number="discountHkd" class="kdol-discount-slider">
+                                    <div class="flex justify-between text-xs text-gray-500"><span>0%</span><span>Tối đa {{ hkdCatalog.maxDiscount }}%</span></div>
+                                </div>
+                            </template>
+                            <p v-else class="text-xs text-gray-600">Không thu tiền. Chương trình từ 08/08/2025 đến 31/12/2026.</p>
+                        </div>
+                        <div class="kdol-table-wrap">
+                            <table class="min-w-full divide-y divide-gray-300">
+                                <caption class="sr-only">Bảng giá combo HKD · {{ selectedHkdGroup.label }}</caption>
+                                <thead class="bg-gray-50"><tr>
+                                    <th scope="col" class="kdol-table-heading kdol-table-heading--label text-left">Gói combo</th>
+                                    <th scope="col" class="kdol-table-heading text-right">{{ activeHkdGroup === 'free' ? 'Giá trị gói (chưa VAT)' : 'Giá gói (chưa VAT)' }}</th>
+                                    <th scope="col" class="kdol-table-heading text-right">{{ activeHkdGroup === 'free' ? 'Thanh toán' : 'Thanh toán (có VAT)' }}</th>
+                                </tr></thead>
+                                <tbody class="divide-y divide-gray-200 bg-white">
+                                    <tr v-for="plan in currentHkdPlans" :key="plan.id" class="hover:bg-gray-50">
+                                        <th scope="row" class="py-4 pl-4 pr-3 text-sm font-medium text-gray-900 text-left">
+                                            {{ plan.name }}
+                                            <p class="text-xs text-gray-500 font-normal mt-1">{{ plan.months ? plan.months + ' tháng' : 'HĐ 12 tháng · HKD 6 tháng' }} · {{ new Intl.NumberFormat('vi-VN').format(plan.invoiceQuantity) }} HĐ</p>
+                                            <p v-if="plan.firstUseOnly" class="text-xs text-vnpt-blue font-normal mt-1">Chỉ dành cho lần đầu sử dụng</p>
+                                            <details class="mt-2 text-xs font-normal">
+                                                <summary class="text-vnpt-blue cursor-pointer">Thành phần &amp; điều kiện</summary>
+                                                <div class="flex flex-col gap-1 mt-2 text-gray-600">
+                                                    <p v-for="part in plan.components" :key="part">{{ part }}</p>
+                                                    <p v-if="plan.firstUseOnly">Thời hạn trên đã bao gồm 6 tháng miễn phí. Không tặng kèm CB_HKD_UD hoặc CB HKD_UD2.</p>
+                                                    <p v-else-if="plan.group === 'new'">Dành cho khách hàng mua đồng thời nhiều dịch vụ.</p>
+                                                    <p v-else-if="plan.group === 'renewal'">Dành cho khách hàng gia hạn từ năm thứ 2.</p>
+                                                    <p>Hiệu lực: {{ plan.effectiveFrom }} · {{ plan.endsOn ? 'Đến ' + plan.endsOn : 'Đến khi có thông báo mới' }}.</p>
+                                                    <p>Văn bản: {{ plan.document }}.</p>
+                                                </div>
+                                            </details>
+                                        </th>
+                                        <td class="px-3 py-3 text-right whitespace-nowrap">
+                                            <div v-if="getHkdDiscount(plan) > 0" class="text-xs text-gray-400 line-through">{{ formatPrice(plan.price) }}</div>
+                                            <div class="text-sm font-semibold text-gray-700">{{ formatPrice(plan.group === 'free' ? plan.referencePrice : calculateHkdPackagePrice(plan)) }}</div>
+                                        </td>
+                                        <td class="px-3 py-3 text-right">
+                                            <div class="flex items-center justify-end gap-3">
+                                                <button type="button" @click="executeHkdCopy(plan)" class="kdol-copy-button" :title="'Sao chép báo giá ' + plan.name">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                                                </button>
+                                                <span class="kdol-price" :class="getHkdDiscount(plan) > 0 ? 'text-orange-600' : 'text-vnpt-blue'">{{ plan.group === 'free' ? 'Miễn phí' : formatPrice(calculateHkdTotal(plan)) }}</span>
+                                            </div>
+                                            <p v-if="getHkdDiscount(plan) > 0" class="text-xs text-gray-500 mt-1">Giảm {{ getHkdDiscount(plan) }}%</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <details class="mt-3 text-xs text-gray-600">
+                            <summary class="text-vnpt-blue cursor-pointer">Lưu ý chung</summary>
+                            <p class="mt-2">Lưu trữ hóa đơn tối thiểu 10 năm từ ngày phát hành. Giá chưa gồm USB Token, tích hợp phần mềm, chuyển đổi dữ liệu, tùy chỉnh/phát triển chức năng và đào tạo.</p>
+                        </details>
+                    </template>
+                    <p v-else class="kdol-empty-state">Chưa tải được bảng giá HKD.</p>
+                </section>
+
                 <section v-else-if="activeService?.id === 'bienlai'" aria-labelledby="receipt-title">
                     <h2 id="receipt-title" class="sr-only">Biên lai điện tử</h2>
                     <template v-if="receiptCatalog">
@@ -1638,6 +1720,10 @@
                     econtractData: [],
                     econtractCatalog: window.KDOL_ECONTRACT || null,
                     receiptCatalog: window.KDOL_RECEIPT || null,
+                    hkdCatalog: window.KDOL_HKD || null,
+                    activeHkdGroup: 'new',
+                    hkdDiscountMode: 'none',
+                    discountHkd: 0,
                     discountReceipt: 0,
                     receiptHasSoftware: false,
                     receiptCustomAmount: '',
@@ -1873,6 +1959,16 @@
                 },
                 receiptDiscount() {
                     return this.getReceiptDiscount(this.discountReceipt);
+                },
+                selectedHkdGroup() {
+                    return this.hkdCatalog?.groups.find(group => group.id === this.activeHkdGroup) || { id: 'new', label: 'Đăng ký mới' };
+                },
+                currentHkdPlans() {
+                    return (this.hkdCatalog?.plans || []).filter(plan => plan.group === this.selectedHkdGroup.id);
+                },
+                hkdDiscount() {
+                    if (this.activeHkdGroup === 'free' || this.hkdDiscountMode !== 'custom') return 0;
+                    return Math.min(this.hkdCatalog?.maxDiscount ?? 40, Math.max(0, Number(this.discountHkd) || 0));
                 },
                 receiptSetupBase() {
                     return this.receiptHasSoftware ? 0 : (this.receiptCatalog?.setupPrice ?? 1000000);
@@ -2231,6 +2327,9 @@
                         if (this.receiptCatalog?.service && !services.some(service => service.id === this.receiptCatalog.service.id)) {
                             services.push(this.receiptCatalog.service);
                         }
+                        if (this.hkdCatalog?.service && !services.some(service => service.id === this.hkdCatalog.service.id)) {
+                            services.push(this.hkdCatalog.service);
+                        }
                         this.categories = dbCategories.map(cat => ({
                             id: cat.id, name: cat.name,
                             services: services.filter(srv => srv.category_id === cat.id).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
@@ -2361,6 +2460,8 @@
                         this.invoiceMaxAmount = '';
                     } else if (srv.id === 'econtract') {
                         this.resetEcontractOptions();
+                    } else if (srv.id === 'hkd') {
+                        this.selectHkdGroup('new');
                     } else if (srv.id === 'bienlai') {
                         this.discountReceipt = 0;
                         this.receiptHasSoftware = false;
@@ -2850,6 +2951,38 @@
                 },
                 executeEcontractEmaxCopy() {
                     if (this.econtractEmaxPlan) this.executeEcontractCopy(this.econtractEmaxPlan);
+                },
+
+                // --- COMBO HKD: GIÁ CHƯA VAT, CHƯA GỒM USB TOKEN. ---
+                selectHkdGroup(group) {
+                    if (!this.hkdCatalog?.groups.some(item => item.id === group)) return;
+                    this.activeHkdGroup = group;
+                    this.hkdDiscountMode = 'none';
+                    this.discountHkd = 0;
+                },
+                getHkdDiscount(plan) {
+                    return plan?.group === 'free' ? 0 : this.hkdDiscount;
+                },
+                calculateHkdPackagePrice(plan) {
+                    return Number(plan?.price) * (100 - this.getHkdDiscount(plan)) / 100;
+                },
+                calculateHkdTotal(plan) {
+                    const price = Number(plan?.price);
+                    if (!Number.isSafeInteger(price) || price < 0) return null;
+                    const total = Math.round(price * (100 - this.getHkdDiscount(plan)) * (100 + this.vatRate) / 10000);
+                    return Number.isSafeInteger(total) ? total : null;
+                },
+                executeHkdCopy(plan) {
+                    if (!this.currentHkdPlans.includes(plan)) return;
+                    const total = this.calculateHkdTotal(plan);
+                    if (total === null) return;
+                    const discount = this.getHkdDiscount(plan);
+                    const priceText = plan.group === 'free' ? 'Miễn phí (không thu tiền)' : 'Tổng thanh toán ' + this.formatPrice(total) + (discount > 0 ? ' (chiết khấu ' + discount + '%)' : '') + ', đã gồm VAT ' + this.vatRate + '%';
+                    const conditionText = plan.firstUseOnly ? ' Chỉ áp dụng lần đầu sử dụng. Thời hạn đã gồm 6 tháng miễn phí; không tặng kèm CB_HKD_UD/CB HKD_UD2.'
+                        : plan.group === 'free' ? ' Chương trình từ ' + plan.effectiveFrom + ' đến ' + plan.endsOn + '.'
+                        : plan.group === 'renewal' ? ' Gia hạn từ năm thứ 2.' : ' Khách hàng mua đồng thời nhiều dịch vụ.';
+                    const textToCopy = 'Combo HKD ' + this.hkdCatalog.area + ' - ' + plan.name + ' (' + this.selectedHkdGroup.label + '): ' + priceText + '. ' + plan.components.join('; ') + '.' + conditionText + ' Chưa gồm USB Token, tích hợp phần mềm, chuyển đổi dữ liệu, tùy chỉnh/phát triển chức năng và đào tạo. Lưu trữ hóa đơn tối thiểu 10 năm từ ngày phát hành.';
+                    navigator.clipboard.writeText(textToCopy).then(() => this.showToast('Đã copy: ' + plan.name));
                 },
 
                 // --- BIÊN LAI ĐIỆN TỬ: GIÁ CHƯA VAT, CHIẾT KHẤU TỐI ĐA 30%. ---

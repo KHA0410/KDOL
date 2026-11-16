@@ -70,7 +70,7 @@ test('receipt service appears under CNTT without a server record and is not dupl
     assert.equal(state.isLoading, false);
     const cntt = state.categories.find(category => category.id === 'cntt');
     assert.ok(cntt);
-    assert.deepEqual(Array.from(cntt.services, service => service.id), ['econtract', 'bienlai']);
+    assert.deepEqual(Array.from(cntt.services, service => service.id), ['econtract', 'bienlai', 'hkd']);
     state.selectService(cntt.services[1]);
     assert.equal(state.activeService.name, 'Biên lai điện tử');
     assert.equal(state.calculateReceiptTotal(state.receiptTablePlans[0]), 1404000);
