@@ -28,6 +28,7 @@
     <script src="econtract-data.js"></script>
     <script src="receipt-data.js"></script>
     <script src="hkd-data.js"></script>
+    <script src="internet-data.js"></script>
     <link rel="stylesheet" href="styles.css?v=20261113-6">
 </head>
 <body class="bg-gray-100 h-screen flex flex-col font-sans">
@@ -1416,7 +1417,7 @@
                                             <span v-if="row.variants[configuration.id]" class="kdol-internet-price"
                                                 :data-plan-id="row.variants[configuration.id].id"
                                                 :title="row.variants[configuration.id].note || ''">
-                                                {{ formatInternetAmount(row.variants[configuration.id].price, row.bundle) }}
+                                                {{ formatInternetAmount(row.variants[configuration.id].price, row.hasCamera) }}
                                             </span>
                                             <span v-else class="kdol-internet-unavailable" aria-label="Chưa có giá cho cấu hình này">—</span>
                                         </td>
@@ -1728,6 +1729,7 @@
                     receiptHasSoftware: false,
                     receiptCustomAmount: '',
                     internetData: [],
+                    internetCatalog: window.KDOL_INTERNET || null,
                     cameraCatalog: window.KDOL_CAMERA || null,
                     cameraMode: 'addon',
                     activeCameraTermId: 'monthly',
@@ -1907,6 +1909,9 @@
                 },
                 internetMatrixRows() {
                     const rows = new Map();
+                    const promotionNames = new Set((this.internetCatalog?.promotionPlanNames || []).map(name => name.toLocaleLowerCase('vi')));
+                    const priorityOrder = new Map((this.internetCatalog?.priorityPlanNames || []).map((name, index) => [name.toLocaleLowerCase('vi'), index]));
+                    const configurationOverrides = new Map(Object.entries(this.internetCatalog?.configurationOverrides || {}).map(([name, configuration]) => [name.toLocaleLowerCase('vi'), configuration]));
                     const bundleOrder = { home: 0, tv: 1, cam: 2 };
                     this.internetData.forEach(group => {
                         const [region, bundle, configuration] = group.type.split('_');
@@ -1917,18 +1922,22 @@
                             if (!rows.has(key)) rows.set(key, { key, bundle, ...this.splitInternetPlanLabel(plan.duration_text), variants: {}, promotion: false });
                             const row = rows.get(key);
                             const defaultPromotion = /^KM:/i.test(plan.note || '') && row.name === 'Home Slay_M';
-                            row.variants[defaultPromotion ? 'none' : configuration] = plan;
-                            if (/^KM:/i.test(plan.note || '')) row.promotion = true;
+                            const displayConfiguration = configurationOverrides.get(row.name.replace(/\s+/g, ' ').toLocaleLowerCase('vi')) || (defaultPromotion ? 'none' : configuration);
+                            row.variants[displayConfiguration] = plan;
+                            if (/^KM:/i.test(plan.note || '') || promotionNames.has(row.name.replace(/\s+/g, ' ').toLocaleLowerCase('vi'))) row.promotion = true;
                         });
                     });
                     return [...rows.values()].map(row => {
                         const preferred = row.variants.none || row.variants['1mesh'] || row.variants['2mesh'];
                         const note = preferred.note || '';
-                        row.benefitsFull = this.getInternetBenefits(note, row.bundle);
+                        row.hasCamera = this.hasInternetCamera(preferred, row.bundle);
+                        const includeFamilyBenefit = this.hasInternetFamilyBenefit(preferred);
+                        row.benefitsFull = this.getInternetBenefits(note, row.bundle, includeFamilyBenefit);
                         const commonBenefits = row.promotion ? note : note.replace(/\s*\+\s*[12]\s*Mesh(?:\s+Wifi)?\s*6\b/gi, '').trim();
-                        row.benefits = this.summarizeInternetBenefits(commonBenefits, row.bundle);
+                        row.benefits = this.summarizeInternetBenefits(commonBenefits, row.bundle, includeFamilyBenefit);
                         return row;
                     }).sort((a, b) => Number(b.promotion) - Number(a.promotion)
+                        || (priorityOrder.get(a.name.toLocaleLowerCase('vi')) ?? priorityOrder.size) - (priorityOrder.get(b.name.toLocaleLowerCase('vi')) ?? priorityOrder.size)
                         || bundleOrder[a.bundle] - bundleOrder[b.bundle]
                         || a.name.localeCompare(b.name, 'vi', { numeric: true }));
                 },
@@ -2339,7 +2348,16 @@
 
                         // Internet: giữ nguyên giá và quyền lợi của từng nhóm cấu hình.
                         const groupedInternet = {};
-                        dbPlans.filter(p => p.service_id === 'internet').forEach(p => {
+                        const internetPlans = dbPlans.filter(p => p.service_id === 'internet');
+                        const internetPlanKey = plan => plan.plan_group + '::' + this.splitInternetPlanLabel(plan.duration_text).name.trim().replace(/\s+/g, ' ').toLocaleLowerCase('vi');
+                        const internetPlanKeys = new Set(internetPlans.map(internetPlanKey));
+                        for (const plan of this.internetCatalog?.supplementalPlans || []) {
+                            const key = internetPlanKey(plan);
+                            if (internetPlanKeys.has(key)) continue;
+                            internetPlans.push(plan);
+                            internetPlanKeys.add(key);
+                        }
+                        internetPlans.forEach(p => {
                             if (!groupedInternet[p.plan_group]) groupedInternet[p.plan_group] = { type: p.plan_group, name: p.group_name, plans: [] };
                             groupedInternet[p.plan_group].plans.push({ id: p.id, duration_text: p.duration_text, price: p.price, note: p.note });
                         });
@@ -2505,12 +2523,22 @@
                     const match = (label || '').match(/^(.*?)\s*\(([^)]+)\)\s*$/);
                     return { name: match ? match[1].trim() : label, speed: match ? match[2].trim() : '—' };
                 },
-                getInternetBenefits(note, bundle) {
+                hasInternetFamilyBenefit(plan) {
+                    const name = this.splitInternetPlanLabel(plan.duration_text).name.trim().replace(/\s+/g, ' ').toLocaleLowerCase('vi');
+                    return !(this.internetCatalog?.withoutFamilyBenefitNames || []).some(item => item.toLocaleLowerCase('vi') === name);
+                },
+                hasInternetCamera(plan, bundle) {
+                    if (bundle !== 'cam') return false;
+                    const name = this.splitInternetPlanLabel(plan.duration_text).name.trim().replace(/\s+/g, ' ').toLocaleLowerCase('vi');
+                    return !(this.internetCatalog?.withoutCameraNames || []).some(item => item.toLocaleLowerCase('vi') === name);
+                },
+                getInternetBenefits(note, bundle, includeFamilyBenefit = true) {
                     const benefits = note || '';
+                    if (!includeFamilyBenefit) return benefits.replace(/Family\s*Safe\s*\/\s*GreenNet/gi, '').replace(/^[\s·+]+|[\s·+]+$/g, '').trim();
                     if (/^KM:/i.test(benefits) || !['home', 'tv', 'cam'].includes(bundle) || /Family\s*Safe\s*\/\s*GreenNet/i.test(benefits)) return benefits;
                     return [benefits, this.internetFamilyBenefit].filter(Boolean).join(' · ');
                 },
-                summarizeInternetBenefits(note, bundle) {
+                summarizeInternetBenefits(note, bundle, includeFamilyBenefit = true) {
                     const summary = (note || '')
                         .replace(/^KM:\s*/i, '')
                         .replace(/\b\d+(?:[.,]\d+)?\s*(?:Mbps|Gbps|ULM)\s*\+\s*/gi, '')
@@ -2522,6 +2550,7 @@
                         .replace(/Mesh(?:\s+Wifi)?\s*6/gi, 'Mesh 6')
                         .replace(/1\s+App\s+MyTV/gi, 'MyTV App')
                         .replace(/MyTV VIP App/gi, 'MyTV VIP (App)')
+                        .replace(/MyTV S1\s*\(App\)\s*hoặc\s*MyTV S2\s*\(App\)/gi, 'MyTV S1/S2')
                         .replace(/MyTV App/gi, 'MyTV (App)')
                         .replace(/\s*\+\s*/g, ' · ')
                         .trim();
@@ -2531,7 +2560,7 @@
                         .replace(/^Modem(?:\s+2 băng tần)?$/i, '')
                         .replace(/^[\s·]+|[\s·]+$/g, '')
                         .trim();
-                    return [integration, this.internetFamilyBenefit].filter(Boolean).join('\n');
+                    return [integration, includeFamilyBenefit ? this.internetFamilyBenefit : ''].filter(Boolean).join('\n');
                 },
                 summarizeInternetMobileBenefits(note) {
                     return (note || '')
@@ -2542,13 +2571,13 @@
                         .replace(/\.?\s*Miễn phí gọi nhóm\s*\(tối đa (\d+) TV\)/i, '\nGọi nhóm miễn phí · tối đa $1 thành viên')
                         .trim();
                 },
-                calculateInternetTotal(monthlyPrice, bundle = '') {
+                calculateInternetTotal(monthlyPrice, hasCamera = false) {
                     const setupFee = this.includeInternetSetupFee ? this.internetSetupFee : 0;
-                    const cameraSetupFee = this.includeInternetCameraSetupFee && bundle === 'cam' ? this.internetCameraSetupFee : 0;
+                    const cameraSetupFee = this.includeInternetCameraSetupFee && hasCamera ? this.internetCameraSetupFee : 0;
                     return Math.round(Number(monthlyPrice) * this.internetMonths + setupFee + cameraSetupFee);
                 },
-                formatInternetAmount(monthlyPrice, bundle = '') {
-                    return new Intl.NumberFormat('vi-VN').format(this.calculateInternetTotal(monthlyPrice, bundle));
+                formatInternetAmount(monthlyPrice, hasCamera = false) {
+                    return new Intl.NumberFormat('vi-VN').format(this.calculateInternetTotal(monthlyPrice, hasCamera));
                 },
                 
                 formatPrice(value) { return new Intl.NumberFormat('vi-VN').format(Math.round(value)) + ' đ'; },
