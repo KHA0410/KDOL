@@ -22,7 +22,7 @@ test('Internet adds both missing Home Cam plans in each region while preserving 
     const original = JSON.stringify(app.data.plans);
     await state.fetchData();
     const loaded = state.internetData.flatMap(group => group.plans);
-    assert.equal(loaded.length, app.data.plans.length + 5);
+    assert.equal(loaded.length, app.data.plans.length + 10);
     for (const plan of app.data.plans) {
         const actual = loaded.find(item => item.id === plan.id);
         assert.equal(actual.price, plan.price);
@@ -41,14 +41,14 @@ test('Internet adds both missing Home Cam plans in each region while preserving 
                 assert.equal(state.internetMobileRows.some(row => row.name === name), false);
                 assert.equal(row.variants[name === 'Home Cam Sành' ? 'none' : '1mesh'], undefined);
                 assert.equal(row.variants['2mesh'], undefined);
-                assert.ok(row.benefits.includes(name === 'Home Cam Canh' ? 'Camera Indoor' : 'MyTV S1/S2'));
+                assert.ok(row.benefits.includes(name === 'Home Cam Canh' ? 'Camera Indoor' : 'MyTV(S1/S2)'));
                 if (name === 'Home Cam Sành') {
-                    assert.match(row.benefits, /01 Mesh/);
-                    assert.match(row.benefits, /1 Camera Indoor lưu 1 ngày/);
-                    assert.match(row.benefitsFull, /01 Camera Indoor lưu trữ 1 ngày/);
+                    assert.match(row.benefits, /1 Mesh/);
+                    assert.match(row.benefits, /1 Camera Indoor\(1 ngày\)/);
+                    assert.match(row.benefitsFull, /1 Camera Indoor\(1 ngày\)/);
                 }
-                assert.doesNotMatch(row.benefits, /Family\s*Safe|GreenNet/i);
-                assert.doesNotMatch(row.benefitsFull, /Family\s*Safe|GreenNet/i);
+                assert.match(row.benefits, /Family Safe \/ GreenNet/);
+                assert.match(row.benefitsFull, /Family Safe \/ GreenNet/);
             } else {
                 assert.equal(Number(row.variants['1mesh'].price), prices[region].mesh);
                 assert.match(row.benefits, /Family Safe \/ GreenNet/);
@@ -95,9 +95,11 @@ test('Home Cam Mật is only available outside the city with the supplied price 
     assert.equal(row.variants['2mesh'], undefined);
     assert.equal(row.hasCamera, true);
     assert.match(row.benefits, /1 Camera Indoor/);
-    assert.match(row.benefits, /Cloud 1 ngày/);
-    assert.match(row.benefits, /MyTV \(App\)/);
-    assert.doesNotMatch(row.benefits, /Family\s*Safe|GreenNet|Mesh/i);
+    assert.match(row.benefits, /1 Camera Indoor\(1 ngày\)/);
+    assert.match(row.benefits, /MyTV\(S1\/S2\)/);
+    assert.match(row.benefits, /Family Safe \/ GreenNet/);
+    assert.match(row.benefitsFull, /Family Safe \/ GreenNet/);
+    assert.doesNotMatch(row.benefits, /Mesh/i);
     for (const months of [1, 3, 6, 12]) for (const internet of [false, true]) for (const camera of [false, true]) {
         state.internetMonths = months; state.includeInternetSetupFee = internet; state.includeInternetCameraSetupFee = camera;
         assert.equal(state.calculateInternetTotal(row.variants.none.price, row.hasCamera), 220000 * months + (internet ? 300000 : 0) + (camera ? 100000 : 0));
@@ -107,7 +109,56 @@ test('Home Cam Mật is only available outside the city with the supplied price 
     assert.equal(state.internetMobileRows.some(row => row.name === 'Home Cam Mật'), false);
 });
 
-test('Internet supplemental plans do not duplicate server packages or overwrite their price/benefits', async () => {
+test('requested Excel additions have exact regional availability, features, columns and totals', async () => {
+    const app = loadInternet(), state = app.state;
+    const original = JSON.stringify(app.data.plans);
+    await state.fetchData();
+    const expected = {
+        noi: [['Home Slay', '300ULM', 'none', 200000, false], ['Home TV One', '300Mbps', 'none', 255000, true], ['Home X', '2500Mbps', '1mesh', 990000, false]],
+        nt: [['Home TV One', '300Mbps', 'none', 230000, true], ['Home X', '2500Mbps', '1mesh', 990000, false]]
+    };
+    for (const region of ['noi', 'nt']) {
+        state.activeInternetRegion = region;
+        for (const [name, speed, configuration, price, camera] of expected[region]) {
+            const rows = state.internetMatrixRows.filter(row => row.name === name);
+            assert.equal(rows.length, 1);
+            const row = rows[0];
+            assert.equal(row.speed, speed); assert.equal(row.hasCamera, camera);
+            assert.equal(row.promotion, name === 'Home Slay');
+            assert.deepEqual(Object.keys(row.variants), [configuration]);
+            assert.equal(row.variants[configuration].price, price);
+            if (name === 'Home TV One') {
+                assert.match(row.benefitsFull, /MyTV\(Flexi\)/);
+                assert.match(row.benefitsFull, /1 Camera Indoor\(1 ngày\)/);
+            } else if (name === 'Home X') {
+                assert.match(row.benefitsFull, /MyTV\(Flexi, Film\+\).*1 Mesh/);
+            } else assert.equal(row.benefitsFull, '_');
+            for (const months of [1, 3, 6, 12]) for (const internetSetup of [false, true]) for (const cameraSetup of [false, true]) {
+                state.internetMonths = months; state.includeInternetSetupFee = internetSetup; state.includeInternetCameraSetupFee = cameraSetup;
+                assert.equal(state.calculateInternetTotal(price, row.hasCamera), price * months + (internetSetup ? 300000 : 0) + (camera && cameraSetup ? 100000 : 0));
+            }
+        }
+        const canh = state.internetMatrixRows.find(row => row.name === 'Home Cam Canh');
+        assert.match(canh.benefitsFull, /1 Camera Indoor\(1 ngày\)/);
+        assert.doesNotMatch(canh.benefitsFull, /3 ngày/);
+        const vip = state.internetMatrixRows.find(row => row.name === 'HomeTV VIP 3');
+        assert.equal(vip.speed, '1Gbps');
+        assert.equal(Number(vip.variants['1mesh'].price), region === 'noi' ? 400000 : 360000);
+    }
+    state.activeInternetRegion = 'nt';
+    for (const name of ['Home Slay', 'Home Slay_M', 'Home Slay_F']) assert.equal(state.internetMatrixRows.some(row => row.name === name), false);
+    const loaded = state.internetData.flatMap(group => group.plans);
+    for (const plan of app.data.plans) {
+        const actual = loaded.find(item => item.id === plan.id);
+        assert.equal(actual.price, plan.price);
+        const vip = plan.duration_text.startsWith('HomeTV VIP 3 (');
+        assert.equal(actual.duration_text, vip ? 'HomeTV VIP 3 (1Gbps)' : plan.duration_text);
+        assert.equal(actual.note, plan.note);
+    }
+    assert.equal(JSON.stringify(app.data.plans), original);
+});
+
+test('Internet supplements avoid duplicates, preserve server prices and apply only requested metadata corrections', async () => {
     const replacement = {
         id: 'server-cam-canh', service_id: 'internet', plan_group: 'nt_cam_none',
         group_name: 'Camera Ngoại thành', duration_text: '  HOME   CAM CANH (300 Mbps)',
@@ -118,11 +169,11 @@ test('Internet supplemental plans do not duplicate server packages or overwrite 
     for (let i = 0; i < 2; i++) {
         await state.fetchData();
         const loaded = state.internetData.flatMap(group => group.plans);
-        assert.equal(loaded.length, 5);
+        assert.equal(loaded.length, 10);
         assert.equal(loaded.filter(plan => plan.id === 'server-cam-canh').length, 1);
         assert.equal(loaded.some(plan => plan.id === 'internet-nt-cam-canh'), false);
         assert.equal(loaded.find(plan => plan.id === 'server-cam-canh').price, 196000);
-        assert.equal(loaded.find(plan => plan.id === 'server-cam-canh').note, 'Ghi chú từ máy chủ');
+        assert.equal(loaded.find(plan => plan.id === 'server-cam-canh').note, '01 Camera Indoor và Cloud (1 ngày)');
         state.activeInternetRegion = 'nt';
         const row = state.internetMatrixRows.find(row => row.variants['1mesh']?.id === 'server-cam-sanh');
         assert.equal(row.hasCamera, true);

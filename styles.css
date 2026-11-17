@@ -11,6 +11,9 @@
     --kdol-color-invoice: #6d28d9;
     --kdol-color-signature: #047857;
     --kdol-color-condition: #92400e;
+    --kdol-color-mesh: #6d28d9;
+    --kdol-color-camera: #9a3412;
+    --kdol-color-security: #047857;
     --kdol-color-border: #e5e7eb;
     --kdol-color-border-light: #dbeafe;
     --kdol-color-surface: #ffffff;
@@ -382,7 +385,6 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 /* Bảng tổng hợp Internet và bộ tính giá theo tháng. */
-.kdol-internet-region,
 .kdol-internet-toolbar,
 .kdol-mytv-toolbar,
 .kdol-mesh-toolbar,
@@ -395,8 +397,27 @@ input[type="range"]::-webkit-slider-thumb {
     box-shadow: var(--kdol-shadow-sm);
 }
 
-.kdol-internet-region { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 1.5rem; }
-.kdol-internet-region-field { flex: 1 1 14rem; max-width: 28rem; }
+.kdol-internet-toolbar-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.625rem;
+    min-width: 0;
+}
+.kdol-internet-toolbar-title {
+    color: #1f2937;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 600;
+}
+.kdol-internet-region-switch { flex: 0 0 auto; }
+.kdol-internet-region-switch .kdol-choice {
+    min-height: 1.625rem;
+    padding: 0.1875rem 0.375rem;
+    font-size: 0.6875rem;
+    line-height: 1rem;
+}
 .kdol-internet-toolbar,
 .kdol-mytv-toolbar,
 .kdol-mesh-toolbar,
@@ -466,7 +487,6 @@ input[type="range"]::-webkit-slider-thumb {
 
 .kdol-internet-calculation,
 .kdol-internet-footnote { color: #64748b; font-size: 0.75rem; line-height: 1.125rem; }
-.kdol-internet-options { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1rem; }
 .kdol-internet-toggle { display: inline-flex; align-items: center; gap: 0.5rem; color: #334155; font-size: 0.8125rem; line-height: 1.25rem; cursor: pointer; }
 .kdol-internet-toggle__input { width: 1rem; height: 1rem; accent-color: var(--kdol-color-primary); }
 .kdol-internet-install-options { display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: 0.75rem; margin-top: 1rem; overflow-x: auto; container: internet-install / inline-size; }
@@ -476,6 +496,16 @@ input[type="range"]::-webkit-slider-thumb {
 .kdol-internet-footnote { margin-top: 0.5rem; }
 .kdol-internet-scroll-hint { margin-bottom: 0.75rem; color: #64748b; font-size: 0.75rem; line-height: 1.125rem; }
 .kdol-internet-section-title { margin-bottom: 0.75rem; color: var(--kdol-color-table-heading); font-size: 1rem; line-height: 1.5rem; font-weight: 700; }
+.kdol-internet-section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+.kdol-internet-section-heading .kdol-internet-section-title { margin-bottom: 0; min-width: 0; }
+.kdol-internet-section-heading .kdol-internet-toggle { flex: 0 0 auto; gap: 0.375rem; font-size: 0.75rem; white-space: nowrap; }
+.kdol-internet-section-heading .kdol-internet-toggle__input { width: 0.875rem; height: 0.875rem; }
 
 .kdol-internet-table {
     width: 100%;
@@ -508,6 +538,33 @@ input[type="range"]::-webkit-slider-thumb {
 .kdol-internet-table tbody .kdol-internet-package { position: sticky; left: 0; z-index: 1; background-color: inherit; font-weight: 600; }
 .kdol-internet-speed { display: block; margin-top: 0.125rem; color: #64748b; font-size: 0.6875rem; line-height: 1rem; font-weight: 400; white-space: nowrap; }
 .kdol-internet-table .kdol-internet-benefits { white-space: pre-line; }
+.kdol-internet-component { font-weight: 500; }
+.kdol-internet-component--mesh { color: var(--kdol-color-mesh); }
+.kdol-internet-component--tv { color: var(--kdol-color-primary); }
+.kdol-internet-component--camera { color: var(--kdol-color-camera); }
+.kdol-internet-component--security { color: var(--kdol-color-security); }
+.kdol-business-terms { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.kdol-business-schemes { width: max-content; margin-top: 0.75rem; overflow-x: auto; }
+.kdol-business-schemes .kdol-choice { padding: 0.25rem 0.375rem; font-size: 0.6875rem; }
+.kdol-business-ip { margin-top: 0.75rem; color: #475569; font-size: 0.75rem; }
+.kdol-business-ip > summary { color: var(--kdol-color-primary); cursor: pointer; }
+.kdol-business-ip-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: 0.5rem 1rem; margin-top: 0.75rem; }
+.kdol-business-ip-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.kdol-business-ip-row small { display: block; color: #64748b; }
+.kdol-business-ip-row .kdol-select { width: 4.5rem; flex: 0 0 4.5rem; padding: 0.375rem; text-align: right; }
+.kdol-business-search { width: 12rem; max-width: 50%; padding: 0.375rem 0.5rem; font-size: 0.75rem; }
+.kdol-business-table { min-width: 540px; }
+.kdol-business-table .kdol-business-family { background-color: var(--kdol-color-control); color: var(--kdol-color-primary); text-align: left; }
+.kdol-business-table .kdol-business-name { text-align: left; font-weight: 600; }
+.kdol-business-name > small,
+.kdol-business-speed small,
+.kdol-business-price small { display: block; margin-top: 0.25rem; color: #64748b; font-size: 0.6875rem; line-height: 1.4; font-weight: 400; }
+.kdol-business-details { margin-top: 0.375rem; color: #475569; font-size: 0.6875rem; line-height: 1.5; font-weight: 400; }
+.kdol-business-details > summary { color: var(--kdol-color-primary); cursor: pointer; }
+.kdol-business-details p { margin-top: 0.25rem; }
+.kdol-business-price { text-align: right; }
+.kdol-business-price .kdol-price { font-size: 1.0625rem; line-height: 1.5rem; white-space: nowrap; }
+.kdol-business-stopped { opacity: 0.65; }
 .kdol-internet-table--mobile .kdol-internet-benefits { text-align: left; }
 .kdol-internet-row--home,
 .kdol-internet-row--mobile { background-color: var(--kdol-color-surface); }

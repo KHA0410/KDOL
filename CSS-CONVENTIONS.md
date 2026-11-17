@@ -17,7 +17,7 @@ Mục đích chính của KDOL là tra cứu nhanh thông tin và giá gói cư�
 - Thứ tự trong CSS: biến dùng chung → tiện ích → thành phần → responsive. Thụt lề 4 dấu cách; không dùng `!important` hoặc selector theo ID để tăng độ ưu tiên.
 - Hiệu ứng tương tác dùng `--kdol-transition-duration` (160ms), hiện nội dung dùng `--kdol-transition-content-duration` (180ms). Chỉ chuyển các thuộc tính cần thiết, tránh `transition: all` và chuyển kích thước bảng/cột. Giá cập nhật ngay, không chạy số đếm.
 - Dấu chọn danh mục dùng phần tử giả, không thêm/bớt độ dày viền làm dịch bố cục. Nút danh mục dùng `<button>` với trạng thái `aria-pressed` để hỗ trợ chuột, cảm ứng và bàn phím.
-- Giữ sticky ở thanh tính giá nhanh; phần chọn khu vực cuộn bình thường. Không đặt `transform` hoặc `will-change` thường trực lên vùng chứa thanh sticky. Tôn trọng `prefers-reduced-motion` khi thêm hiệu ứng mới.
+- Giữ sticky ở thanh tính giá nhanh, gồm tiêu đề bên trái và cụm chọn Nội thành/Ngoại thành nhỏ gọn bên phải. Ô Hiện cột tích hợp nằm bên phải dòng Gói Internet và cuộn cùng bảng. Không đặt `transform` hoặc `will-change` thường trực lên vùng chứa thanh sticky. Tôn trọng `prefers-reduced-motion` khi thêm hiệu ứng mới.
 
 Ví dụ nút chọn:
 
