@@ -29,8 +29,8 @@
     <script src="receipt-data.js"></script>
     <script src="hkd-data.js"></script>
     <script src="internet-data.js"></script>
-    <script src="internet-business-data.js?v=20261117-1"></script>
-    <link rel="stylesheet" href="styles.css?v=20261117-4">
+    <script src="internet-business-data.js?v=20261117-4"></script>
+    <link rel="stylesheet" href="styles.css?v=20261117-8">
 </head>
 <body class="bg-gray-100 h-screen flex flex-col font-sans">
     <div id="app" v-cloak class="flex flex-col h-full overflow-hidden">
@@ -1491,18 +1491,31 @@
                                 <label class="kdol-internet-toggle"><input type="checkbox" v-model="includeBusinessInternetSetup" class="kdol-internet-toggle__input"><span>Phí lắp {{ formatPrice(internetBusinessCatalog.setupPrice) }} <span class="text-xs text-gray-500">(chưa VAT)</span></span></label>
                                 <label class="kdol-internet-toggle"><input type="checkbox" v-model="businessInternetShowStopped" class="kdol-internet-toggle__input"><span>Hiện {{ businessInternetStoppedCount }} gói đã dừng</span></label>
                             </div>
-                            <details class="kdol-business-ip">
-                                <summary>IP tĩnh mua thêm <span v-if="businessIpSubtotal > 0">· {{ formatPrice(businessIpSubtotal) }} chưa VAT</span></summary>
+                            <div class="kdol-business-tools">
+                                <button id="business-ip-trigger" type="button" @click="businessIpExpanded = !businessIpExpanded" :aria-expanded="businessIpExpanded" aria-controls="business-ip-options" class="kdol-business-ip-trigger">
+                                    <span aria-hidden="true">{{ businessIpExpanded ? '▾' : '▸' }}</span>
+                                    <span>IP tĩnh mua thêm <span v-if="businessIpSubtotal > 0">· {{ formatPrice(businessIpSubtotal) }} chưa VAT</span></span>
+                                </button>
+                                <label class="kdol-internet-toggle kdol-business-show-details">
+                                    <input type="checkbox" v-model="businessInternetShowDetails" class="kdol-internet-toggle__input">
+                                    Hiện IP &amp; thiết bị
+                                </label>
+                            </div>
+                            <div v-show="businessIpExpanded" id="business-ip-options" class="kdol-business-ip" role="region" aria-labelledby="business-ip-trigger">
                                 <div class="kdol-choice-group w-max mt-2" role="group" aria-label="Mức giá IP mua thêm">
                                     <button v-for="scheme in [{ id: 'retail', label: 'Hiện hành' }, { id: 'delegated', label: 'Phân cấp' }]" :key="scheme.id" type="button" @click="businessIpScheme = scheme.id" :class="['kdol-choice', businessIpScheme === scheme.id ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">{{ scheme.label }}</button>
                                 </div>
                                 <div class="kdol-business-ip-list">
-                                    <label v-for="ip in internetBusinessCatalog.ipPlans" :key="ip.id" class="kdol-business-ip-row">
-                                        <span>{{ ip.name }}<small>{{ formatPrice(ip[businessIpScheme]) }} · chưa VAT</small></span>
-                                        <input type="number" min="0" step="1" inputmode="numeric" v-model="businessIpQuantities[ip.id]" class="kdol-select" :aria-label="'Số lượng ' + ip.name">
-                                    </label>
+                                    <div v-for="ip in internetBusinessCatalog.ipPlans" :key="ip.id" class="kdol-business-ip-row">
+                                        <label :for="'business-ip-count-' + ip.id">{{ ip.name }}<small>{{ formatPrice(ip[businessIpScheme]) }} · chưa VAT</small></label>
+                                        <div class="kdol-business-ip-stepper" role="group" :aria-label="'Số lượng ' + ip.name">
+                                            <button type="button" @click="adjustBusinessIpQuantity(ip.id, -1)" :disabled="Number(businessIpQuantities[ip.id]) <= 0" class="kdol-business-ip-step" :aria-label="'Giảm số lượng ' + ip.name">−</button>
+                                            <input :id="'business-ip-count-' + ip.id" type="number" min="0" step="1" inputmode="numeric" v-model="businessIpQuantities[ip.id]" class="kdol-select" :aria-label="'Số lượng ' + ip.name">
+                                            <button type="button" @click="adjustBusinessIpQuantity(ip.id, 1)" :disabled="Number(businessIpQuantities[ip.id]) >= Number.MAX_SAFE_INTEGER" class="kdol-business-ip-step" :aria-label="'Tăng số lượng ' + ip.name">+</button>
+                                        </div>
+                                    </div>
                                 </div>
-                            </details>
+                            </div>
                             <p v-if="businessIpSubtotal === null" class="text-xs text-vnpt-red mt-2" role="status">Số lượng IP phải là số nguyên từ 0 trở lên.</p>
                         </div>
                         <div class="kdol-internet-section-heading">
@@ -1515,13 +1528,19 @@
                                 <caption class="sr-only">Internet doanh nghiệp · {{ businessInternetSelectedScheme.label }} · {{ businessInternetSelectedPeriod.label }}</caption>
                                 <thead><tr><th scope="col">Gói</th><th scope="col">Tốc độ</th><th scope="col">Thanh toán · VAT {{ businessInternetVat }}%</th></tr></thead>
                                 <tbody v-for="family in businessInternetSections" :key="family.id">
-                                    <tr><th scope="rowgroup" colspan="3" class="kdol-business-family">{{ family.label }} <span class="font-normal">· {{ family.plans.length }} gói</span></th></tr>
-                                    <tr v-for="plan in family.plans" :key="plan.id" class="kdol-internet-row kdol-internet-row--home" :class="{ 'kdol-business-stopped': plan.discontinued }">
+                                    <tr><th scope="rowgroup" colspan="3" class="kdol-business-family">
+                                        <button type="button" @click="toggleBusinessInternetFamily(family.id)" :aria-expanded="isBusinessInternetFamilyOpen(family.id)" :aria-controls="family.plans.map(plan => 'business-plan-' + plan.id).join(' ')" class="kdol-business-family-toggle">
+                                            <span aria-hidden="true">{{ isBusinessInternetFamilyOpen(family.id) ? '▾' : '▸' }}</span>
+                                            <span>{{ family.label }}</span>
+                                            <span class="kdol-business-family-count">{{ family.plans.length }} gói</span>
+                                        </button>
+                                    </th></tr>
+                                    <tr v-for="plan in family.plans" :key="plan.id" :id="'business-plan-' + plan.id" v-show="isBusinessInternetFamilyOpen(family.id)" class="kdol-internet-row kdol-internet-row--home" :class="{ 'kdol-business-stopped': plan.discontinued }">
                                         <th scope="row" class="kdol-business-name">
                                             {{ plan.name }}<small v-if="plan.variantLabel">{{ plan.variantLabel }}</small>
                                             <small v-if="plan.discontinued" class="text-vnpt-red">{{ plan.statusNote }}</small>
                                             <small v-if="plan.monthlyUnavailable">Chỉ bán kỳ 6/13 tháng</small>
-                                            <details class="kdol-business-details">
+                                            <details class="kdol-business-details" :open="businessInternetShowDetails">
                                                 <summary>IP &amp; thiết bị</summary>
                                                 <p v-if="plan.ipv4" class="kdol-business-note kdol-business-note--ipv4">IPv4: {{ plan.ipv4 }}</p>
                                                 <p v-if="plan.ipv6" class="kdol-business-note kdol-business-note--ipv6">IPv6: {{ plan.ipv6 }}</p>
@@ -1534,7 +1553,7 @@
                                         </th>
                                         <td class="kdol-business-speed">
                                             <strong>{{ new Intl.NumberFormat('vi-VN').format(plan.domesticMbps) }} Mbps<span v-if="plan.maxSessions">/phiên</span></strong>
-                                            <small v-if="plan.internationalMbps !== null">QT {{ plan.internationalKind.toLowerCase() }}: {{ plan.internationalMbps }} Mbps</small>
+                                            <small v-if="plan.internationalMbps !== null">QT <span :class="plan.internationalKind === 'Giới hạn' ? 'kdol-business-speed--limited' : 'kdol-business-speed--committed'">{{ plan.internationalKind.toLowerCase() }}</span>: {{ plan.internationalMbps }} Mbps</small>
                                             <small v-if="plan.maxSessions">Tối đa {{ plan.maxSessions }} phiên đồng thời</small>
                                         </td>
                                         <td class="kdol-business-price">
@@ -1829,6 +1848,9 @@
                     businessInternetScheme: 'retail',
                     includeBusinessInternetSetup: false,
                     businessInternetShowStopped: false,
+                    businessInternetShowDetails: false,
+                    businessInternetOpenFamilies: {},
+                    businessIpExpanded: false,
                     businessInternetQuery: '',
                     businessIpScheme: 'retail',
                     businessIpQuantities: { '4': 0, '5': 0, '6': 0, '7': 0 },
@@ -2002,7 +2024,10 @@
                     const plans = (this.internetBusinessCatalog?.plans || []).filter(plan => (this.businessInternetShowStopped || !plan.discontinued)
                         && Object.values(plan.prices[this.getBusinessInternetScheme(plan)] || {}).some(price => typeof price === 'number' && Number.isFinite(price))
                         && (!query || (plan.name + ' ' + (plan.variantLabel || '')).toLocaleLowerCase('vi').includes(query)));
-                    return (this.internetBusinessCatalog?.families || []).map(family => ({ ...family, plans: plans.filter(plan => plan.family === family.id) })).filter(family => family.plans.length);
+                    return (this.internetBusinessCatalog?.families || []).map(family => {
+                        const namePattern = family.namePattern ? new RegExp(family.namePattern, 'i') : null;
+                        return { ...family, plans: plans.filter(plan => plan.family === (family.sourceFamily || family.id) && (!namePattern || namePattern.test(plan.name))) };
+                    }).filter(family => family.plans.length);
                 },
                 businessInternetStoppedCount() {
                     return (this.internetBusinessCatalog?.plans || []).filter(plan => plan.discontinued).length;
@@ -2465,6 +2490,12 @@
                 }
             },
             watch: {
+                businessInternetQuery() {
+                    this.businessInternetOpenFamilies = {};
+                },
+                businessInternetShowDetails(show) {
+                    if (show) this.businessInternetOpenFamilies = Object.fromEntries((this.internetBusinessCatalog?.families || []).map(family => [family.id, true]));
+                },
                 maxSmartCaDiscount(newMax) {
                     if (this.discountRate > newMax) this.discountRate = newMax;
                 },
@@ -2674,11 +2705,28 @@
                 matchesMytvChannel(channel, query) {
                     return /^\d+$/.test(query) ? channel.number === query : this.normalizeMytvSearch(channel.name).includes(query);
                 },
+                isBusinessInternetFamilyOpen(id) {
+                    return this.businessInternetOpenFamilies[id] ?? (Boolean(this.businessInternetQuery.trim()) || this.businessInternetShowDetails);
+                },
+                toggleBusinessInternetFamily(id) {
+                    if (!this.internetBusinessCatalog?.families.some(family => family.id === id)) return;
+                    this.businessInternetOpenFamilies[id] = !this.isBusinessInternetFamilyOpen(id);
+                },
+                adjustBusinessIpQuantity(id, step) {
+                    if (!this.internetBusinessCatalog?.ipPlans.some(plan => plan.id === id) || ![-1, 1].includes(step)) return;
+                    const value = Number(this.businessIpQuantities[id]);
+                    const current = Number.isFinite(value) && value >= 0 && value <= Number.MAX_SAFE_INTEGER ? Math.trunc(value) : 0;
+                    const quantity = Math.max(0, current + step);
+                    if (Number.isSafeInteger(quantity)) this.businessIpQuantities[id] = quantity;
+                },
                 resetBusinessInternetOptions() {
                     this.businessInternetPeriod = 'monthly';
                     this.businessInternetScheme = 'retail';
                     this.includeBusinessInternetSetup = false;
                     this.businessInternetShowStopped = false;
+                    this.businessInternetShowDetails = false;
+                    this.businessInternetOpenFamilies = {};
+                    this.businessIpExpanded = false;
                     this.businessInternetQuery = '';
                     this.businessIpScheme = 'retail';
                     this.businessIpQuantities = { '4': 0, '5': 0, '6': 0, '7': 0 };

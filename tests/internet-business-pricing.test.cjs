@@ -159,6 +159,28 @@ test('static IP purchases are charged once at their independent tariff, with set
     assert.equal(JSON.stringify(state.internetBusinessCatalog), snapshot);
 });
 
+test('IP quantity buttons update totals and quotes, stop at zero and keep each IP option independent', () => {
+    const app = loadPricing(), state = app.state;
+    const plan = state.internetBusinessCatalog.plans.find(plan => plan.sourceRow === 8);
+    for (const [step, quantity, total] of [[1, 1, 770000], [1, 2, 990000], [-1, 1, 770000], [-1, 0, 550000], [-1, 0, 550000]]) {
+        state.adjustBusinessIpQuantity('4', step);
+        assert.equal(state.businessIpQuantities['4'], quantity);
+        assert.equal(state.calculateBusinessInternetTotal(plan), total);
+        state.executeBusinessInternetCopy(plan);
+        assert.ok(app.copied().includes(state.formatPrice(total)));
+        if (quantity) assert.ok(app.copied().includes(quantity + ' × ' + state.internetBusinessCatalog.ipPlans[0].name));
+        else assert.ok(!app.copied().includes('IP mua thêm'));
+    }
+    state.businessIpScheme = 'delegated'; state.businessIpQuantities['4'] = '3';
+    state.adjustBusinessIpQuantity('4', 1);
+    assert.equal(state.businessIpQuantities['4'], 4);
+    assert.equal(state.calculateBusinessInternetTotal(plan), 1254000);
+    state.adjustBusinessIpQuantity('7', 1);
+    assert.equal(state.businessIpQuantities['4'], 4);
+    assert.equal(state.businessIpQuantities['7'], 1);
+    assert.equal(state.calculateBusinessInternetTotal(plan), 3014000);
+});
+
 test('invalid IP quantities block incomplete quotes, zero/blank means no add-on, and unsafe totals are rejected', () => {
     const app = loadPricing(), state = app.state, plan = state.internetBusinessCatalog.plans.find(plan => plan.sourceRow === 8);
     for (const id of ['4', '5', '6', '7']) for (const quantity of [-1, 0.5, 'abc', Infinity, Number.MAX_SAFE_INTEGER]) {

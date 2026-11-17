@@ -548,14 +548,24 @@ input[type="range"]::-webkit-slider-thumb {
 .kdol-business-schemes { width: max-content; margin-top: 0.75rem; overflow-x: auto; }
 .kdol-business-schemes .kdol-choice { padding: 0.25rem 0.375rem; font-size: 0.6875rem; }
 .kdol-business-ip { margin-top: 0.75rem; color: #475569; font-size: 0.75rem; }
-.kdol-business-ip > summary { color: var(--kdol-color-primary); cursor: pointer; }
+.kdol-business-tools { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-top: 0.75rem; }
+.kdol-business-ip-trigger { display: inline-flex; align-items: baseline; gap: 0.25rem; min-width: 0; padding: 0; color: var(--kdol-color-primary); font-size: 0.75rem; line-height: 1.25rem; text-align: left; cursor: pointer; }
+.kdol-business-show-details { flex: 0 0 auto; gap: 0.375rem; font-size: 0.75rem; white-space: nowrap; }
+.kdol-business-show-details .kdol-internet-toggle__input { width: 0.875rem; height: 0.875rem; }
 .kdol-business-ip-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: 0.5rem 1rem; margin-top: 0.75rem; }
 .kdol-business-ip-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
 .kdol-business-ip-row small { display: block; color: #64748b; }
-.kdol-business-ip-row .kdol-select { width: 4.5rem; flex: 0 0 4.5rem; padding: 0.375rem; text-align: right; }
+.kdol-business-ip-stepper { display: flex; align-items: center; gap: 0.25rem; flex: 0 0 auto; }
+.kdol-business-ip-stepper .kdol-select { width: 2.75rem; flex: 0 0 2.75rem; min-height: 2rem; padding: 0.25rem; text-align: center; appearance: textfield; }
+.kdol-business-ip-stepper input::-webkit-inner-spin-button,
+.kdol-business-ip-stepper input::-webkit-outer-spin-button { appearance: none; margin: 0; }
+.kdol-business-ip-step { width: 2rem; min-height: 2rem; flex: 0 0 2rem; border: 1px solid var(--kdol-color-border-light); border-radius: var(--kdol-radius-md); background-color: var(--kdol-color-control); color: var(--kdol-color-primary); font-size: 1rem; line-height: 1; font-weight: 600; }
+.kdol-business-ip-step:disabled { opacity: 0.35; cursor: default; }
 .kdol-business-search { width: 12rem; max-width: 50%; padding: 0.375rem 0.5rem; font-size: 0.75rem; }
 .kdol-business-table { min-width: 540px; }
-.kdol-business-table .kdol-business-family { background-color: var(--kdol-color-control); color: var(--kdol-color-primary); text-align: left; }
+.kdol-business-table .kdol-business-family { padding: 0; background-color: var(--kdol-color-control); color: var(--kdol-color-primary); text-align: left; }
+.kdol-business-family-toggle { display: flex; align-items: center; gap: 0.375rem; width: 100%; min-height: 2.25rem; padding: 0.5rem; color: inherit; text-align: left; font-weight: 600; }
+.kdol-business-family-count { margin-left: auto; color: #64748b; font-size: 0.75rem; font-weight: 400; white-space: nowrap; }
 .kdol-business-table .kdol-business-name { text-align: left; font-weight: 600; }
 .kdol-business-name > small,
 .kdol-business-speed small,
@@ -570,6 +580,8 @@ input[type="range"]::-webkit-slider-thumb {
 .kdol-business-note--backup { color: var(--kdol-color-backup); }
 .kdol-business-note--condition { color: var(--kdol-color-condition); border-left-style: dashed; font-weight: 400; }
 .kdol-business-price { text-align: right; }
+.kdol-business-speed--limited { color: var(--kdol-color-condition); font-weight: 600; }
+.kdol-business-speed--committed { color: var(--kdol-color-security); font-weight: 600; }
 .kdol-business-price .kdol-price { font-size: 1.0625rem; line-height: 1.5rem; white-space: nowrap; }
 .kdol-business-stopped { opacity: 0.65; }
 .kdol-internet-table--mobile .kdol-internet-benefits { text-align: left; }

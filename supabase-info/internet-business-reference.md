@@ -21,6 +21,14 @@ Tab Doanh nghiệp mặc định giá Hiện hành, kỳ tháng. Theo xác nhậ
 
 Sáu cấu hình ghi dừng từ 15/08: FiberIoT1, FiberIoT2, FiberXtra1, FiberOn1 và hai cấu hình FibeOn2 (IP động/IP tĩnh). Mặc định ẩn; bật Hiện gói đã dừng để tra lịch sử, không cho sao chép báo giá bán mới. Giữ tên `FibeOn2` đúng nguồn và ghi thêm loại IP để phân biệt hai dòng.
 
+Trên giao diện, nhóm 14 gói Eco/Fiber/VIP được tách thành FiberEco (5 gói), Fiber (5 gói) và FiberVip (4 gói), theo tên thương mại. Đây là nhóm hiển thị riêng; vẫn dùng đúng các cột giá của bảng nguồn Eco/Fiber/VIP, không đổi giá hoặc điều kiện.
+
+Các nhóm còn lại được tách tương tự thành FiberIoT, FiberXtra, FiberS, FiberWifi, Fiber Pro; FiberOn và FiberM tiếp tục là nhóm riêng. FiberIoT chỉ có gói đã dừng nên hiện khi bật lựa chọn tương ứng. Mỗi cấu hình chỉ nằm trong một nhóm; phân nhóm hiển thị không thay bộ cột giá gốc.
+
+Thứ tự hiển thị: FiberEco → FiberWifi → Fiber Pro → FiberS → FiberXtra → FiberOn → Fiber → FiberVip → FiberM. FiberIoT ở cuối khi bật các gói đã dừng.
+
+Từng tiêu đề nhóm là nút mở/thu gọn các gói con, mặc định thu gọn và có hiển thị số gói. Có thể mở nhiều nhóm để so sánh. Khi tìm tên gói, các nhóm kết quả tự mở; khi tích Hiện IP & thiết bị, mở tất cả nhóm để thấy toàn bộ ghi chú. Thu gọn nhóm không xóa lựa chọn IP, kỳ hoặc giá. Chọn lại dịch vụ đặt lại trạng thái thu gọn.
+
 ## Cột giá sử dụng
 
 | Nhóm | Hiện hành | Phân cấp | Y tế / GD / Sở BN | DN MTL |
@@ -47,6 +55,8 @@ FiberEco2 có mức Phân cấp tháng tối thiểu 350.000đ, dùng đúng s�
 
 Trong chi tiết IP & thiết bị, IPv4 màu xanh dương, IPv6 xanh lá, Mesh tím, các đường dự phòng xanh ngọc; điều kiện giá màu cam nâu với vạch nét đứt. Giữ nguyên nội dung và thông số, dùng màu nhất quán ở mọi gói.
 
+Ô Hiện IP & thiết bị ở bên phải cùng dòng IP tĩnh mua thêm, mặc định bỏ chọn. Tích vào mở ghi chú của tất cả gói đang hiển thị và những gói xuất hiện sau khi đổi bộ lọc; bỏ tích thu gọn lại. Phần IP mua thêm mở riêng bằng nút bên trái, không thay số lượng hoặc mức giá IP khi đóng/mở. Chọn lại dịch vụ Internet đặt lại hai điều khiển thu gọn.
+
 Xtra ghi quốc tế giới hạn; các bảng khác ghi cam kết. FiberM dùng tốc độ mỗi phiên và số phiên đồng thời, không tự gán tốc độ quốc tế. IP v4/v6, dự phòng 4G/5G/FiberVNN và Mesh được lấy đúng từng dòng. Ô trống không tự điền từ gói liền kề. Các lựa chọn Mesh Wi-Fi 5/6 ở nhóm FiberWifi giữ cả hai phương án vì số thiết bị khác nhau.
 
 File có danh sách gói dùng thử nhưng không nêu thời gian, giá hoặc điều kiện miễn phí cụ thể; không tự tạo nút miễn cước.
@@ -63,6 +73,8 @@ Phí lắp: 272.727đ/thuê bao chưa VAT theo ô A1, chỉ cộng khi chọn, m
 | Block 32 địa chỉ | 2.000.000 | 1.600.000 |
 
 Chế độ giá IP riêng, mặc định Hiện hành; không tự áp chế độ ngành của gói Internet vào IP. Số lượng là số nguyên không âm. Để trống hiểu là 0. Nhập không hợp lệ chặn tổng và sao chép để tránh báo giá thiếu IP.
+
+Mỗi ô số lượng IP có nút −/+ để thao tác trên điện thoại, đồng thời vẫn nhập tay và dùng bàn phím được. Nút giảm bị khóa ở 0; mỗi lần nhấn thay đổi một đơn vị và cập nhật tổng/báo giá từ cùng dữ liệu số lượng.
 
 Tổng = làm tròn đến đồng một lần của `(giá đúng kỳ trong nguồn + phí lắp nếu chọn + tổng IP mua thêm) × (100 + VAT) / 100`. Giữ số lẻ của các gói Fiber Pro, FiberM2/M3, FiberOn3, FiberIoT1 trong suốt phép tính; chỉ định dạng phần hiển thị đến đồng. Không nhân giá kỳ dài từ giá tháng, không nhân khoản cộng thêm theo số phiên hoặc thời hạn. Các giá Gia đình đã VAT và kỳ 12–13 tháng không tham gia phép tính Doanh nghiệp.
 

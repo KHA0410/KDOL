@@ -38,24 +38,57 @@ window.KDOL_INTERNET_BUSINESS = {
     ],
     "families": [
         {
-            "id": "xtra",
-            "label": "FiberIoT / FiberXtra"
-        },
-        {
             "id": "eco",
-            "label": "FiberEco / Fiber / FiberVip"
+            "label": "FiberEco",
+            "namePattern": "^FiberEco"
         },
         {
             "id": "wifi",
-            "label": "FiberS / FiberWifi / Fiber Pro"
+            "label": "FiberWifi",
+            "namePattern": "^FiberWifi"
+        },
+        {
+            "id": "pro",
+            "label": "Fiber Pro",
+            "sourceFamily": "wifi",
+            "namePattern": "^Fiber\\s*Pro$"
+        },
+        {
+            "id": "s",
+            "label": "FiberS",
+            "sourceFamily": "wifi",
+            "namePattern": "^FiberS\\d+$"
+        },
+        {
+            "id": "xtra",
+            "label": "FiberXtra",
+            "namePattern": "^FiberXtra"
         },
         {
             "id": "on",
             "label": "FiberOn"
         },
         {
+            "id": "fiber",
+            "label": "Fiber",
+            "sourceFamily": "eco",
+            "namePattern": "^Fiber\\d+$"
+        },
+        {
+            "id": "vip",
+            "label": "FiberVip",
+            "sourceFamily": "eco",
+            "namePattern": "^FiberVip"
+        },
+        {
             "id": "multi",
             "label": "FiberM · Nhiều phiên đồng thời"
+        },
+        {
+            "id": "iot",
+            "label": "FiberIoT",
+            "sourceFamily": "xtra",
+            "namePattern": "^FiberIoT"
         }
     ],
     "ipPlans": [
