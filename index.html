@@ -30,7 +30,7 @@
     <script src="hkd-data.js"></script>
     <script src="internet-data.js"></script>
     <script src="internet-business-data.js?v=20261117-1"></script>
-    <link rel="stylesheet" href="styles.css?v=20261117-3">
+    <link rel="stylesheet" href="styles.css?v=20261117-4">
 </head>
 <body class="bg-gray-100 h-screen flex flex-col font-sans">
     <div id="app" v-cloak class="flex flex-col h-full overflow-hidden">
@@ -1523,14 +1523,13 @@
                                             <small v-if="plan.monthlyUnavailable">Chỉ bán kỳ 6/13 tháng</small>
                                             <details class="kdol-business-details">
                                                 <summary>IP &amp; thiết bị</summary>
-                                                <p v-if="plan.ipv4">IPv4: {{ plan.ipv4 }}</p>
-                                                <p v-if="plan.ipv6">IPv6: {{ plan.ipv6 }}</p>
-                                                <p v-if="plan.mesh && plan.mesh !== 'Không'">Mesh: {{ plan.mesh }}</p>
-                                                <p v-if="plan.backupMobile && plan.backupMobile !== 'Không'">Dự phòng 4G/5G: {{ plan.backupMobile }}</p>
-                                                <p v-if="plan.backupFiber && plan.backupFiber !== 'Không'">Dự phòng FiberVNN: {{ plan.backupFiber }}</p>
-                                                <p v-if="plan.policyNote">{{ plan.policyNote }}</p>
-                                                <p v-if="plan.originalInternationalMbps !== null && plan.originalInternationalMbps !== plan.internationalMbps">Quốc tế ở cột gốc: {{ plan.originalInternationalMbps }} Mbps; tốc độ cập nhật T3/2025: {{ plan.latestSpeed }}.</p>
-                                                <p v-if="plan.family === 'on' && businessInternetScheme === 'health'">Cột giá riêng của nhóm này áp dụng Y tế.</p>
+                                                <p v-if="plan.ipv4" class="kdol-business-note kdol-business-note--ipv4">IPv4: {{ plan.ipv4 }}</p>
+                                                <p v-if="plan.ipv6" class="kdol-business-note kdol-business-note--ipv6">IPv6: {{ plan.ipv6 }}</p>
+                                                <p v-if="plan.mesh && plan.mesh !== 'Không'" class="kdol-business-note kdol-business-note--mesh">Mesh: {{ plan.mesh }}</p>
+                                                <p v-if="plan.backupMobile && plan.backupMobile !== 'Không'" class="kdol-business-note kdol-business-note--backup">Dự phòng 4G/5G: {{ plan.backupMobile }}</p>
+                                                <p v-if="plan.backupFiber && plan.backupFiber !== 'Không'" class="kdol-business-note kdol-business-note--backup">Dự phòng FiberVNN: {{ plan.backupFiber }}</p>
+                                                <p v-if="plan.policyNote" class="kdol-business-note kdol-business-note--condition">{{ plan.policyNote }}</p>
+                                                <p v-if="plan.family === 'on' && businessInternetScheme === 'health'" class="kdol-business-note kdol-business-note--condition">Cột giá riêng của nhóm này áp dụng Y tế.</p>
                                             </details>
                                         </th>
                                         <td class="kdol-business-speed">

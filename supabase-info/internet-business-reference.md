@@ -43,7 +43,9 @@ FiberEco2 có mức Phân cấp tháng tối thiểu 350.000đ, dùng đúng s�
 
 ## Tốc độ, IP và thiết bị
 
-Ưu tiên tốc độ cập nhật T3/2025: Xtra cột D, Eco/Fiber/VIP cột E, S/Wifi cột D, On cột F. Nếu ô có dạng `400/8`, giữ nguyên chuỗi cập nhật và hiển thị 400 Mbps trong nước, 8 Mbps quốc tế. Cột quốc tế gốc cũng được lưu và hiện trong chi tiết khi khác số mới, ví dụ FiberEco4 400/8 so với cột cam kết cũ 7, FiberS2 800/6 so với cột cũ 5. Không bỏ thông tin khác biệt của nguồn.
+Ưu tiên tốc độ cập nhật T3/2025: Xtra cột D, Eco/Fiber/VIP cột E, S/Wifi cột D, On cột F. Nếu ô có dạng `400/8`, giữ nguyên chuỗi cập nhật và hiển thị 400 Mbps trong nước, 8 Mbps quốc tế. Cột quốc tế gốc vẫn lưu để đối chiếu nguồn, ví dụ FiberEco4 400/8 so với cột cam kết cũ 7, FiberS2 800/6 so với cột cũ 5. Theo yêu cầu rút gọn, không hiển thị dòng Quốc tế ở cột gốc trên giao diện.
+
+Trong chi tiết IP & thiết bị, IPv4 màu xanh dương, IPv6 xanh lá, Mesh tím, các đường dự phòng xanh ngọc; điều kiện giá màu cam nâu với vạch nét đứt. Giữ nguyên nội dung và thông số, dùng màu nhất quán ở mọi gói.
 
 Xtra ghi quốc tế giới hạn; các bảng khác ghi cam kết. FiberM dùng tốc độ mỗi phiên và số phiên đồng thời, không tự gán tốc độ quốc tế. IP v4/v6, dự phòng 4G/5G/FiberVNN và Mesh được lấy đúng từng dòng. Ô trống không tự điền từ gói liền kề. Các lựa chọn Mesh Wi-Fi 5/6 ở nhóm FiberWifi giữ cả hai phương án vì số thiết bị khác nhau.
 
