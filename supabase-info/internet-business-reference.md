@@ -74,6 +74,8 @@ Phí lắp: 272.727đ/thuê bao chưa VAT theo ô A1, chỉ cộng khi chọn, m
 
 Chế độ giá IP riêng, mặc định Hiện hành; không tự áp chế độ ngành của gói Internet vào IP. Số lượng là số nguyên không âm. Để trống hiểu là 0. Nhập không hợp lệ chặn tổng và sao chép để tránh báo giá thiếu IP.
 
+Giá IP hiển thị dưới từng loại và tổng IP cạnh nút mua thêm đã gồm VAT 10%. Ví dụ 1 địa chỉ WAN tĩnh hiển thị 220.000đ hiện hành hoặc 176.000đ phân cấp. Dữ liệu và `businessIpSubtotal` vẫn giữ giá chưa VAT để tổng thanh toán chỉ cộng thuế một lần.
+
 Mỗi ô số lượng IP có nút −/+ để thao tác trên điện thoại, đồng thời vẫn nhập tay và dùng bàn phím được. Nút giảm bị khóa ở 0; mỗi lần nhấn thay đổi một đơn vị và cập nhật tổng/báo giá từ cùng dữ liệu số lượng.
 
 Tổng = làm tròn đến đồng một lần của `(giá đúng kỳ trong nguồn + phí lắp nếu chọn + tổng IP mua thêm) × (100 + VAT) / 100`. Giữ số lẻ của các gói Fiber Pro, FiberM2/M3, FiberOn3, FiberIoT1 trong suốt phép tính; chỉ định dạng phần hiển thị đến đồng. Không nhân giá kỳ dài từ giá tháng, không nhân khoản cộng thêm theo số phiên hoặc thời hạn. Các giá Gia đình đã VAT và kỳ 12–13 tháng không tham gia phép tính Doanh nghiệp.

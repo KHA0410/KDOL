@@ -30,7 +30,7 @@
     <script src="hkd-data.js"></script>
     <script src="internet-data.js"></script>
     <script src="internet-business-data.js?v=20261117-4"></script>
-    <link rel="stylesheet" href="styles.css?v=20261117-8">
+    <link rel="stylesheet" href="styles.css?v=20261117-9">
 </head>
 <body class="bg-gray-100 h-screen flex flex-col font-sans">
     <div id="app" v-cloak class="flex flex-col h-full overflow-hidden">
@@ -1488,13 +1488,13 @@
                                 <button v-for="scheme in internetBusinessCatalog.schemes" :key="scheme.id" type="button" @click="businessInternetScheme = scheme.id" :aria-pressed="businessInternetScheme === scheme.id" :class="['kdol-choice', businessInternetScheme === scheme.id ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">{{ scheme.label }}</button>
                             </div>
                             <div class="flex flex-wrap items-center justify-between gap-2 mt-3">
-                                <label class="kdol-internet-toggle"><input type="checkbox" v-model="includeBusinessInternetSetup" class="kdol-internet-toggle__input"><span>Phí lắp {{ formatPrice(internetBusinessCatalog.setupPrice) }} <span class="text-xs text-gray-500">(chưa VAT)</span></span></label>
+                                <label class="kdol-internet-toggle"><input type="checkbox" v-model="includeBusinessInternetSetup" class="kdol-internet-toggle__input"><span>Phí lắp {{ new Intl.NumberFormat('vi-VN').format(Math.round(internetBusinessCatalog.setupPrice * (100 + businessInternetVat) / 100)) }}đ <span class="text-xs text-gray-500">(Gồm VAT)</span></span></label>
                                 <label class="kdol-internet-toggle"><input type="checkbox" v-model="businessInternetShowStopped" class="kdol-internet-toggle__input"><span>Hiện {{ businessInternetStoppedCount }} gói đã dừng</span></label>
                             </div>
                             <div class="kdol-business-tools">
                                 <button id="business-ip-trigger" type="button" @click="businessIpExpanded = !businessIpExpanded" :aria-expanded="businessIpExpanded" aria-controls="business-ip-options" class="kdol-business-ip-trigger">
                                     <span aria-hidden="true">{{ businessIpExpanded ? '▾' : '▸' }}</span>
-                                    <span>IP tĩnh mua thêm <span v-if="businessIpSubtotal > 0">· {{ formatPrice(businessIpSubtotal) }} chưa VAT</span></span>
+                                    <span>IP tĩnh mua thêm <span v-if="businessIpSubtotal > 0">· {{ formatPrice(businessIpSubtotal * (100 + businessInternetVat) / 100) }} đã VAT</span></span>
                                 </button>
                                 <label class="kdol-internet-toggle kdol-business-show-details">
                                     <input type="checkbox" v-model="businessInternetShowDetails" class="kdol-internet-toggle__input">
@@ -1507,7 +1507,7 @@
                                 </div>
                                 <div class="kdol-business-ip-list">
                                     <div v-for="ip in internetBusinessCatalog.ipPlans" :key="ip.id" class="kdol-business-ip-row">
-                                        <label :for="'business-ip-count-' + ip.id">{{ ip.name }}<small>{{ formatPrice(ip[businessIpScheme]) }} · chưa VAT</small></label>
+                                        <label :for="'business-ip-count-' + ip.id">{{ ip.name }}<small>{{ formatPrice(ip[businessIpScheme] * (100 + businessInternetVat) / 100) }} · đã VAT 10%</small></label>
                                         <div class="kdol-business-ip-stepper" role="group" :aria-label="'Số lượng ' + ip.name">
                                             <button type="button" @click="adjustBusinessIpQuantity(ip.id, -1)" :disabled="Number(businessIpQuantities[ip.id]) <= 0" class="kdol-business-ip-step" :aria-label="'Giảm số lượng ' + ip.name">−</button>
                                             <input :id="'business-ip-count-' + ip.id" type="number" min="0" step="1" inputmode="numeric" v-model="businessIpQuantities[ip.id]" class="kdol-select" :aria-label="'Số lượng ' + ip.name">
@@ -1520,7 +1520,10 @@
                         </div>
                         <div class="kdol-internet-section-heading">
                             <h3 class="kdol-internet-section-title">Gói Internet doanh nghiệp</h3>
-                            <input v-model="businessInternetQuery" type="search" class="kdol-select kdol-business-search" placeholder="Tìm tên gói..." aria-label="Tìm gói Internet doanh nghiệp">
+                            <div class="kdol-business-search">
+                                <input ref="businessInternetSearch" v-model="businessInternetQuery" type="search" class="kdol-select" placeholder="Tìm tên gói..." aria-label="Tìm gói Internet doanh nghiệp">
+                                <button v-if="businessInternetQuery" type="button" @click="businessInternetQuery = ''; $refs.businessInternetSearch.focus()" class="kdol-business-search-clear" aria-label="Xóa nội dung tìm kiếm" title="Xóa nội dung"><span aria-hidden="true">×</span></button>
+                            </div>
                         </div>
                         <p v-if="!businessInternetSections.length" class="kdol-empty-state">Không có gói phù hợp.</p>
                         <div v-else class="kdol-table-wrap">
