@@ -100,7 +100,7 @@
 .kdol-address-tag--ngoai { background: #ecfdf5; color: var(--kdol-color-signature); }
 .kdol-address-tag--unknown,
 .kdol-address-tag--mixed { background: var(--kdol-color-control); color: #475569; }
-.kdol-address-comparison { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.625rem 1rem; width: 100%; }
+.kdol-address-comparison { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.625rem 1rem; width: 100%; }
 .kdol-address-comparison dt { margin-bottom: 0.25rem; color: #64748b; font-size: 0.6875rem; }
 .kdol-address-comparison dd { font-size: 0.875rem; line-height: 1.375rem; overflow-wrap: anywhere; }
 .kdol-address-comparison .kdol-address-province { color: #64748b; font-size: 0.75rem; }
@@ -836,7 +836,6 @@ input[type="range"]::-webkit-slider-thumb {
 
 @media (min-width: 640px) {
     .kdol-address-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 1rem; }
-    .kdol-address-comparison { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .kdol-choice--fluid { flex: none; }
     .kdol-mytv-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .kdol-mytv-channel-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); }
