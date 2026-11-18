@@ -56,16 +56,14 @@
     flex: 0 0 auto;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
+    width: 2.5rem;
     min-height: 2.5rem;
     margin-left: 1rem;
-    padding: 0.5rem 0.75rem;
+    padding: 0.5rem;
     border: 1px solid rgb(255 255 255 / 0.4);
     border-radius: var(--kdol-radius-lg);
     color: white;
     background: rgb(255 255 255 / 0.1);
-    font-size: 0.8125rem;
-    font-weight: 600;
     cursor: pointer;
 }
 .kdol-address-trigger:hover { background: rgb(255 255 255 / 0.2); }
