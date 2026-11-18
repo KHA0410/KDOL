@@ -1,61 +1,104 @@
 """Convert the supplied address workbook to a browser-local lookup catalog.
 
-Usage: python scripts/import-addresses.py path/to/workbook.xlsx
-Only the workbook's columns are imported; no old wards/provinces are inferred.
+Usage: python scripts/import-addresses.py catalog.xlsx [hcm-history.xlsx]
+Only workbook fields are imported; old wards/provinces are never inferred.
 """
 
 import json
 from pathlib import Path
 import sys
+import unicodedata
 import xml.etree.ElementTree as ET
 import zipfile
 
 
-def read_records(source):
+def read_sheet(source):
     ns = {"m": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
+    with zipfile.ZipFile(source) as workbook:
+        strings = ["".join(item.itertext()) for item in ET.fromstring(workbook.read("xl/sharedStrings.xml")).findall("m:si", ns)] if "xl/sharedStrings.xml" in workbook.namelist() else []
+        for row in ET.fromstring(workbook.read("xl/worksheets/sheet1.xml")).findall("m:sheetData/m:row", ns):
+            cells = {}
+            for cell in row.findall("m:c", ns):
+                column = "".join(filter(str.isalpha, cell.attrib["r"]))
+                value, inline = cell.find("m:v", ns), cell.find("m:is", ns)
+                text = value.text if value is not None else "".join(inline.itertext()) if inline is not None else ""
+                if cell.get("t") == "s":
+                    text = strings[int(text)]
+                cells[column] = text.strip()
+            yield int(row.attrib["r"]), cells
+
+
+def normalize(value):
+    return " ".join("".join(char for char in unicodedata.normalize("NFD", value.lower().replace("đ", "d")) if not unicodedata.combining(char)).split())
+
+
+def read_records(source):
     columns = {
         "C": "provinceCode", "D": "provinceName", "E": "provinceTmsCode",
         "F": "districtCode", "G": "districtName", "I": "wardCode", "J": "wardName",
     }
-    with zipfile.ZipFile(source) as workbook:
-        strings = [
-            "".join(item.itertext())
-            for item in ET.fromstring(workbook.read("xl/sharedStrings.xml")).findall("m:si", ns)
-        ]
-        sheet = ET.fromstring(workbook.read("xl/worksheets/sheet1.xml"))
-        records = []
-        for row in sheet.findall("m:sheetData/m:row", ns):
-            if int(row.attrib["r"]) <= 3:
-                continue
-            record = {}
-            for cell in row.findall("m:c", ns):
-                column = "".join(filter(str.isalpha, cell.attrib["r"]))
-                if column not in columns:
-                    continue
-                value = cell.find("m:v", ns)
-                if value is None:
-                    text = "".join(cell.find("m:is", ns).itertext()) if cell.find("m:is", ns) is not None else ""
-                else:
-                    text = strings[int(value.text)] if cell.get("t") == "s" else value.text
-                record[columns[column]] = text.strip()
-            if not record:
-                continue
-            if not all(record.get(key) for key in columns.values()):
-                raise ValueError(f"Incomplete address at workbook row {row.attrib['r']}")
-            records.append(record)
+    records = []
+    for number, cells in read_sheet(source):
+        if number <= 3:
+            continue
+        record = {key: cells.get(column, "") for column, key in columns.items()}
+        if not any(record.values()):
+            continue
+        if not all(record.values()):
+            raise ValueError(f"Incomplete address at workbook row {number}")
+        records.append(record)
     if len({row["wardCode"] for row in records}) != len(records):
         raise ValueError("Duplicate new ward codes in workbook")
     return records
+
+
+def add_history(records, source):
+    destinations = {}
+    for row in records:
+        if row["provinceCode"] == "29":
+            destinations.setdefault(normalize(row["wardName"]), []).append(row)
+    districts = {normalize(row["districtName"]): row["districtCode"] for row in records if row["provinceCode"] == "29"}
+    count = 0
+    for number, cells in read_sheet(source):
+        if number == 1:
+            continue
+        if not all(cells.get(column) for column in ["B", "C", "D", "F", "G"]):
+            raise ValueError(f"Incomplete history at workbook row {number}")
+        candidates = destinations.get(normalize(cells["D"]), [])
+        if len(candidates) > 1:
+            # Thanh An and Thạnh An are distinct destinations; never join by
+            # accent-free spelling alone when multiple places share that key.
+            candidates = [row for row in candidates if row["wardName"].casefold() == cells["D"].casefold()]
+        target = candidates[0] if len(candidates) == 1 else None
+        district_code = districts.get(normalize(cells["B"]))
+        if target is None or district_code is None:
+            raise ValueError(f"Unmatched ward or district at workbook row {number}: {cells}")
+        official_code = cells["F"]
+        if target.get("officialWardCode", official_code) != official_code:
+            raise ValueError(f"Conflicting new ward codes at workbook row {number}")
+        target["officialWardCode"] = official_code
+        target.setdefault("origins", []).append({
+            "wardName": cells.get("A", ""), # Côn Đảo has no old ward in the source.
+            "districtName": cells["B"], "districtCode": district_code,
+            "provinceName": cells["C"], "mergerType": cells["G"],
+        })
+        count += 1
+    return count
 
 
 if __name__ == "__main__":
     source = Path(sys.argv[1])
     records = read_records(source)
     catalog = {"source": source.name, "records": records}
+    if len(sys.argv) > 2:
+        history = Path(sys.argv[2])
+        catalog["historyCount"] = add_history(records, history)
+        catalog["historySource"] = history.name
     output = Path(__file__).resolve().parents[1] / "address-data.js"
     output.write_text(
         "// Generated by scripts/import-addresses.py from the user-supplied workbook.\n"
-        "// districtName is old; wardName and provinceName are new. Codes retain leading zeroes.\n"
+        "// districtName is old; wardName and provinceName are new. origins retains source wards and split notes.\n"
+        "// Original workbook codes and officialWardCode from the history workbook are kept separate.\n"
         "window.KDOL_ADDRESSES = Object.freeze(" + json.dumps(catalog, ensure_ascii=False, separators=(",", ":")) + ");\n",
         encoding="utf-8",
     )

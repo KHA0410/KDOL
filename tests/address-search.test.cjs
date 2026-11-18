@@ -16,7 +16,7 @@ test('catalog retains all workbook records, 34 provinces and string codes with l
     assert.equal(catalog.records.length, 3321);
     assert.equal(new Set(catalog.records.map(row => row.provinceCode)).size, 34);
     assert.equal(new Set(catalog.records.map(row => row.wardCode)).size, 3321);
-    assert.ok(catalog.records.every(row => Object.values(row).every(value => typeof value === 'string' && value.length)));
+    assert.ok(catalog.records.every(row => ['provinceCode', 'provinceName', 'provinceTmsCode', 'districtCode', 'districtName', 'wardCode', 'wardName'].every(key => typeof row[key] === 'string' && row[key].length)));
     const first = catalog.records[0];
     assert.equal(first.provinceCode, '01');
     assert.equal(first.wardCode, '10105001');
@@ -60,8 +60,9 @@ test('new ward to old district: Phuong Hoa Hung returns Quan 10 without scatteri
     assert.equal(matches[0].districtName, 'Quận 10');
     assert.equal(matches[0].wardCode, '70119089');
     const untyped = engine.search(catalog.records, 'hoa hung');
-    assert.equal(untyped.length, 4); // Includes Mỹ Hoà Hưng and Vĩnh Hoà Hưng, which contain the complete phrase.
-    assert.ok(untyped.every(row => engine.normalize(row.wardName).includes('hoa hung')));
+    assert.equal(untyped.length, 5); // Also includes old Xã Hòa Hưng -> new Xã Hòa Hội in HCM.
+    assert.ok(untyped.every(row => [row.wardName, ...(row.matchedOrigins || []).map(origin => origin.wardName)]
+        .some(name => engine.normalize(name).includes('hoa hung'))));
     assert.equal(engine.search(catalog.records, 'phuong hoa hung', '01').length, 0);
     const dongAnh = engine.search(catalog.records, 'huyện đông anh');
     assert.equal(dongAnh.length, 5);
@@ -69,7 +70,7 @@ test('new ward to old district: Phuong Hoa Hung returns Quan 10 without scatteri
 });
 
 test('combined place names work in either order while typed administrative names stay together', () => {
-    for (const query of ['phuong hoa hung ho chi minh', 'ho chi minh phuong hoa hung', 'hoa hung ho chi minh']) {
+    for (const query of ['phuong hoa hung ho chi minh', 'ho chi minh phuong hoa hung']) {
         const matches = engine.search(catalog.records, query);
         assert.equal(matches.length, 1, query);
         assert.equal(matches[0].districtName, 'Quận 10', query);
@@ -79,6 +80,58 @@ test('combined place names work in either order while typed administrative names
     }
     assert.equal(engine.search(catalog.records, 'quan 10 ha noi').length, 0);
     assert.ok(engine.search(catalog.records, 'phuong hoa hu').some(row => row.wardCode === '70119089'));
+});
+
+test('HCM imports 493 origin mappings covering all 168 new wards, keeping both code systems separate', () => {
+    const mapped = catalog.records.filter(row => row.origins);
+    assert.equal(catalog.historySource, 'tphcm-sap-nhap-phuong-xa.xlsx');
+    assert.equal(catalog.historyCount, 493);
+    assert.equal(mapped.length, 168);
+    assert.equal(mapped.reduce((count, row) => count + row.origins.length, 0), 493);
+    assert.equal(new Set(mapped.map(row => row.officialWardCode)).size, 168);
+    assert.ok(mapped.every(row => row.provinceCode === '29' && row.origins.every(origin => origin.districtCode && origin.provinceName && origin.mergerType)));
+    const conDao = mapped.find(row => row.wardName === 'Đặc khu Côn Đảo');
+    assert.equal(conDao.origins[0].wardName, '');
+    assert.equal(conDao.origins[0].districtName, 'Huyện Côn Đảo');
+});
+
+test('old Phuong 14 Quan 10 returns both split destinations and only the relevant old address', () => {
+    for (const query of ['phường 14, quận 10, hcm', 'p14 q10 tphcm', 'P.14, Q.10, TP.HCM', 'hcm quan 10 phuong 14']) {
+        const matches = engine.search(catalog.records, query);
+        assert.equal(matches.length, 2, query);
+        assert.equal(matches.map(row => row.officialWardCode).sort().join(','), '27163,27169');
+        assert.ok(matches.every(row => row.matchedOrigins.length === 1
+            && row.matchedOrigins[0].wardName === 'Phường 14'
+            && row.matchedOrigins[0].districtName === 'Quận 10'));
+        assert.ok(matches.every(row => engine.classify(row).id === 'noi'));
+        assert.ok(matches.find(row => row.officialWardCode === '27169').matchedOrigins[0].mergerType.includes('chủ yếu'));
+        assert.ok(matches.find(row => row.officialWardCode === '27163').matchedOrigins[0].mergerType.includes('một phần'));
+    }
+    assert.equal(engine.search(catalog.records, 'phuong 14 quan 10 ha noi').length, 0);
+});
+
+test('reverse HCM lookup lists every source ward, keeps numbered wards distinct and supports official codes', () => {
+    const dienHong = engine.search(catalog.records, 'phuong dien hong hcm');
+    assert.equal(dienHong.length, 1);
+    assert.equal(dienHong[0].matchedOrigins.map(origin => origin.wardName).sort().join(','), 'Phường 14,Phường 6,Phường 8');
+    assert.equal(engine.search(catalog.records, '27169')[0].wardName, 'Phường Diên Hồng');
+    // This old ward is absent from the source, so do not substitute Phường 10/11/14.
+    assert.equal(engine.search(catalog.records, 'phuong 1 quan 1 hcm').length, 0);
+    assert.ok(engine.search(catalog.records, 'huyen dau tieng tinh binh duong').length > 0);
+});
+
+test('split addresses keep original VNPT areas and reverse lookup identifies destinations spanning both areas', () => {
+    const matches = engine.search(catalog.records, 'xa an phu tay binh chanh');
+    assert.equal(matches.length, 2);
+    assert.ok(matches.every(row => engine.classify(row).id === 'ngoai'));
+    const binhDong = engine.search(catalog.records, 'phuong binh dong hcm');
+    assert.equal(binhDong.length, 1);
+    assert.equal(engine.classify(binhDong[0]).id, 'mixed');
+    assert.ok(binhDong[0].matchedOrigins.some(origin => origin.districtName === 'Quận 8'));
+    assert.ok(binhDong[0].matchedOrigins.some(origin => origin.districtName === 'Huyện Bình Chánh'));
+    // Similar unaccented names must not merge distinct administrative units.
+    assert.equal(catalog.records.find(row => row.wardName === 'Xã Thạnh An' && row.provinceCode === '29').officialWardCode, '27676');
+    assert.equal(catalog.records.find(row => row.wardName === 'Xã Thanh An' && row.provinceCode === '29').officialWardCode, '25807');
 });
 
 test('province and area filters combine with search; no matches and blank search are handled', () => {

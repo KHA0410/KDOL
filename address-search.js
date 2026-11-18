@@ -5,8 +5,14 @@
         .replace(/[\u0300-\u036f]/g, '').replace(/[đĐ]/g, 'd').toLowerCase()
         .replace(/[^a-z0-9]+/g, ' ').trim().replace(/\s+/g, ' ');
 
-    const administrativeType = /\b(?:phuong|xa|dac khu|quan|huyen|thi xa|tinh|thanh pho|tp)\b/;
-    const stripType = value => value.replace(/^(?:phuong|xa|dac khu|quan|huyen|thi xa|tinh|thanh pho|tp) /, '');
+    const administrativeType = /\b(?:phuong|xa|dac khu|thi tran|quan|huyen|thi xa|tinh|thanh pho|tp)\b/;
+    const stripType = value => value.replace(/^(?:phuong|xa|dac khu|thi tran|quan|huyen|thi xa|tinh|thanh pho|tp) /, '');
+    const normalizeQuery = value => normalize(value)
+        .replace(/\b(?:tp hcm|tphcm|hcm)\b/g, 'ho chi minh')
+        .replace(/\bp\s*(\d+)\b/g, 'phuong $1')
+        .replace(/\bq\s*(\d+)\b/g, 'quan $1');
+    const makeFields = values => [...new Set(values.filter(Boolean).map(normalize))]
+        .map(full => ({ full, bare: stripType(full) }));
 
     function matchesNames(fields, query) {
         if (!query) return true;
@@ -34,6 +40,13 @@
     }
 
     function classify(record, rules = window.KDOL_ADDRESS_REGIONS) {
+        if (record.matchedOrigins?.length) {
+            const areas = new Set(record.matchedOrigins.map(origin => classify({
+                ...record, matchedOrigins: null, districtCode: origin.districtCode
+            }, rules).id));
+            if (areas.size > 1) return { id: 'mixed', label: 'Nội thành / Ngoại thành & Tỉnh' };
+            return classify({ ...record, matchedOrigins: null, districtCode: record.matchedOrigins[0].districtCode }, rules);
+        }
         const id = rules?.wardCodes?.[record.wardCode]
             ?? rules?.districtCodes?.[record.districtCode]
             ?? rules?.districtPrefixes?.[record.districtCode?.slice(0, 3)]
@@ -49,24 +62,30 @@
                 record,
                 ward: normalize(record.wardName),
                 name: normalize(record.wardName).replace(/^(phuong|xa|dac khu) /, ''),
-                fields: [record.wardName, record.districtName, record.provinceName].map(value => {
-                    const full = normalize(value);
-                    return { full, bare: stripType(full) };
-                }),
-                codes: [record.wardCode, record.districtCode, record.provinceCode, record.provinceTmsCode]
+                branches: record.origins?.length
+                    ? record.origins.map(origin => ({ origin, fields: makeFields([
+                        record.wardName, record.provinceName, origin.wardName, origin.districtName, origin.provinceName
+                    ]) }))
+                    : [{ fields: makeFields([record.wardName, record.districtName, record.provinceName]) }],
+                codes: [record.wardCode, record.officialWardCode, record.districtCode, record.provinceCode, record.provinceTmsCode].filter(Boolean)
             })));
         }
-        const normalized = normalize(query);
+        const normalized = normalizeQuery(query);
         const numeric = /^\d+$/.test(normalized);
         return indexes.get(records)
-            .filter(item => (!provinceCode || item.record.provinceCode === provinceCode)
-                && (!area || classify(item.record).id === area)
-                && (matchesNames(item.fields, normalized)
-                    || (numeric && item.codes.some(code => code.startsWith(normalized)))))
-            .map(item => ({ record: item.record, score: !normalized ? 0
-                : item.record.wardCode === normalized ? 4
+            .filter(item => !provinceCode || item.record.provinceCode === provinceCode)
+            .map(item => {
+                const codeMatch = numeric && item.codes.some(code => code.startsWith(normalized));
+                const branches = item.branches.filter(branch => codeMatch || matchesNames(branch.fields, normalized));
+                if (!branches.length) return null;
+                const record = item.record.origins?.length && normalized
+                    ? { ...item.record, matchedOrigins: branches.map(branch => branch.origin) } : item.record;
+                return { record, score: !normalized ? 0
+                : item.record.wardCode === normalized || item.record.officialWardCode === normalized ? 4
                 : item.ward === normalized || item.name === normalized ? 3
-                : item.ward.startsWith(normalized) || item.name.startsWith(normalized) ? 2 : 1 }))
+                : item.ward.startsWith(normalized) || item.name.startsWith(normalized) ? 2 : 1 };
+            })
+            .filter(item => item && (!area || classify(item.record).id === area))
             .sort((a, b) => b.score - a.score)
             .map(item => item.record);
     }

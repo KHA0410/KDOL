@@ -31,8 +31,8 @@
     <script src="internet-data.js"></script>
     <script src="internet-business-data.js?v=20261117-4"></script>
     <script src="address-regions.js?v=20261118-2"></script>
-    <script src="address-search.js?v=20261118-3"></script>
-    <link rel="stylesheet" href="styles.css?v=20261118-2">
+    <script src="address-search.js?v=20261118-4"></script>
+    <link rel="stylesheet" href="styles.css?v=20261118-4">
 </head>
 <body class="bg-gray-100 h-screen flex flex-col font-sans">
     <div id="app" v-cloak class="flex flex-col h-full overflow-hidden">
@@ -55,8 +55,8 @@
                     </button>
                 </div>
                 <div class="kdol-address-controls">
-                    <label for="address-query" class="sr-only">Tìm quận/huyện cũ hoặc phường/xã mới</label>
-                    <input ref="addressQueryInput" id="address-query" v-model="addressQuery" class="kdol-address-input" type="search" placeholder="Tìm quận/huyện cũ hoặc phường/xã mới…" autocomplete="off" spellcheck="false">
+                    <label for="address-query" class="sr-only">Tìm địa chỉ trước hoặc sau sáp nhập</label>
+                    <input ref="addressQueryInput" id="address-query" v-model="addressQuery" class="kdol-address-input" type="search" placeholder="Nhập địa chỉ cũ hoặc mới…" autocomplete="off" spellcheck="false">
                 </div>
                 <div class="kdol-address-results" :aria-busy="addressLoading">
                     <p v-if="addressLoading" class="kdol-address-empty" role="status">Đang tải danh mục địa chỉ…</p>
@@ -71,7 +71,14 @@
                         <ol v-else class="kdol-address-list">
                             <li v-for="record in visibleAddresses" :key="record.wardCode" class="kdol-address-card">
                                 <dl class="kdol-address-comparison">
-                                    <div><dt>Trước · quận/huyện cũ</dt><dd>{{ record.districtName }}</dd></div>
+                                    <div>
+                                        <dt>{{ record.origins?.length ? 'Trước sáp nhập' : 'Trước · quận/huyện cũ' }}</dt>
+                                        <dd v-for="(origin, index) in (record.matchedOrigins || record.origins || [])" :key="index" class="kdol-address-origin">
+                                            {{ [origin.wardName, origin.districtName].filter(Boolean).join(', ') }}
+                                            <span class="kdol-address-province">{{ origin.provinceName }}</span>
+                                        </dd>
+                                        <dd v-if="!record.origins?.length">{{ record.districtName }}</dd>
+                                    </div>
                                     <div><dt>Sau sáp nhập</dt><dd>{{ record.wardName }}</dd><dd class="kdol-address-province">{{ record.provinceName }}</dd></div>
                                 </dl>
                                 <span :class="['kdol-address-tag', 'kdol-address-tag--' + getAddressArea(record).id]">{{ getAddressArea(record).label }}</span>
@@ -2593,7 +2600,7 @@
                         if (!window.KDOL_ADDRESSES) {
                             await new Promise((resolve, reject) => {
                                 const script = document.createElement('script');
-                                script.src = 'address-data.js?v=20261118-1';
+                                script.src = 'address-data.js?v=20261118-2';
                                 script.onload = () => { script.remove(); resolve(); };
                                 script.onerror = () => { script.remove(); reject(new Error('Không tải được dữ liệu')); };
                                 document.head.appendChild(script);

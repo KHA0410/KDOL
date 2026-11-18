@@ -98,11 +98,14 @@
 .kdol-address-tag { display: inline-block; flex-shrink: 0; padding: 0.1875rem 0.5rem; border: 1px solid var(--kdol-color-border); border-radius: var(--kdol-radius-md); font-size: 0.6875rem; line-height: 1rem; font-weight: 600; }
 .kdol-address-tag--noi { background: var(--kdol-color-primary-light); color: var(--kdol-color-primary); }
 .kdol-address-tag--ngoai { background: #ecfdf5; color: var(--kdol-color-signature); }
-.kdol-address-tag--unknown { background: var(--kdol-color-control); color: #475569; }
+.kdol-address-tag--unknown,
+.kdol-address-tag--mixed { background: var(--kdol-color-control); color: #475569; }
 .kdol-address-comparison { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.625rem 1rem; width: 100%; }
 .kdol-address-comparison dt { margin-bottom: 0.25rem; color: #64748b; font-size: 0.6875rem; }
 .kdol-address-comparison dd { font-size: 0.875rem; line-height: 1.375rem; overflow-wrap: anywhere; }
 .kdol-address-comparison .kdol-address-province { color: #64748b; font-size: 0.75rem; }
+.kdol-address-origin + .kdol-address-origin { margin-top: 0.625rem; }
+.kdol-address-origin .kdol-address-province { display: block; }
 .kdol-address-empty { padding: 2rem 0.75rem; color: #64748b; font-size: 0.875rem; text-align: center; }
 .kdol-address-more { display: block; min-height: 2.75rem; margin: 0.75rem auto 0; padding: 0.5rem 1rem; border: 1px solid var(--kdol-color-border-light); border-radius: var(--kdol-radius-lg); background: var(--kdol-color-primary-light); color: var(--kdol-color-primary); font-size: 0.8125rem; font-weight: 600; cursor: pointer; }
 .kdol-address-dialog :is(button, input):focus-visible { outline: 2px solid var(--kdol-color-primary); outline-offset: 2px; }
