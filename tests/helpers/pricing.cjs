@@ -24,7 +24,7 @@ function readPlans(serviceIds = ['vnptca', 'smartca']) {
         .filter(plan => serviceIds.includes(plan.service_id));
 }
 
-function loadPricing(client = {}) {
+function loadPricing(client = {}, extraFiles = []) {
     const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
     const script = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
         .filter(match => !/\bsrc\s*=/.test(match[1])).at(-1)[2];
@@ -35,7 +35,7 @@ function loadPricing(client = {}) {
         navigator: { clipboard: { writeText(text) { copied = text; return Promise.resolve(); } } }
     };
     vm.createContext(sandbox);
-    for (const file of ['vnptca-data.js', 'smartca-usage-data.js', 'smartca-household-data.js', 'bhxh-data.js', 'invoice-data.js', 'inbot-data.js', 'pos-data.js', 'econtract-data.js', 'receipt-data.js', 'hkd-data.js', 'internet-data.js', 'internet-business-data.js']) {
+    for (const file of ['vnptca-data.js', 'smartca-usage-data.js', 'smartca-household-data.js', 'bhxh-data.js', 'invoice-data.js', 'inbot-data.js', 'pos-data.js', 'econtract-data.js', 'receipt-data.js', 'hkd-data.js', 'internet-data.js', 'internet-business-data.js', ...extraFiles]) {
         vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), sandbox);
     }
     vm.runInContext(script, sandbox);
