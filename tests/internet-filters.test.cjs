@@ -15,11 +15,18 @@ async function loadInternet() {
 
 const names = rows => Array.from(rows, row => row.name);
 
-test('speed options normalize Mbps, ULM and Gbps and combine with other customer needs', async () => {
+test('minimum speed options normalize Mbps, ULM and Gbps and combine with other customer needs', async () => {
     const state = await loadInternet();
     assert.deepEqual(Array.from(state.internetFilterDefinitions[0].options, option => option.id), ['', '300', '500', '1000', '2500']);
+    assert.deepEqual(Array.from(state.internetFilterDefinitions[0].options, option => option.label), ['Tất cả', 'Từ 300 Mbps', 'Từ 500 Mbps', 'Từ 1 Gbps', 'Từ 2.5 Gbps']);
+    state.internetFilters.speed = '500';
+    assert.ok(names(state.internetMatrixRows).includes('Home 2'));
+    assert.ok(names(state.internetMatrixRows).includes('Home X'));
+    assert.equal(names(state.internetMatrixRows).includes('Home 1'), false);
+    assert.deepEqual(names(state.internetMobileRows), ['Home Đỉnh']);
+    assert.equal(state.getInternetFilterLabel(state.internetFilterDefinitions[0]), 'Từ 500 Mbps');
     state.internetFilters.speed = '1000';
-    assert.deepEqual(names(state.internetMatrixRows), ['Home 3', 'HomeTV 3', 'HomeTV VIP 3', 'Home Cam 3']);
+    assert.deepEqual(names(state.internetMatrixRows), ['Home 3', 'Home X', 'HomeTV 3', 'HomeTV VIP 3', 'Home Cam 3']);
     assert.equal(state.internetMobileRows.length, 0);
     state.internetFilters.camera = 'yes';
     state.internetFilters.mesh = '2';

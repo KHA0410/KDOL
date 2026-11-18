@@ -33,7 +33,7 @@
     <script src="fiber-renewal-data.js?v=20261118-3"></script>
     <script src="address-regions.js?v=20261118-2"></script>
     <script src="address-search.js?v=20261118-4"></script>
-    <link rel="stylesheet" href="styles.css?v=20261118-12">
+    <link rel="stylesheet" href="styles.css?v=20261118-14">
 </head>
 <body class="bg-gray-100 h-screen flex flex-col font-sans">
     <div id="app" v-cloak class="flex flex-col h-full overflow-hidden">
@@ -1439,7 +1439,7 @@
                                 <div v-if="openInternetFilter === filter.id" :id="'internet-filter-options-' + filter.id" class="kdol-internet-filter-options" role="group" :aria-labelledby="'internet-filter-' + filter.id">
                                     <button v-for="option in filter.options" :key="option.id" type="button" class="kdol-internet-filter-option"
                                         :class="{ 'kdol-internet-filter-option--active': internetFilters[filter.id] === option.id }"
-                                        :aria-pressed="internetFilters[filter.id] === option.id" @click="internetFilters[filter.id] = option.id">
+                                        :aria-pressed="internetFilters[filter.id] === option.id" @click="selectInternetFilter(filter.id, option.id)">
                                         {{ option.label }}
                                     </button>
                                 </div>
@@ -1456,7 +1456,6 @@
                                 {{ months === 12 ? '12-13' : months }} tháng
                             </button>
                         </div>
-                        <p v-if="internetMonths === 12" class="kdol-internet-footnote">Trả trước 12 tháng, tặng 1 tháng: sử dụng 13 tháng.</p>
                         <div class="kdol-internet-install-options">
                             <label class="kdol-internet-toggle" title="Phí lắp đặt được cộng một lần vào tổng tiền của kỳ đang chọn.">
                                 <input type="checkbox" v-model="includeInternetSetupFee" class="kdol-internet-toggle__input">
@@ -1645,8 +1644,48 @@
                             <div class="kdol-internet-terms kdol-business-terms" role="group" aria-label="Kỳ thanh toán doanh nghiệp">
                                 <button v-for="period in internetBusinessCatalog.periods" :key="period.id" type="button" @click="businessInternetPeriod = period.id" :aria-pressed="businessInternetPeriod === period.id" class="kdol-internet-term" :class="{ 'kdol-internet-term--active': businessInternetPeriod === period.id }">{{ period.label }}</button>
                             </div>
-                            <div class="kdol-choice-group kdol-business-schemes" role="group" aria-label="Mức giá Internet doanh nghiệp">
-                                <button v-for="scheme in internetBusinessCatalog.schemes" :key="scheme.id" type="button" @click="businessInternetScheme = scheme.id" :aria-pressed="businessInternetScheme === scheme.id" :class="['kdol-choice', businessInternetScheme === scheme.id ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">{{ scheme.label }}</button>
+                            <div class="kdol-business-filter-actions">
+                                <div class="kdol-choice-group kdol-business-schemes" role="group" aria-label="Mức giá Internet doanh nghiệp">
+                                    <button v-for="scheme in internetBusinessCatalog.schemes" :key="scheme.id" type="button" @click="businessInternetScheme = scheme.id" :aria-pressed="businessInternetScheme === scheme.id" :class="['kdol-choice', businessInternetScheme === scheme.id ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">{{ scheme.label }}</button>
+                                </div>
+                                <button type="button" class="kdol-internet-filter-toggle"
+                                    :class="{ 'kdol-internet-filter-toggle--active': showBusinessInternetFilters || businessInternetFilterCount }"
+                                    @click="toggleBusinessInternetFilters" :aria-expanded="showBusinessInternetFilters" aria-controls="business-internet-filters"
+                                    :aria-label="'Lọc gói doanh nghiệp theo nhu cầu' + (businessInternetFilterCount ? ', đang chọn ' + businessInternetFilterCount + ' tiêu chí' : '')" title="Lọc gói doanh nghiệp theo nhu cầu">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16l-6 7v7l-4 2v-9Z"/></svg>
+                                    <span v-if="businessInternetFilterCount" class="kdol-internet-filter-count" aria-hidden="true">{{ businessInternetFilterCount }}</span>
+                                </button>
+                            </div>
+                            <div v-if="showBusinessInternetFilters" id="business-internet-filters" class="kdol-internet-filters" @keydown.esc.stop.prevent="closeBusinessInternetFilterOptions">
+                                <div class="kdol-internet-filter-tags kdol-business-filter-tags" role="group" aria-label="Tiêu chí lọc gói doanh nghiệp">
+                                    <button v-for="filter in businessInternetFilterDefinitions" :key="filter.id" :id="'business-internet-filter-' + filter.id" type="button"
+                                        class="kdol-internet-filter-tag"
+                                        :class="{ 'kdol-internet-filter-tag--selected': isBusinessInternetFilterSelected(filter.id), 'kdol-internet-filter-tag--open': openBusinessInternetFilter === filter.id }"
+                                        @click="openBusinessInternetFilter = openBusinessInternetFilter === filter.id ? '' : filter.id"
+                                        :aria-expanded="openBusinessInternetFilter === filter.id" :aria-controls="'business-internet-filter-options-' + filter.id"
+                                        :aria-label="filter.label + ': ' + getBusinessInternetFilterLabel(filter)" :title="filter.label + ': ' + getBusinessInternetFilterLabel(filter)">
+                                        <span class="kdol-internet-filter-label">{{ filter.label }}</span>
+                                        <span class="kdol-internet-filter-value">{{ getBusinessInternetFilterLabel(filter, true) }}</span>
+                                    </button>
+                                </div>
+                                <template v-for="filter in businessInternetFilterDefinitions" :key="filter.id">
+                                    <div v-if="openBusinessInternetFilter === filter.id" :id="'business-internet-filter-options-' + filter.id" class="kdol-business-filter-panel" role="group" :aria-labelledby="'business-internet-filter-' + filter.id">
+                                        <div v-for="group in filter.groups" :key="group.id" class="kdol-business-filter-group">
+                                            <p v-if="group.label" :id="'business-internet-filter-group-' + group.id" class="kdol-business-filter-group-label">{{ group.label }}</p>
+                                            <div class="kdol-internet-filter-options" role="group" :aria-label="group.label || filter.label">
+                                                <button v-for="option in group.options" :key="option.id" type="button" class="kdol-internet-filter-option"
+                                                    :class="{ 'kdol-internet-filter-option--active': businessInternetFilters[group.id] === option.id }"
+                                                    :aria-pressed="businessInternetFilters[group.id] === option.id" @click="selectBusinessInternetFilter(filter.id, group.id, option.id)">
+                                                    {{ option.label }}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                                <div class="kdol-internet-filter-status">
+                                    <span role="status" aria-live="polite"><strong>{{ businessInternetFilteredCount }}</strong> gói phù hợp</span>
+                                    <button v-if="businessInternetFilterCount" type="button" class="kdol-internet-filter-clear" @click="resetBusinessInternetFilters">Xóa lọc</button>
+                                </div>
                             </div>
                             <div class="flex flex-wrap items-center justify-between gap-2 mt-3">
                                 <label class="kdol-internet-toggle"><input type="checkbox" v-model="includeBusinessInternetSetup" class="kdol-internet-toggle__input"><span>Phí lắp {{ new Intl.NumberFormat('vi-VN').format(Math.round(internetBusinessCatalog.setupPrice * (100 + businessInternetVat) / 100)) }}đ <span class="text-xs text-gray-500">(Gồm VAT)</span></span></label>
@@ -1686,7 +1725,10 @@
                                 <button v-if="businessInternetQuery" type="button" @click="businessInternetQuery = ''; $refs.businessInternetSearch.focus()" class="kdol-business-search-clear" aria-label="Xóa nội dung tìm kiếm" title="Xóa nội dung"><span aria-hidden="true">×</span></button>
                             </div>
                         </div>
-                        <p v-if="!businessInternetSections.length" class="kdol-empty-state">Không có gói phù hợp.</p>
+                        <div v-if="!businessInternetSections.length" class="kdol-empty-state">
+                            <p>Không có gói phù hợp<span v-if="businessInternetFilterCount"> với các nhu cầu đã chọn</span>.</p>
+                            <button v-if="businessInternetFilterCount" type="button" class="kdol-internet-filter-clear mt-2" @click="resetBusinessInternetFilters">Xóa lọc</button>
+                        </div>
                         <div v-else class="kdol-table-wrap">
                             <table class="kdol-internet-table kdol-business-table">
                                 <caption class="sr-only">Internet doanh nghiệp · {{ businessInternetSelectedScheme.label }} · {{ businessInternetSelectedPeriod.label }}</caption>
@@ -2030,6 +2072,9 @@
                     businessInternetOpenFamilies: {},
                     businessIpExpanded: false,
                     businessInternetQuery: '',
+                    showBusinessInternetFilters: false,
+                    openBusinessInternetFilter: '',
+                    businessInternetFilters: { speed: '', international: '', internationalKind: '', ip: '', mesh: '', backup: '' },
                     businessIpScheme: 'retail',
                     businessIpQuantities: { '4': 0, '5': 0, '6': 0, '7': 0 },
                     cameraCatalog: window.KDOL_CAMERA || null,
@@ -2258,11 +2303,40 @@
                     const query = this.businessInternetQuery.trim().toLocaleLowerCase('vi');
                     const plans = (this.internetBusinessCatalog?.plans || []).filter(plan => (this.businessInternetShowStopped || !plan.discontinued)
                         && Object.values(plan.prices[this.getBusinessInternetScheme(plan)] || {}).some(price => typeof price === 'number' && Number.isFinite(price))
-                        && (!query || (plan.name + ' ' + (plan.variantLabel || '')).toLocaleLowerCase('vi').includes(query)));
+                        && (!query || (plan.name + ' ' + (plan.variantLabel || '')).toLocaleLowerCase('vi').includes(query))
+                        && this.matchesBusinessInternetFilters(plan));
                     return (this.internetBusinessCatalog?.families || []).map(family => {
                         const namePattern = family.namePattern ? new RegExp(family.namePattern, 'i') : null;
                         return { ...family, plans: plans.filter(plan => plan.family === (family.sourceFamily || family.id) && (!namePattern || namePattern.test(plan.name))) };
                     }).filter(family => family.plans.length);
+                },
+                businessInternetFilterDefinitions() {
+                    const all = { id: '', label: 'Tất cả' };
+                    const speedOptions = values => [all, ...values.map(value => ({ id: String(value),
+                        label: 'Từ ' + (value >= 1000 ? `${value / 1000} Gbps` : `${value} Mbps`),
+                        shortLabel: '≥' + (value >= 1000 ? `${value / 1000}G` : `${value}M`) }))];
+                    return [
+                        { id: 'speed', label: 'Tốc độ', groups: [{ id: 'speed', options: speedOptions([100, 150, 300, 500, 1000, 2000, 2500]) }] },
+                        { id: 'international', label: 'Quốc tế', groups: [
+                            { id: 'internationalKind', label: 'Loại băng thông', options: [all, { id: 'committed', label: 'Cam kết' }, { id: 'limited', label: 'Giới hạn' }] },
+                            { id: 'international', label: 'Tốc độ tối thiểu', options: speedOptions([5, 10, 20, 50, 100, 200]) }
+                        ] },
+                        { id: 'ip', label: 'IP tĩnh', groups: [{ id: 'ip', options: [all,
+                            { id: 'dynamic', label: 'IP động', shortLabel: 'Động' }, { id: 'static', label: 'Có IP tĩnh', shortLabel: 'Có' },
+                            { id: 'wan', label: 'IP WAN tĩnh', shortLabel: 'WAN' }, { id: 'lan8', label: 'Block 8 IP LAN', shortLabel: '8 IP LAN' }] }] },
+                        { id: 'mesh', label: 'Mesh', groups: [{ id: 'mesh', options: [all,
+                            { id: 'yes', label: 'Có Mesh', shortLabel: 'Có' }, { id: 'no', label: 'Không Mesh', shortLabel: 'Không' },
+                            { id: '5', label: 'Mesh 5' }, { id: '6', label: 'Mesh 6' }] }] },
+                        { id: 'backup', label: 'Dự phòng', groups: [{ id: 'backup', options: [all,
+                            { id: 'yes', label: 'Có dự phòng', shortLabel: 'Có' }, { id: 'no', label: 'Không dự phòng', shortLabel: 'Không' },
+                            { id: 'mobile', label: '4G/5G' }, { id: 'fiber', label: 'Fiber' }, { id: 'both', label: '4G/5G + Fiber', shortLabel: 'Cả hai' }] }] }
+                    ];
+                },
+                businessInternetFilterCount() {
+                    return ['speed', 'international', 'ip', 'mesh', 'backup'].filter(id => this.isBusinessInternetFilterSelected(id)).length;
+                },
+                businessInternetFilteredCount() {
+                    return this.businessInternetSections.reduce((total, family) => total + family.plans.length, 0);
                 },
                 businessInternetStoppedCount() {
                     return (this.internetBusinessCatalog?.plans || []).filter(plan => plan.discontinued).length;
@@ -2308,7 +2382,7 @@
                         .map(row => this.getInternetSpeedMbps(row.speed)).filter(speed => speed > 0));
                     return [
                         { id: 'speed', label: 'Tốc độ', options: [all, ...[...speeds].sort((a, b) => a - b)
-                            .map(speed => ({ id: String(speed), label: speed >= 1000 ? `${speed / 1000} Gbps` : `${speed} Mbps` }))] },
+                            .map(speed => ({ id: String(speed), label: 'Từ ' + (speed >= 1000 ? `${speed / 1000} Gbps` : `${speed} Mbps`) }))] },
                         { id: 'mytv', label: 'MyTV', options: [all,
                             { id: 'yes', label: 'Có MyTV', shortLabel: 'Có' }, { id: 'no', label: 'Không MyTV', shortLabel: 'Không dùng' },
                             { id: 's', label: 'S1/S2' }, { id: 'flexi', label: 'Flexi' },
@@ -3040,7 +3114,7 @@
                     return /^\d+$/.test(query) ? channel.number === query : this.normalizeMytvSearch(channel.name).includes(query);
                 },
                 isBusinessInternetFamilyOpen(id) {
-                    return this.businessInternetOpenFamilies[id] ?? (Boolean(this.businessInternetQuery.trim()) || this.businessInternetShowDetails);
+                    return this.businessInternetOpenFamilies[id] ?? (Boolean(this.businessInternetQuery.trim()) || this.businessInternetShowDetails || this.businessInternetFilterCount > 0);
                 },
                 toggleBusinessInternetFamily(id) {
                     if (!this.internetBusinessCatalog?.families.some(family => family.id === id)) return;
@@ -3054,6 +3128,8 @@
                     if (Number.isSafeInteger(quantity)) this.businessIpQuantities[id] = quantity;
                 },
                 resetBusinessInternetOptions() {
+                    this.showBusinessInternetFilters = false;
+                    this.resetBusinessInternetFilters();
                     this.businessInternetPeriod = 'monthly';
                     this.businessInternetScheme = 'retail';
                     this.includeBusinessInternetSetup = false;
@@ -3113,9 +3189,82 @@
                         + ', đã gồm VAT ' + this.businessInternetVat + '%.' + (extra.length ? ' Đã cộng ' + extra.join('; ') + '.' : '') + ' ' + parts.join('; ') + '.';
                     navigator.clipboard.writeText(textToCopy).then(() => this.showToast('Đã copy: ' + this.formatPrice(total)));
                 },
+                toggleBusinessInternetFilters() {
+                    this.showBusinessInternetFilters = !this.showBusinessInternetFilters;
+                    if (!this.showBusinessInternetFilters) this.openBusinessInternetFilter = '';
+                },
+                isBusinessInternetFilterSelected(id) {
+                    return this.businessInternetFilters[id] !== '' || (id === 'international' && this.businessInternetFilters.internationalKind !== '');
+                },
+                getBusinessInternetFilterLabel(filter, compact = false) {
+                    const labels = filter.groups.map(group => {
+                        if (!this.businessInternetFilters[group.id]) return '';
+                        const option = group.options.find(option => option.id === this.businessInternetFilters[group.id]);
+                        if (compact && group.id === 'internationalKind' && this.businessInternetFilters.international) {
+                            return option?.id === 'committed' ? 'CK' : 'GH';
+                        }
+                        return (compact ? option?.shortLabel : '') || option?.label || '';
+                    }).filter(Boolean);
+                    return labels.join(compact ? ' ' : ' · ') || 'Tất cả';
+                },
+                selectBusinessInternetFilter(filterId, groupId, optionId) {
+                    const group = this.businessInternetFilterDefinitions.find(filter => filter.id === filterId)?.groups.find(group => group.id === groupId);
+                    if (!group?.options.some(option => option.id === optionId)) return;
+                    this.businessInternetFilters[groupId] = optionId;
+                    this.openBusinessInternetFilter = '';
+                    this.businessInternetOpenFamilies = {};
+                    this.$nextTick(() => this.focusInternetFilterTrigger('business-internet-filter-' + filterId));
+                },
+                closeBusinessInternetFilterOptions() {
+                    const trigger = this.openBusinessInternetFilter;
+                    this.openBusinessInternetFilter = '';
+                    if (trigger) document.getElementById('business-internet-filter-' + trigger)?.focus();
+                },
+                resetBusinessInternetFilters() {
+                    this.businessInternetFilters = { speed: '', international: '', internationalKind: '', ip: '', mesh: '', backup: '' };
+                    this.openBusinessInternetFilter = '';
+                    this.businessInternetOpenFamilies = {};
+                },
+                matchesBusinessInternetFilters(plan) {
+                    const filters = this.businessInternetFilters;
+                    if (filters.speed && !(Number(plan.domesticMbps) >= Number(filters.speed))) return false;
+                    if (filters.international && !(typeof plan.internationalMbps === 'number' && plan.internationalMbps >= Number(filters.international))) return false;
+                    if (filters.internationalKind) {
+                        const kind = filters.internationalKind === 'committed' ? 'Cam kết' : 'Giới hạn';
+                        if (plan.internationalMbps === null || plan.internationalMbps === undefined || plan.internationalKind !== kind) return false;
+                    }
+                    const ipv4 = String(plan.ipv4 || '').trim();
+                    if (filters.ip === 'dynamic' && !/động/i.test(ipv4)) return false;
+                    if (filters.ip === 'static' && !/tĩnh/i.test(ipv4)) return false;
+                    if (filters.ip === 'wan' && !/wan\s+tĩnh/i.test(ipv4)) return false;
+                    if (filters.ip === 'lan8' && !/block\s*0?8\b/i.test(ipv4)) return false;
+                    const mesh = String(plan.mesh || '').trim();
+                    const hasMesh = /\bMesh\b/i.test(mesh);
+                    if ((filters.mesh === 'yes' && !hasMesh) || (filters.mesh === 'no' && hasMesh)) return false;
+                    if (['5', '6'].includes(filters.mesh) && !new RegExp('\\bMesh\\s*' + filters.mesh + '\\b', 'i').test(mesh)) return false;
+                    const mobile = /\d+\s*GB\b/i.test(plan.backupMobile || '');
+                    const fiber = /^Fiber/i.test(String(plan.backupFiber || '').trim());
+                    if ((filters.backup === 'yes' && !mobile && !fiber) || (filters.backup === 'no' && (mobile || fiber))) return false;
+                    if ((filters.backup === 'mobile' && !mobile) || (filters.backup === 'fiber' && !fiber) || (filters.backup === 'both' && (!mobile || !fiber))) return false;
+                    return true;
+                },
                 toggleInternetFilters() {
                     this.showInternetFilters = !this.showInternetFilters;
                     if (!this.showInternetFilters) this.openInternetFilter = '';
+                },
+                selectInternetFilter(filterId, optionId) {
+                    this.internetFilters[filterId] = optionId;
+                    this.openInternetFilter = '';
+                    this.$nextTick(() => this.focusInternetFilterTrigger('internet-filter-' + filterId));
+                },
+                focusInternetFilterTrigger(id) {
+                    const trigger = document.getElementById(id);
+                    trigger?.focus({ preventScroll: true });
+                    trigger?.scrollIntoView({
+                        block: 'nearest',
+                        inline: 'nearest',
+                        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'
+                    });
                 },
                 closeInternetFilterOptions() {
                     const trigger = this.openInternetFilter;
@@ -3128,7 +3277,7 @@
                 },
                 getInternetFilterLabel(filter) {
                     const option = filter.options.find(option => option.id === this.internetFilters[filter.id]);
-                    return option?.shortLabel || option?.label || this.internetFilters[filter.id] + ' Mbps';
+                    return option?.shortLabel || option?.label || 'Từ ' + this.internetFilters[filter.id] + ' Mbps';
                 },
                 getInternetSpeedMbps(speed) {
                     const match = String(speed || '').match(/(\d+(?:[.,]\d+)?)\s*(Gbps|Mbps|ULM)/i);
@@ -3136,7 +3285,7 @@
                 },
                 matchesInternetFilters(plan, row, configuration = 'none') {
                     const filters = this.internetFilters;
-                    if (filters.speed && this.getInternetSpeedMbps(row.speed) !== Number(filters.speed)) return false;
+                    if (filters.speed && !(this.getInternetSpeedMbps(row.speed) >= Number(filters.speed))) return false;
                     const note = plan.note || '';
                     // Home Slay_M cho chọn Mesh hoặc MyTV, không gồm đồng thời cả hai.
                     const alternatives = note.split(/\s+hoặc\s+/i);

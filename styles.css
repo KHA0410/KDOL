@@ -735,8 +735,18 @@ input[type="range"]::-webkit-slider-thumb {
 .kdol-renewal-toolbar :is(input, select, button):focus-visible { outline: 2px solid var(--kdol-color-primary); outline-offset: 2px; }
 
 .kdol-business-terms { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.kdol-business-schemes { width: max-content; margin-top: 0.75rem; overflow-x: auto; }
+.kdol-business-filter-actions { display: flex; align-items: center; gap: 0.5rem; min-width: 0; margin-top: 0.75rem; }
+.kdol-business-filter-actions .kdol-internet-filter-toggle { flex: 0 0 1.875rem; margin-left: auto; }
+.kdol-business-schemes { flex: 0 1 auto; min-width: 0; width: max-content; overflow-x: auto; }
 .kdol-business-schemes .kdol-choice { padding: 0.25rem 0.375rem; font-size: 0.6875rem; }
+.kdol-business-filter-tags { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.kdol-business-filter-tags .kdol-internet-filter-tag { grid-template-columns: minmax(0, 1fr); padding: 0.5rem 0.25rem; text-align: center; }
+.kdol-business-filter-tags .kdol-internet-filter-label { grid-column: 1 / -1; white-space: nowrap; }
+.kdol-business-filter-tags .kdol-internet-filter-value { font-size: 0.625rem; }
+.kdol-business-filter-panel { margin-top: 0.625rem; padding: 0.5rem; border: 1px solid var(--kdol-color-border); border-radius: var(--kdol-radius-md); background-color: var(--kdol-color-surface-muted); }
+.kdol-business-filter-group + .kdol-business-filter-group { margin-top: 0.625rem; padding-top: 0.625rem; border-top: 1px solid var(--kdol-color-border); }
+.kdol-business-filter-group-label { margin-bottom: 0.375rem; color: #64748b; font-size: 0.6875rem; line-height: 1rem; }
+.kdol-business-filter-panel .kdol-internet-filter-options { margin-top: 0; padding: 0; border: 0; background-color: transparent; }
 .kdol-business-ip { margin-top: 0.75rem; color: #475569; font-size: 0.75rem; }
 .kdol-business-tools { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-top: 0.75rem; }
 .kdol-business-ip-trigger { display: inline-flex; align-items: baseline; gap: 0.25rem; min-width: 0; padding: 0; color: var(--kdol-color-primary); font-size: 0.75rem; line-height: 1.25rem; text-align: left; cursor: pointer; }
