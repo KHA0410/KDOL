@@ -77,18 +77,18 @@ window.KDOL_MYTV = (() => {
     const basic = { vtv, htv, entertainment: entertainmentBasic, education: educationBasic, news: newsBasic, essential, local };
     const extended = { vtv, htv, movies, entertainment: entertainmentExtended, kids, education: educationExtended, news: newsExtended, essential, local };
     const specifications = [
-        { id: 's', name: 'S', channelCount: '109', monthlyPrice: 20000, highlights: 'VTV · HTV · Địa phương', galaxy: 'Galaxy VIP vào thứ 7 hằng tuần', lineup: basic },
-        { id: 's1', name: 'S1', channelCount: '130', monthlyPrice: 30000, highlights: 'VTVcab · HBO', galaxy: 'Galaxy VIP vào thứ 7 hằng tuần', lineup: { ...basic, vtvcab, movies: [movies[0]] } },
-        { id: 's2', name: 'S2', channelCount: '131', monthlyPrice: 30000, highlights: 'SCTV · HBO', galaxy: 'Galaxy VIP vào thứ 7 hằng tuần', lineup: { ...basic, sctv, movies: [movies[0]] } },
-        { id: 'film', name: 'Film', channelCount: 'Gần 120', monthlyPrice: 65000, highlights: '2 kênh thể thao SPOTV độc quyền\nMiễn phí Galaxy VIP\nKho nội dung VOD giải trí phong phú (không quảng cáo)', galaxy: 'Galaxy VIP', lineup: { ...extended, vtv: [vtv[0], vtv[4]], sports } },
-        { id: 'film-plus', name: 'Film+', channelCount: 'Gần 130', monthlyPrice: 65000, highlights: 'Miễn phí Galaxy VIP\nKho nội dung VOD giải trí phong phú (không quảng cáo)', galaxy: 'Galaxy VIP', lineup: extended },
-        { id: 'flexi-1', name: 'Flexi 1', channelCount: 'Gần 150', monthlyPrice: 65000, highlights: 'Chùm 20 kênh VTVcab\nMiễn phí Galaxy Play cao cấp\nKho nội dung VOD giải trí phong phú', galaxy: 'Galaxy Play cao cấp', lineup: { ...extended, vtvcab } },
-        { id: 'flexi-2', name: 'Flexi 2', channelCount: 'Gần 150', monthlyPrice: 65000, highlights: 'Chùm 21 kênh SCTV\nMiễn phí Galaxy Play cao cấp\nKho nội dung VOD giải trí phong phú', galaxy: 'Galaxy Play cao cấp', lineup: { ...extended, sctv } },
+        { id: 's', name: 'S', channelCount: '109', monthlyPrice: 20000, highlights: '69 HD · 40 SD\nVTV · HTV · Địa phương\nKhông có chùm VTVcab và chùm kênh quốc tế\nKho VOD có quảng cáo\nGalaxy Cao Cấp vào thứ 7 hằng tuần', galaxy: 'Galaxy Cao Cấp vào thứ 7 hằng tuần', lineup: basic },
+        { id: 's1', name: 'S1', channelCount: '130', monthlyPrice: 30000, highlights: '90 HD · 40 SD\nChùm kênh VTVcab\nKhông có chùm kênh quốc tế\nKho VOD có quảng cáo\nGalaxy Cao Cấp vào thứ 7 hằng tuần', galaxy: 'Galaxy Cao Cấp vào thứ 7 hằng tuần', lineup: { ...basic, vtvcab, movies: [movies[0]] } },
+        { id: 's2', name: 'S2', channelCount: '131', monthlyPrice: 30000, highlights: '91 HD · 40 SD\nChùm kênh SCTV\nKhông có chùm kênh quốc tế\nKho VOD có quảng cáo\nGalaxy Cao Cấp vào thứ 7 hằng tuần', galaxy: 'Galaxy Cao Cấp vào thứ 7 hằng tuần', lineup: { ...basic, sctv, movies: [movies[0]] } },
+        { id: 'film', name: 'Film', channelCount: '117', monthlyPrice: 65000, highlights: 'VTV1 · VTV5 · Các kênh trong nước khác\nChùm kênh quốc tế\n2 kênh thể thao SPOTV độc quyền\nMiễn phí Galaxy VIP\nKho VOD không quảng cáo', galaxy: 'Galaxy VIP', lineup: { ...extended, vtv: [vtv[0], vtv[4]], sports } },
+        { id: 'film-plus', name: 'Film+', channelCount: '125', monthlyPrice: 65000, highlights: 'Chùm kênh trong nước (VTV, HTV…) và quốc tế\nKhông gồm 2 kênh SPOTV\nMiễn phí Galaxy VIP\nKho VOD không quảng cáo', galaxy: 'Galaxy VIP', lineup: extended },
+        { id: 'flexi-1', name: 'Flexi 1', channelCount: '145', monthlyPrice: 65000, highlights: 'Chùm kênh trong nước (VTV, HTV…) và quốc tế\nChùm 20 kênh VTVcab\nKhông gồm 2 kênh SPOTV\nMiễn phí Galaxy Play cao cấp\nKho VOD có quảng cáo', galaxy: 'Galaxy Play cao cấp', lineup: { ...extended, vtvcab } },
+        { id: 'flexi-2', name: 'Flexi 2', channelCount: '146', monthlyPrice: 65000, highlights: 'Chùm kênh trong nước (VTV, HTV…) và quốc tế\nChùm 21 kênh SCTV\nKhông gồm 2 kênh SPOTV\nMiễn phí Galaxy Play cao cấp\nKho VOD có quảng cáo', galaxy: 'Galaxy Play cao cấp', lineup: { ...extended, sctv } },
         {
-            id: 'vip', name: 'MyTV VIP', channelCount: 'Gần 170', monthlyPrice: 95000,
-            highlights: 'Chùm kênh SCTV và VTVcab\n2 kênh thể thao SPOTV độc quyền\nMiễn phí Galaxy VIP\nKho nội dung VOD giải trí phong phú (không quảng cáo)',
+            id: 'vip', name: 'MyTV VIP', channelCount: '168', monthlyPrice: 95000,
+            highlights: 'Chùm kênh trong nước (VTV, HTV…) và quốc tế\nChùm kênh SCTV và VTVcab\n2 kênh thể thao SPOTV độc quyền\nMiễn phí Galaxy VIP\nKho VOD không quảng cáo',
             galaxy: 'Galaxy VIP', lineup: { vtv, htv, vtvcab, sctv, sports },
-            channelNote: 'Danh sách tra cứu hiện gồm các chùm VTV, HTV, VTVcab, SCTV và 2 kênh SPOTV. Chưa có danh sách đầy đủ gần 170 kênh của gói VIP.',
+            channelNote: 'Danh sách tra cứu hiện gồm các chùm VTV, HTV, VTVcab, SCTV và 2 kênh SPOTV. Chưa có danh sách đầy đủ 168 kênh của gói VIP.',
             poster: null, deviceSummary: null, replaySummary: null
         }
     ];

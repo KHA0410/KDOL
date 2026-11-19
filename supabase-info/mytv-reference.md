@@ -4,29 +4,29 @@ Mục tiêu: so sánh nhanh các gói và tìm kênh phù hợp khi tư vấn. D
 
 ## Nguồn
 
-Bảy ảnh do người dùng cung cấp từ thư mục `D:\MY VNPT\MyTV`, dành cho khách hàng sử dụng mạng VNPT, cùng ảnh bảng giá và quyền lợi MyTV VIP bổ sung trong cuộc trò chuyện. Dữ liệu là bản chép từ ảnh, chưa xác minh trực tiếp với danh mục MyTV đang phát sóng. Không tự suy diễn gói tên lớn hơn sẽ bao gồm toàn bộ kênh của gói trước.
+Bảy ảnh do người dùng cung cấp từ thư mục `D:\MY VNPT\MyTV`, dành cho khách hàng sử dụng mạng VNPT, cùng ảnh bảng giá và quyền lợi MyTV VIP bổ sung trong cuộc trò chuyện. Bảng so sánh người dùng gửi ngày 2026-11-19 được ưu tiên cho số kênh và quyền lợi. Riêng danh sách VTV của Film giữ VTV1 và VTV5 theo tờ rơi và đính chính của người dùng; mô tả không gồm VTV2–VTV9 trong bảng so sánh không được dùng để loại VTV5. Dữ liệu là bản chép từ ảnh, chưa xác minh trực tiếp với danh mục MyTV đang phát sóng. Không tự suy diễn gói tên lớn hơn sẽ bao gồm toàn bộ kênh của gói trước.
 
-| Gói | Ảnh nguồn | Số kênh công bố trong ảnh | Số mục được liệt kê và nhập để tra cứu |
+| Gói | Ảnh nguồn danh sách kênh | Số kênh công bố theo bảng mới nhất | Số mục đã nhập để tra cứu |
 | --- | --- | --- | ---: |
 | S | `S.jpg` | 109 | 88 |
 | S1 | `S1.jpg` | 130 | 109 |
 | S2 | `S2.jpg` | 131 | 110 |
-| Film | `FILM.jpg` | Gần 120 | 97 |
-| Film+ | `FILM PLUS.jpg` | Gần 130 | 104 |
-| Flexi 1 | `FLEXI 1.jpg` | Gần 150 | 124 |
-| Flexi 2 | `FLEXI 2.jpg` | Gần 150 | 125 |
-| MyTV VIP | Ảnh quyền lợi và bảng giá gửi trong cuộc trò chuyện | Gần 170 | 68 kênh thuộc các chùm đã xác nhận, chưa phải toàn bộ danh sách |
+| Film | `FILM.jpg` | 117 | 97 |
+| Film+ | `FILM PLUS.jpg` | 125 | 104 |
+| Flexi 1 | `FLEXI 1.jpg` | 145 | 124 |
+| Flexi 2 | `FLEXI 2.jpg` | 146 | 125 |
+| MyTV VIP | Ảnh quyền lợi và bảng giá gửi trong cuộc trò chuyện | 168 | 68 kênh thuộc các chùm đã xác nhận, chưa phải toàn bộ danh sách |
 
 Số kênh công bố trên tờ giới thiệu khác số mục được liệt kê trong ảnh. Giao diện giữ riêng số công bố và danh sách thực tế chép được; không tạo thêm kênh để bù vào tổng. Ảnh gốc có thể mở bằng liên kết "Xem tờ kênh gốc" khi chọn từng gói.
 
 ## Các điểm phân biệt được giữ theo ảnh
 
 - S: chùm VTV, HTV, tin tức, giải trí cơ bản, khoa giáo, thiết yếu, địa phương; không có HBO trong danh sách ảnh.
-- S1: thêm chùm VTVcab và HBO. S2: thêm chùm SCTV và HBO.
-- Film: phần VTV trong ảnh chỉ liệt kê VTV1, VTV5; có SPOTV và SPOTV2. Film+ liệt kê đầy đủ chùm VTV, không liệt kê SPOTV. Hai gói đều có HBO, Box Hits, Cinemax, WarnerTV, nhóm thiếu nhi và khoa giáo mở rộng.
+- S1: thêm chùm VTVcab và HBO. S2: thêm chùm SCTV và HBO. Bảng mới ghi S/S1/S2 không có chùm kênh quốc tế; cột nổi bật giữ đúng mô tả này và không quảng bá HBO. Danh sách tra cứu vẫn giữ HBO và các kênh quốc tế lẻ đã chép từ ảnh vì bảng mới chưa xác nhận tên từng kênh bị loại.
+- Film: phần VTV có VTV1 và VTV5 theo tờ rơi, được người dùng xác nhận lại; giữ cả hai trong cột nổi bật và danh sách tra cứu. Có SPOTV và SPOTV2. Film+ liệt kê đầy đủ chùm VTV, không liệt kê SPOTV. Hai gói đều có HBO, Box Hits, Cinemax, WarnerTV, nhóm thiếu nhi và khoa giáo mở rộng.
 - Flexi 1 có VTVcab; Flexi 2 có SCTV; cả hai có nhóm phim, thiếu nhi và khoa giáo mở rộng.
 - MyTV VIP có VTV/HTV, cả chùm VTVcab và SCTV, hai kênh SPOTV/SPOTV2, Galaxy VIP và VOD không quảng cáo. Ảnh mới chỉ mô tả các chùm kênh, không có danh sách đầy đủ; tra cứu VIP tạm dùng 68 kênh đã biết thuộc các chùm VTV, HTV, VTVcab, SCTV và SPOTV. Không tự ghép các kênh quốc tế/phim/địa phương chưa được xác nhận. Chi tiết gói có ghi chú về danh sách chưa đầy đủ.
-- S/S1/S2: trải nghiệm Galaxy VIP vào thứ 7 hằng tuần. Film/Film+: Galaxy VIP. Flexi 1/Flexi 2: Galaxy Play cao cấp (theo ảnh so sánh gói được cung cấp bổ sung).
+- S/S1/S2: Galaxy Cao Cấp vào thứ 7 hằng tuần, VOD có quảng cáo; lần lượt 69 HD + 40 SD, 90 HD + 40 SD, 91 HD + 40 SD. S không có chùm VTVcab. Film/Film+: Galaxy VIP, VOD không quảng cáo. Flexi 1/Flexi 2: Galaxy Play cao cấp, VOD có quảng cáo; có chùm trong nước và quốc tế nhưng không gồm 2 kênh SPOTV. Film+ cũng không gồm 2 kênh SPOTV. VIP có chùm trong nước và quốc tế, Galaxy VIP và VOD không quảng cáo.
 - Bảy ảnh gốc cùng ghi 1 tài khoản đăng nhập 5 thiết bị, xem đồng thời 2 thiết bị; xem lại tối đa 72 giờ theo chính sách từng kênh. Ảnh VIP bổ sung chưa xác nhận các thông số này nên không hiển thị cho VIP. VIP chưa có ảnh gốc cục bộ trong `assets/mytv/`, không tạo liên kết ảnh bị lỗi.
 - KBS World trong ảnh S/S1/S2 ghi HD; trong ảnh Film/Film+/Flexi 1/Flexi 2 ghi SD. Dữ liệu giữ tên kèm chất lượng theo từng ảnh.
 
@@ -41,7 +41,7 @@ Người dùng bổ sung giá và ảnh so sánh gói ngày 2026-11-11:
 | Film, Film+, Flexi 1, Flexi 2 | 65.000đ | Bỏ chữ "Từ" theo yêu cầu cập nhật của người dùng |
 | MyTV VIP | 95.000đ | Đã gồm VAT; 6 tháng 570.000đ, thanh toán 12 tháng 1.140.000đ theo ảnh bảng giá bổ sung |
 
-Cột nổi bật của bốn gói 65.000đ được cập nhật theo ảnh so sánh mới: Film có 2 kênh thể thao SPOTV độc quyền, Galaxy VIP miễn phí và VOD không quảng cáo; Film+ có Galaxy VIP miễn phí và VOD không quảng cáo; Flexi 1 có chùm 20 kênh VTVcab, Flexi 2 có chùm 21 kênh SCTV, cả hai miễn phí Galaxy Play cao cấp và có kho VOD giải trí. Số kênh vẫn hiển thị ở cột riêng để tránh lặp lại trong nội dung nổi bật.
+Cột nổi bật được bổ sung theo bảng ngày 2026-11-19: chùm kênh trong nước/quốc tế, giới hạn SPOTV, trạng thái quảng cáo VOD, Galaxy Cao Cấp thứ 7 và cơ cấu HD/SD của S/S1/S2. Phần VTV của Film ghi VTV1 và VTV5 theo tờ rơi và đính chính của người dùng. Các quyền lợi đã có được giữ: Film có 2 kênh thể thao SPOTV độc quyền; Film/Film+ miễn phí Galaxy VIP; Flexi 1 có chùm 20 kênh VTVcab, Flexi 2 có chùm 21 kênh SCTV, cả hai miễn phí Galaxy Play cao cấp. Tổng số kênh hiển thị ở cột riêng theo số chính xác trong bảng mới.
 
 Giá được lưu trong `monthlyPrice` của từng gói ở phần `specifications` của `mytv-data.js`. Không tự áp dụng VAT hoặc ưu đãi ngoài thông tin người dùng cung cấp.
 
