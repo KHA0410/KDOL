@@ -1,7 +1,7 @@
 /* Bổ sung Internet theo ảnh và file VNPT Internet.xlsx người dùng cung cấp.
  * Cột giá thứ nhất là Ngoại thành, cột thứ hai là Nội thành,
  * đối chiếu Home Cam 1 (215.000 / 255.000) và +1 Mesh (230.000 / 270.000).
- * Chỉ thêm gói chưa có; đính chính Cloud Home Cam Canh và tốc độ HomeTV VIP 3.
+ * Chỉ thêm gói chưa có; đính chính tốc độ/thành phần theo bảng người dùng cung cấp.
  * Không thay giá các gói hiện hữu.
  */
 window.KDOL_INTERNET = {
@@ -17,7 +17,16 @@ window.KDOL_INTERNET = {
     mytvFlexiPlanNames: ['Home TV One', 'Home Đỉnh'],
     planCorrections: {
         'Home Cam Canh': { note: '01 Camera Indoor và Cloud (1 ngày)' },
-        'HomeTV VIP 3': { duration_text: 'HomeTV VIP 3 (1Gbps)' }
+        'HomeTV VIP 3': { duration_text: 'HomeTV VIP 3 (1Gbps)' },
+        'Home Slay_M': {
+            duration_text: 'Home Slay_M (300ULM Mbps)',
+            note: 'KM: 300ULM Mbps + 1 Mesh 6 hoặc 1 App MyTV'
+        },
+        'Home Slay_F': {
+            duration_text: 'Home Slay_F (300ULM Mbps)',
+            note: 'KM: 300ULM Mbps + 1 Mesh 6 + 1 Camera Indoor + Cloud 1 ngày'
+        },
+        'HomeTV_B': { note: 'KM: 300Mbps + MyTV S1 (App) hoặc MyTV S2 (App)' }
     },
     supplementalPlans: [
         { id: 'internet-nt-cam-canh', service_id: 'internet', plan_group: 'nt_cam_none', group_name: 'Kèm Camera Ngoại thành',

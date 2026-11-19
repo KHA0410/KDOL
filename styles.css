@@ -713,6 +713,13 @@ input[type="range"]::-webkit-slider-thumb {
 .kdol-internet-install-options .kdol-internet-toggle__input { flex: 0 0 0.75rem; width: 0.75rem; height: 0.75rem; }
 .kdol-internet-install-text { display: inline; white-space: nowrap; }
 .kdol-internet-footnote { margin-top: 0.5rem; }
+.kdol-internet-notes { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--kdol-color-border); color: #475569; font-size: 0.8125rem; line-height: 1.6; overflow-wrap: anywhere; }
+.kdol-internet-notes summary { color: var(--kdol-color-primary); font-size: 0.875rem; font-weight: 700; cursor: pointer; }
+.kdol-internet-notes[open] summary { margin-bottom: 0.625rem; }
+.kdol-internet-notes summary:focus-visible { outline: 2px solid var(--kdol-color-primary); outline-offset: 3px; }
+.kdol-internet-notes ol { padding-left: 1.25rem; list-style: decimal; }
+.kdol-internet-notes li + li { margin-top: 0.625rem; }
+.kdol-internet-notes strong { font-weight: 600; }
 .kdol-internet-scroll-hint { margin-bottom: 0.75rem; color: #64748b; font-size: 0.75rem; line-height: 1.125rem; }
 .kdol-internet-section-title { margin-bottom: 0.75rem; color: var(--kdol-color-table-heading); font-size: 1rem; line-height: 1.5rem; font-weight: 700; }
 .kdol-internet-section-heading {
@@ -756,8 +763,8 @@ input[type="range"]::-webkit-slider-thumb {
 .kdol-internet-table thead tr:first-child > th:first-child { position: sticky; left: 0; z-index: 2; }
 .kdol-internet-table tbody .kdol-internet-package { position: sticky; left: 0; z-index: 1; background-color: inherit; font-weight: 600; }
 .kdol-internet-speed { display: block; margin-top: 0.125rem; color: #64748b; font-size: 0.6875rem; line-height: 1rem; font-weight: 400; white-space: nowrap; }
-.kdol-internet-table .kdol-internet-benefits { white-space: pre-line; }
-.kdol-internet-component { font-weight: 500; }
+.kdol-internet-table .kdol-internet-benefits { white-space: pre-line; overflow-wrap: anywhere; }
+.kdol-internet-component { font-weight: 500; overflow-wrap: anywhere; }
 .kdol-internet-component--mesh { color: var(--kdol-color-mesh); }
 .kdol-internet-component--tv { color: var(--kdol-color-primary); }
 .kdol-internet-component--camera { color: var(--kdol-color-camera); }
@@ -858,27 +865,35 @@ input[type="range"]::-webkit-slider-thumb {
 .kdol-mytv-result { margin-top: 0.5rem; color: var(--kdol-color-primary); font-size: 0.8125rem; }
 .kdol-mytv-table,
 .kdol-mesh-table,
+.kdol-stb-table,
 .kdol-camera-table { width: 100%; min-width: 480px; border-collapse: collapse; font-size: 0.8125rem; line-height: 1.5; text-align: center; }
 .kdol-mytv-table th,
 .kdol-mytv-table td,
 .kdol-mesh-table th,
 .kdol-mesh-table td,
+.kdol-stb-table th,
+.kdol-stb-table td,
 .kdol-camera-table th,
 .kdol-camera-table td { padding: 0.5rem 0.75rem; border: 1px solid var(--kdol-color-table-border); }
 .kdol-mytv-table thead th,
 .kdol-mesh-table thead th,
+.kdol-stb-table thead th,
 .kdol-camera-table thead th { background-color: var(--kdol-color-table-heading); color: #ffffff; font-weight: 600; white-space: nowrap; }
 .kdol-mytv-table thead th:first-child,
 .kdol-mesh-table thead th:first-child,
+.kdol-stb-table thead th:first-child,
 .kdol-camera-table thead th:first-child { position: sticky; left: 0; z-index: 2; }
 .kdol-mytv-table tbody tr,
 .kdol-mesh-table tbody tr,
+.kdol-stb-table tbody tr,
 .kdol-camera-table tbody tr { background-color: var(--kdol-color-surface); }
 .kdol-mytv-table tbody th,
 .kdol-mesh-table tbody th,
+.kdol-stb-table tbody th,
 .kdol-camera-table tbody th { position: sticky; left: 0; z-index: 1; background-color: inherit; }
 .kdol-mytv-table tbody tr:nth-child(even),
 .kdol-mesh-table tbody tr:nth-child(even),
+.kdol-stb-table tbody tr:nth-child(even),
 .kdol-camera-table tbody tr:nth-child(even) { background-color: var(--kdol-color-surface-muted); }
 .kdol-mytv-table tbody .kdol-mytv-row--selected { background-color: var(--kdol-color-primary-light); }
 .kdol-mytv-package { display: block; width: 100%; padding: 0.25rem; color: var(--kdol-color-primary); font-weight: 700; white-space: nowrap; }
@@ -903,6 +918,16 @@ input[type="range"]::-webkit-slider-thumb {
 .kdol-mytv-channels li { display: flex; align-items: baseline; gap: 0.5rem; padding: 0.375rem 0; font-size: 0.75rem; line-height: 1.125rem; }
 .kdol-mytv-channels li + li { border-top: 1px solid #f1f5f9; }
 .kdol-mytv-channel-number { flex: 0 0 2rem; color: #64748b; font-variant-numeric: tabular-nums; }
+
+/* Set-top-box: giá thuê B2C và gói MyTV B2B. */
+.kdol-stb-terms { display: grid; grid-template-columns: repeat(auto-fit, minmax(5rem, 1fr)); gap: 0.25rem; padding: 0.25rem; border: 1px solid var(--kdol-color-border-light); border-radius: var(--kdol-radius-control); background: var(--kdol-color-control); }
+.kdol-stb-terms .kdol-choice:focus-visible { outline: 2px solid var(--kdol-color-primary); outline-offset: 2px; }
+.kdol-stb-table { min-width: 0; font-size: 0.875rem; }
+.kdol-stb-table--b2b { min-width: 30rem; }
+.kdol-stb-table th:first-child { text-align: left; }
+.kdol-stb-table .kdol-stb-price { color: var(--kdol-color-primary); font-weight: 600; text-align: right; white-space: nowrap; }
+.kdol-stb-unavailable { color: #64748b; font-weight: 400; }
+.kdol-stb-note { color: #64748b; font-size: 0.8125rem; line-height: 1.5; }
 
 /* Mesh: tra cứu add-on và tính tiền mua thiết bị. */
 .kdol-mesh-heading,

@@ -36,7 +36,7 @@ Theo yêu cầu sắp xếp tiếp theo, Home Slay được đưa vào nhóm Ưu
 
 Cột Tích hợp phân màu theo thành phần: Mesh màu tím, MyTV màu xanh dương, Camera/Cloud màu cam nâu, Family Safe/GreenNet màu xanh lá. Giữ nguyên các chữ nối "hoặc", "và", dấu ngăn và nội dung; không biến lựa chọn thành đồng thời có cả hai dịch vụ. Áp dụng cùng màu MyTV trong bảng Internet + Di động, không đổi quyền lợi hay giá.
 
-Nhãn MyTV rút gọn theo loại dịch vụ: thường ghi `MyTV(S1/S2)`; nâng cao ghi `MyTV(Flexi, Film+)`. HomeTV 1/2/3 và Home X dùng nhãn nâng cao theo Excel. Home TV One và Home Đỉnh chỉ ghi `MyTV(Flexi)` theo thành phần riêng đã cung cấp. Gói VIP giữ nhãn VIP. Áp dụng trong cột Tích hợp và tooltip; không đổi nội dung dữ liệu gốc hoặc giá.
+Nhãn MyTV rút gọn theo loại dịch vụ: thường ghi `MyTV(S1/S2)`; nâng cao ghi `MyTV(Flexi1/Flexi2/Film/Film+)` theo đính chính của người dùng. HomeTV 1/2/3 và Home X dùng nhãn nâng cao; lựa chọn bộ lọc tương ứng ghi `Flexi1/Flexi2/Film/Film+`. Home TV One và Home Đỉnh chỉ ghi `MyTV(Flexi)` theo thành phần riêng đã cung cấp. Gói VIP giữ nhãn VIP. Áp dụng trong cột Tích hợp, tooltip và bảng so sánh; không đổi nội dung dữ liệu gốc hoặc giá.
 
 Cách ghi thiết bị thống nhất trong phần tích hợp và tooltip: `1 Mesh`, `2 Mesh`, không hiện số 0 đầu hoặc hậu tố Wi-Fi 6/Mesh 6. Tiêu đề cột dùng `+1 Mesh` / `+2 Mesh`. Camera kèm lưu trữ ghi `1 Camera Indoor(1 ngày)` hoặc `1 Camera Indoor(3 ngày)` theo đúng số ngày của từng gói; giữ số lượng và loại Indoor/Outdoor nếu nguồn có nêu. Đây chỉ là rút gọn nhãn, không đổi thiết bị hoặc chính sách tính phí.
 
@@ -45,3 +45,25 @@ Cụm chọn Nội thành/Ngoại thành nằm bên phải tiêu đề Tính gi�
 Home Cam Sành gồm 1 Mesh, 1 Camera Indoor lưu trữ 1 ngày, MyTV S1/S2 và Family Safe / GreenNet. Gói có `hasCamera = true`, áp dụng phí lắp Camera khi tích chọn. Giữ nguyên giá gói và vị trí ở bảng trên.
 
 Tổng tiền dùng cùng công thức Internet hiện có: giá tháng × 1/3/6/12 tháng, cộng một lần phí lắp Internet 300.000đ nếu tích chọn. Phí lắp Camera 100.000đ chỉ cộng nếu tích chọn và gói thực sự có Camera: bao gồm Home Cam Canh, Home Cam Sành, Home Cam Mật và các gói Camera hiện hữu. Kỳ 12–13 tháng chỉ thu 12 tháng, tặng thêm 1 tháng sử dụng. Không áp thêm VAT hoặc chiết khấu của dịch vụ CNTT vào giá Internet.
+
+## Lưu ý MyTV trong gói tích hợp
+
+Theo nội dung người dùng yêu cầu ghi chú, cuối tab Internet gia đình (sau cả bảng Internet và Internet + Di động) có mục thu gọn mặc định `Lưu ý về MyTV trong gói tích hợp`; bấm tiêu đề để mở/đóng, giữ đầy đủ bốn lưu ý:
+
+1. Mặc định chỉ có MyTV App; dùng STB tính thêm 22.000đ/STB/tháng, chi tiết theo Phụ lục 01.
+2. HomeTV chọn 1 trong MyTV Flexi 1, Flexi 2, Film, Film+; HomeTV Vip dùng MyTV Vip.
+3. Đổi nội dung miễn phí trên EPG, tối đa 1 lần/tháng/thuê bao. Các chiều: Flexi 1 ↔ Flexi 2; Nâng cao plus ↔ NC plus SCTV; Film → Film+ chỉ một chiều.
+4. Khách hàng phát triển mới gói tích hợp tại TP.HCM mặc định MyTV Flexi 2; hướng dẫn tự đổi linh hoạt trên EPG giữa 4 gói đồng giá Flexi 1, Flexi 2, Film, Film+ hoặc mua add-on VTVcab, SCTV, Tắt quảng cáo...
+
+Mức 22.000đ trong ghi chú thuộc gói tích hợp. Yêu cầu lần này chỉ thêm nội dung chú thích, không thay bộ tính giá hoặc mức phí thuê STB của MyTV B2C/B2B riêng.
+
+## Cập nhật bảng Home1_M / HomeTV_B / Home Slay_M / Home Slay_F
+
+Theo bảng mới người dùng yêu cầu cập nhật tốc độ và thành phần:
+
+- Home Slay_M và Home Slay_F ghi tốc độ `300ULM Mbps` thay cho `300Mbps`, áp dụng qua `planCorrections` vào dữ liệu hiển thị và tooltip. Bộ lọc/so sánh tiếp tục nhận diện tốc độ là 300 Mbps. Cột tích hợp bỏ phần tốc độ lặp lại.
+- HomeTV_B chỉ gồm MyTV S1/S2 (App), không còn lựa chọn Mesh. Cập nhật bộ lọc và cấu hình so sánh thông qua ghi chú đã đính chính; giá vẫn ở cột Mặc định.
+- Home1_M giữ 300 Mbps + 1 Mesh 6. Home Slay_M giữ lựa chọn 1 Mesh 6 **hoặc** MyTV S1/S2 App. Home Slay_F giữ 1 Mesh 6 + 1 Camera Indoor + Cloud 1 ngày.
+- Giá tháng lần lượt Home1_M 195.000đ, HomeTV_B 195.000đ, Home Slay_M 210.000đ, Home Slay_F 215.000đ. Các kỳ 3/6/12–13 tháng khớp bộ tính hiện tại; không đổi giá hoặc khu vực có gói. Không ghi đè dữ liệu nguồn Supabase/CSV.
+
+Người dùng đã rút lại ảnh Home Cam Canh ghi Cloud 3 ngày / Ngoại thành 200.000đ; tiếp tục dùng Cloud 1 ngày, Ngoại thành 195.000đ và Nội thành 240.000đ như trước ảnh đó.

@@ -17,6 +17,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="mytv-data.js"></script>
     <script src="mesh-data.js"></script>
+    <script src="stb-data.js?v=20261119-2"></script>
     <script src="camera-data.js"></script>
     <script src="vnptca-data.js"></script>
     <script src="smartca-usage-data.js"></script>
@@ -28,13 +29,13 @@
     <script src="econtract-data.js"></script>
     <script src="receipt-data.js"></script>
     <script src="hkd-data.js"></script>
-    <script src="internet-data.js"></script>
+    <script src="internet-data.js?v=20261119-3"></script>
     <script src="internet-comparison-data.js?v=20261119-1"></script>
     <script src="internet-business-data.js?v=20261117-4"></script>
     <script src="fiber-renewal-data.js?v=20261118-3"></script>
     <script src="address-regions.js?v=20261118-2"></script>
     <script src="address-search.js?v=20261118-4"></script>
-    <link rel="stylesheet" href="styles.css?v=20261119-3">
+    <link rel="stylesheet" href="styles.css?v=20261119-7">
 </head>
 <body class="bg-gray-100 h-screen flex flex-col font-sans">
     <div id="app" v-cloak class="flex flex-col h-full overflow-hidden">
@@ -152,7 +153,7 @@
             <p class="text-gray-500 font-medium">Đang tải dữ liệu từ máy chủ...</p>
         </div>
 
-        <div v-else class="flex-1 flex flex-col md:flex-row overflow-hidden" :class="{ 'kdol-layout--wide': ['internet', 'mytv', 'mesh', 'camera'].includes(activeService?.id) }">
+        <div v-else class="flex-1 flex flex-col md:flex-row overflow-hidden" :class="{ 'kdol-layout--wide': ['internet', 'mytv', 'mesh', 'camera', 'stb'].includes(activeService?.id) }">
             <!-- Cột 1: Danh mục -->
             <div class="kdol-sidebar w-full md:w-1/4 bg-white border-b md:border-b-0 md:border-r border-gray-200 flex flex-col flex-shrink-0">
                 <div class="p-2 md:p-3 bg-gray-50 border-b font-semibold text-gray-700 uppercase text-xs hidden md:block">Danh mục Dịch vụ</div>
@@ -1626,6 +1627,15 @@
                             </table>
                         </div>
                     </div>
+                    <details class="kdol-internet-notes" aria-labelledby="internet-mytv-notes-title">
+                        <summary id="internet-mytv-notes-title">Lưu ý về MyTV trong gói tích hợp</summary>
+                        <ol>
+                            <li><strong>Thiết bị:</strong> Mặc định gói tích hợp chỉ cung cấp <strong>MyTV App</strong>. Nếu khách hàng cần dùng đầu thu Set-top-box (STB), tính thêm <strong>22.000đ/STB/tháng</strong> (chi tiết theo Phụ lục 01).</li>
+                            <li><strong>Nội dung gói cước:</strong> Với <strong>HomeTV</strong>, khách hàng chọn 1 trong 4 gói: MyTV Flexi 1, MyTV Flexi 2, MyTV Film hoặc MyTV Film+. Với <strong>HomeTV Vip</strong>, sử dụng gói MyTV Vip.</li>
+                            <li><strong>Chuyển đổi nội dung:</strong> Thực hiện <strong>miễn phí trên màn hình EPG</strong>, tối đa <strong>1 lần/tháng/thuê bao</strong>. Các chiều được phép đổi: Flexi 1 ↔ Flexi 2; Nâng cao plus ↔ NC plus SCTV; <strong>Film → Film+</strong> (chỉ 1 chiều, không đổi ngược lại).</li>
+                            <li><strong>Lưu ý tại TP.HCM:</strong> Khách hàng phát triển mới gói tích hợp mặc định dùng <strong>MyTV Flexi 2</strong>. Khi có nhu cầu xem nội dung khác, hướng dẫn khách hàng tự đổi linh hoạt trên EPG giữa 4 gói đồng giá (Flexi 1, Flexi 2, Film, Film+) hoặc mua thêm gói add-on (VTVcab, SCTV, Tắt quảng cáo...).</li>
+                        </ol>
+                    </details>
                     </template>
                     <template v-else-if="activeInternetTab === 'renewal'">
                         <h3 class="kdol-service-title">Gia hạn FiberVNN</h3>
@@ -1977,6 +1987,58 @@
                     <p v-else class="kdol-empty-state">Chưa có bảng giá WiFi Mesh.</p>
                 </section>
 
+                <!-- SET-TOP-BOX MYTV -->
+                <section v-else-if="activeService?.id === 'stb'" aria-labelledby="stb-title">
+                    <h2 id="stb-title" class="sr-only">Set-top-box MyTV</h2>
+                    <template v-if="stbCatalog">
+                        <div class="kdol-tabs" role="group" aria-label="Bảng giá Set-top-box">
+                            <button v-for="tab in [{ id: 'b2c', label: 'MyTV B2C' }, { id: 'b2b', label: 'MyTV B2B' }]" :key="tab.id" type="button" @click="activeStbTab = tab.id" :aria-pressed="activeStbTab === tab.id" :class="['kdol-tab', activeStbTab === tab.id ? 'border-b-2 border-vnpt-blue text-vnpt-blue' : 'text-gray-500 hover:text-gray-700']">{{ tab.label }}</button>
+                        </div>
+                        <template v-if="activeStbTab === 'b2c'">
+                            <div class="kdol-config-panel" role="group" aria-labelledby="stb-term-label">
+                                <span id="stb-term-label" class="text-sm font-semibold text-gray-800">Kỳ cước STB</span>
+                                <div class="kdol-stb-terms">
+                                    <button v-for="period in stbCatalog.b2c.periods" :key="period.id" type="button" class="kdol-choice" :class="activeStbTermId === period.id ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50'" :aria-pressed="activeStbTermId === period.id" @click="activeStbTermId = period.id">{{ period.label }}</button>
+                                </div>
+                                <p v-if="selectedStbPeriod?.note" class="kdol-stb-note" role="status">{{ selectedStbPeriod.note }}</p>
+                            </div>
+                            <h3 class="kdol-internet-section-title">Set-top-box MyTV B2C</h3>
+                            <p class="kdol-stb-note mb-3">Giá thuê STB đã bao gồm VAT.</p>
+                            <div class="kdol-table-wrap">
+                                <table class="kdol-stb-table">
+                                    <caption class="sr-only">Giá Set-top-box MyTV B2C, kỳ {{ selectedStbPeriod?.label }}, đã gồm VAT</caption>
+                                    <thead><tr><th scope="col">Gói</th><th scope="col">Giá {{ selectedStbPeriod?.label }} (đ)</th></tr></thead>
+                                    <tbody>
+                                        <tr v-for="plan in stbQuoteRows" :key="plan.id">
+                                            <th scope="row">{{ plan.name }}</th>
+                                            <td class="kdol-stb-price"><span v-if="plan.price !== null">{{ formatPrice(plan.price) }}</span><span v-else class="kdol-stb-unavailable">Chưa có giá</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </template>
+                        <template v-else>
+                            <h3 class="kdol-internet-section-title">MyTV B2B</h3>
+                            <p class="kdol-stb-note mb-3">Giá tháng, chưa bao gồm VAT · Đơn vị: đồng/thuê bao/phòng.</p>
+                            <div class="kdol-table-wrap">
+                                <table class="kdol-stb-table kdol-stb-table--b2b">
+                                    <caption class="sr-only">Giá tháng MyTV B2B chưa gồm VAT, chưa kèm và đã kèm STB</caption>
+                                    <thead><tr><th scope="col">Gói cước</th><th scope="col">Chưa kèm STB</th><th scope="col">Đã kèm STB</th></tr></thead>
+                                    <tbody>
+                                        <tr v-for="plan in stbCatalog.b2b.plans" :key="plan.id">
+                                            <th scope="row">{{ plan.name }}</th>
+                                            <td class="kdol-stb-price">{{ formatPrice(plan.monthlyWithoutStb) }}</td>
+                                            <td class="kdol-stb-price">{{ formatPrice(plan.monthlyWithStb) }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p class="kdol-stb-note mt-3">Giá đã kèm STB bao gồm phí thuê thiết bị {{ formatPrice(stbCatalog.b2b.monthlyStbRental) }}/thuê bao/phòng/STB/tháng, chưa VAT.</p>
+                        </template>
+                    </template>
+                    <p v-else class="kdol-empty-state">Chưa có bảng giá Set-top-box.</p>
+                </section>
+
                 <!-- 6. TRUYỀN HÌNH MYTV -->
                 <section v-else-if="activeService?.id === 'mytv'" aria-labelledby="mytv-title">
                     <h2 id="mytv-title" class="sr-only">Truyền hình MyTV</h2>
@@ -2144,6 +2206,9 @@
                     meshMode: 'addon',
                     activeMeshTermId: 'one',
                     meshPurchaseQuantity: 1,
+                    stbCatalog: window.KDOL_STB || null,
+                    activeStbTab: 'b2c',
+                    activeStbTermId: 'monthly',
                     mytvPackages: window.KDOL_MYTV?.packages || [],
                     mytvGroups: window.KDOL_MYTV?.groups || [],
                     mytvQuery: '',
@@ -2273,6 +2338,14 @@
                         { id: 'mixed-cloud', label: 'Camera kết hợp IN + OUT · Cloud', rows: rows.filter(row => row.indoor > 0 && row.outdoor > 0) },
                         { id: 'memory-card', label: 'Camera dùng thẻ nhớ', rows: rows.filter(isMemoryCard) }
                     ].filter(group => group.rows.length > 0);
+                },
+                selectedStbPeriod() {
+                    return this.stbCatalog?.b2c.periods.find(period => period.id === this.activeStbTermId) || this.stbCatalog?.b2c.periods[0] || null;
+                },
+                stbQuoteRows() {
+                    if (!this.stbCatalog || !this.selectedStbPeriod) return [];
+                    const periodIndex = this.stbCatalog.b2c.periods.indexOf(this.selectedStbPeriod);
+                    return this.stbCatalog.b2c.plans.map(plan => ({ ...plan, price: plan.prices[periodIndex] ?? null }));
                 },
                 selectedMeshPeriod() {
                     return this.meshCatalog?.periods.find(period => period.id === this.activeMeshTermId) || this.meshCatalog?.periods[0] || null;
@@ -2484,7 +2557,7 @@
                         { id: 'mytv', label: 'MyTV', options: [all,
                             { id: 'yes', label: 'Có MyTV', shortLabel: 'Có' }, { id: 'no', label: 'Không MyTV', shortLabel: 'Không dùng' },
                             { id: 's', label: 'S1/S2' }, { id: 'flexi', label: 'Flexi' },
-                            { id: 'film', label: 'Flexi, Film+', shortLabel: 'Film+' }, { id: 'vip', label: 'VIP' }] },
+                            { id: 'film', label: 'Flexi1/Flexi2/Film/Film+' }, { id: 'vip', label: 'VIP' }] },
                         { id: 'mesh', label: 'Mesh', options: [all,
                             { id: '0', label: 'Không Mesh', shortLabel: 'Không dùng' }, { id: '1', label: '1 Mesh', shortLabel: '1 thiết bị' }, { id: '2', label: '2 Mesh', shortLabel: '2 thiết bị' }] },
                         { id: 'camera', label: 'Cam', options: [all,
@@ -3041,6 +3114,9 @@
                         if (this.meshCatalog?.service && !services.some(service => service.id === this.meshCatalog.service.id)) {
                             services.push(this.meshCatalog.service);
                         }
+                        if (this.stbCatalog?.service && !services.some(service => service.id === this.stbCatalog.service.id)) {
+                            services.push(this.stbCatalog.service);
+                        }
                         if (this.receiptCatalog?.service && !services.some(service => service.id === this.receiptCatalog.service.id)) {
                             services.push(this.receiptCatalog.service);
                         }
@@ -3212,6 +3288,9 @@
                         this.mytvQuery = '';
                         this.activeMytvPackageId = 's';
                         this.activeMytvTermId = 'monthly';
+                    } else if (srv.id === 'stb') {
+                        this.activeStbTab = 'b2c';
+                        this.activeStbTermId = 'monthly';
                     } else if (srv.id === 'mesh') {
                         this.meshMode = 'addon';
                         this.activeMeshTermId = 'one';
@@ -3480,10 +3559,10 @@
                     const name = planName.trim().replace(/\s+/g, ' ').toLocaleLowerCase('vi');
                     const advanced = (this.internetCatalog?.mytvAdvancedPlanNames || []).some(item => item.toLocaleLowerCase('vi') === name);
                     const flexi = (this.internetCatalog?.mytvFlexiPlanNames || []).some(item => item.toLocaleLowerCase('vi') === name);
-                    const label = advanced ? 'MyTV(Flexi, Film+)' : flexi ? 'MyTV(Flexi)' : 'MyTV(S1/S2)';
+                    const label = advanced ? 'MyTV(Flexi1/Flexi2/Film/Film+)' : flexi ? 'MyTV(Flexi)' : 'MyTV(S1/S2)';
                     return (note || '')
                         .replace(/1\s+App\s+MyTV/gi, label)
-                        .replace(/MyTV\s+Nâng\s+cao(?:\s*\(App\)|\s+App)?/gi, 'MyTV(Flexi, Film+)')
+                        .replace(/MyTV\s+Nâng\s+cao(?:\s*\(App\)|\s+App)?/gi, 'MyTV(Flexi1/Flexi2/Film/Film+)')
                         .replace(/MyTV S1\s*\(App\)\s*hoặc\s*MyTV S2\s*\(App\)/gi, 'MyTV(S1/S2)')
                         .replace(/MyTV\s+S1\s*\/\s*S2/gi, 'MyTV(S1/S2)')
                         .replace(/MyTV\s+Flexi\b/gi, 'MyTV(Flexi)')
@@ -3512,7 +3591,7 @@
                 summarizeInternetBenefits(note, bundle, includeFamilyBenefit = true, planName = '') {
                     const summary = this.formatInternetMytv(this.formatInternetEquipment(note)
                         .replace(/^KM:\s*/i, '')
-                        .replace(/\b\d+(?:[.,]\d+)?\s*(?:Mbps|Gbps|ULM)\s*\+\s*/gi, '')
+                        .replace(/\b\d+(?:[.,]\d+)?\s*(?:ULM(?:\s*Mbps)?|Mbps|Gbps)\s*\+\s*/gi, '')
                         .replace(/^Tích hợp\s*/i, '')
                         .replace(/Modem 2 băng tần\s*\(([^)]+)\)/gi, '$1')
                         .replace(/Family Safe\s*\/\s*GreenNet/gi, 'Family Safe / GreenNet')
