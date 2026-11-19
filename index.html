@@ -29,11 +29,12 @@
     <script src="receipt-data.js"></script>
     <script src="hkd-data.js"></script>
     <script src="internet-data.js"></script>
+    <script src="internet-comparison-data.js?v=20261119-1"></script>
     <script src="internet-business-data.js?v=20261117-4"></script>
     <script src="fiber-renewal-data.js?v=20261118-3"></script>
     <script src="address-regions.js?v=20261118-2"></script>
     <script src="address-search.js?v=20261118-4"></script>
-    <link rel="stylesheet" href="styles.css?v=20261118-14">
+    <link rel="stylesheet" href="styles.css?v=20261119-3">
 </head>
 <body class="bg-gray-100 h-screen flex flex-col font-sans">
     <div id="app" v-cloak class="flex flex-col h-full overflow-hidden">
@@ -86,6 +87,62 @@
                         </ol>
                         <button v-if="addressMatches.length > addressLimit" type="button" class="kdol-address-more" @click="addressLimit += 50">Xem thêm {{ Math.min(50, addressMatches.length - addressLimit) }} kết quả</button>
                     </template>
+                </div>
+            </div>
+        </dialog>
+
+        <dialog ref="internetComparisonDialog" id="internet-comparison-dialog" class="kdol-comparison-dialog" aria-labelledby="internet-comparison-title" @cancel.prevent="closeInternetComparison" @click="handleInternetComparisonBackdrop">
+            <div class="kdol-comparison-content">
+                <div class="kdol-comparison-heading">
+                    <h2 id="internet-comparison-title">So sánh gói Internet</h2>
+                    <button type="button" class="kdol-comparison-close" @click="closeInternetComparison" aria-label="Đóng so sánh">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg>
+                    </button>
+                </div>
+                <div class="kdol-comparison-body">
+                    <div class="kdol-comparison-controls">
+                        <label class="kdol-comparison-field" for="comparison-region">Khu vực
+                            <select id="comparison-region" v-model="activeInternetRegion" @change="syncInternetFilters()" class="kdol-select">
+                                <option v-for="region in internetRegionOptions" :key="region.id" :value="region.id">{{ region.name }}</option>
+                            </select>
+                        </label>
+                        <label class="kdol-comparison-field kdol-comparison-field--plan" for="comparison-plan">Gói VNPT
+                            <select ref="internetComparisonSelect" id="comparison-plan" :value="selectedInternetComparison?.id || ''" @change="activeInternetComparisonId = $event.target.value" class="kdol-select">
+                                <option v-for="option in internetComparisonOptions" :key="option.id" :value="option.id">{{ option.label }}</option>
+                            </select>
+                        </label>
+                    </div>
+                    <p v-if="!selectedInternetComparison" class="kdol-empty-state">Chưa có gói VNPT phù hợp. Hãy đổi khu vực hoặc bỏ bớt tiêu chí lọc.</p>
+                    <template v-else>
+                        <div class="kdol-table-wrap kdol-comparison-table-wrap">
+                            <table class="kdol-comparison-table">
+                                <caption class="sr-only">So sánh giá tháng {{ selectedInternetComparison.name }} với Viettel và FPT tại {{ internetRegionName }}</caption>
+                                <thead><tr><th scope="col">Gói</th><th scope="col">Thành phần</th><th scope="col">Giá / tháng</th></tr></thead>
+                                <tbody>
+                                    <tr class="kdol-comparison-baseline">
+                                        <th scope="row"><span class="kdol-comparison-provider">VNPT</span>{{ selectedInternetComparison.name }}<small>{{ selectedInternetComparison.speed }}</small></th>
+                                        <td :title="selectedInternetComparison.details"><div class="kdol-comparison-components"><span v-for="component in getInternetComparisonComponents(selectedInternetComparison)" :key="component" class="kdol-comparison-component">{{ component }}</span></div></td>
+                                        <td class="kdol-comparison-price">{{ formatPrice(selectedInternetComparison.monthlyPrice) }}<small>Gói đang chọn</small></td>
+                                    </tr>
+                                    <template v-for="group in internetComparisonGroups" :key="group.id">
+                                        <tr v-if="!group.plans.length"><th scope="row">{{ group.name }}</th><td colspan="2" class="kdol-comparison-empty">Chưa có gói tương ứng.</td></tr>
+                                        <tr v-for="plan in group.plans" :key="plan.id">
+                                            <th scope="row"><span class="kdol-comparison-provider">{{ group.name }}</span>{{ plan.name }}<small>{{ getInternetComparisonSpeedLabel(plan) }}</small><small v-if="!plan.region" class="kdol-comparison-caveat">Chưa ghi khu vực</small></th>
+                                            <td :title="plan.details"><div class="kdol-comparison-components"><span v-for="component in getInternetComparisonComponents(plan)" :key="component" class="kdol-comparison-component">{{ component }}</span></div></td>
+                                            <td class="kdol-comparison-price">{{ formatPrice(plan.monthlyPrice) }}<small :class="{ 'kdol-comparison-lower': plan.region && plan.monthlyPrice < selectedInternetComparison.monthlyPrice, 'kdol-comparison-higher': plan.region && plan.monthlyPrice > selectedInternetComparison.monthlyPrice }">{{ getInternetComparisonDifference(plan) }}</small></td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="kdol-comparison-note">Giá tháng, chưa gồm phí lắp đặt. Mesh (?) = chưa rõ số lượng.</p>
+                    </template>
+                    <details class="kdol-comparison-source">
+                        <summary>Nguồn và tùy chọn thêm</summary>
+                        <label class="kdol-internet-toggle kdol-comparison-unknown"><input type="checkbox" v-model="includeInternetComparisonUnknownRegion" class="kdol-internet-toggle__input">Hiện gói chưa ghi khu vực</label>
+                        <p>Nguồn: {{ internetComparisonCatalog?.source.filename || 'Chưa tải dữ liệu so sánh' }} · 19/11/2026.</p>
+                        <p>So cùng nhóm tốc độ (300–350 Mbps chung nhóm) và TV/Mesh/Camera. Quyền lợi TV, upload, Cloud có thể khác nhau. Ô trống, 0 hoặc chưa rõ cấu hình không được dùng làm giá so sánh.</p>
+                    </details>
                 </div>
             </div>
         </dialog>
@@ -1420,6 +1477,9 @@
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16l-6 7v7l-4 2v-9Z"/></svg>
                                     <span v-if="internetFilterCount" class="kdol-internet-filter-count" aria-hidden="true">{{ internetFilterCount }}</span>
                                 </button>
+                                <button ref="internetComparisonTrigger" type="button" class="kdol-internet-filter-toggle" @click="openInternetComparison" aria-haspopup="dialog" aria-controls="internet-comparison-dialog" aria-label="So sánh giá với Viettel và FPT" title="So sánh giá cùng phân khúc">
+                                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M5 6h14M3 13l3-7 3 7H3Zm12 0 3-7 3 7h-6ZM8 21h8M3 13a3 3 0 0 0 6 0m6 0a3 3 0 0 0 6 0"/></svg>
+                                </button>
                             </div>
                         </div>
                         <div v-if="showInternetFilters" id="internet-filters" class="kdol-internet-filters" @keydown.esc.stop.prevent="closeInternetFilterOptions">
@@ -1931,9 +1991,9 @@
                                 {{ term.label }}
                             </button>
                         </div>
-                        <label class="kdol-internet-toggle mt-3" title="Cộng giá một thiết bị STB, không nhân theo số tháng của gói.">
+                        <label class="kdol-internet-toggle mt-3" title="Phí STB 50.000đ/tháng, tính theo số tháng thanh toán của gói.">
                             <input type="checkbox" v-model="includeMytvStb" class="kdol-internet-toggle__input">
-                            Thêm 1 STB (+{{ formatPrice(mytvStbPrice) }})
+                            Thêm 1 STB (+{{ formatPrice(mytvStbPrice) }}/tháng)
                         </label>
                         <p v-if="selectedMytvTerm.bonusMonths" class="kdol-mytv-footnote" role="status">Thanh toán {{ selectedMytvTerm.paidMonths }} tháng, tặng {{ selectedMytvTerm.bonusMonths }} tháng: sử dụng {{ selectedMytvTerm.paidMonths + selectedMytvTerm.bonusMonths }} tháng.</p>
                     </div>
@@ -1958,7 +2018,7 @@
                                         <button type="button" class="kdol-mytv-package" :aria-pressed="selectedMytvPackage?.id === pkg.id" @click="activeMytvPackageId = pkg.id">{{ pkg.name }}</button>
                                     </th>
                                     <td>{{ pkg.channelCount }}</td>
-                                    <td class="kdol-mytv-highlights">{{ pkg.highlights }}</td>
+                                    <td class="kdol-mytv-highlights"><span v-for="(part, index) in getMytvHighlightParts(pkg.highlights)" :key="index" :class="{ 'kdol-mytv-highlight': part.emphasized }">{{ part.text }}</span></td>
                                     <td class="kdol-mytv-price"><span v-if="pkg.monthlyPrice !== null">{{ formatPrice(calculateMytvTotal(pkg.monthlyPrice)) }}</span></td>
                                 </tr>
                             </tbody>
@@ -2093,6 +2153,9 @@
                     mytvStbPrice: 50000,
 
                     activeInternetRegion: 'noi',
+                    internetComparisonCatalog: window.KDOL_INTERNET_COMPARISON || null,
+                    activeInternetComparisonId: '',
+                    includeInternetComparisonUnknownRegion: false,
                     showInternetFilters: false,
                     openInternetFilter: '',
                     internetFilters: { speed: '', mytv: '', mesh: '', camera: '' },
@@ -2372,6 +2435,41 @@
                 internetPriceHeading() {
                     if (this.includeInternetSetupFee || this.includeInternetCameraSetupFee) return `Tổng ${this.internetTermLabel} (đ)`;
                     return this.internetMonths === 1 ? 'Giá gói (đ/tháng)' : `Giá ${this.internetTermLabel} (đ)`;
+                },
+                internetComparisonOptions() {
+                    return this.internetMatrixRows.flatMap(row => Object.entries(row.variants).flatMap(([configuration, plan]) => {
+                        const note = plan.note || '';
+                        const alternatives = /\bMesh\b[^\n]*\s+hoặc\s+[^\n]*MyTV/i.test(note) ? note.split(/\s+hoặc\s+/i) : [note];
+                        return alternatives.flatMap((choice, index) => {
+                            if (!this.matchesInternetFilters({ ...plan, note: choice }, row, configuration)) return [];
+                            const mesh = choice.match(/\b0*(\d+)\s+(?:thiết bị\s+)?Mesh\b/i);
+                            const meshCount = mesh ? Number(mesh[1]) : Number(configuration.match(/^(\d+)mesh$/)?.[1] || 0);
+                            const tv = /MyTV/i.test(choice);
+                            const camera = this.hasInternetCamera(plan, row.bundle);
+                            const summary = this.summarizeInternetBenefits(choice, row.bundle, this.hasInternetFamilyBenefit(plan), row.name);
+                            const details = !summary || summary.trim() === '_' ? 'Chỉ Internet' : summary;
+                            const monthlyPrice = Number(plan.price);
+                            if (!Number.isFinite(monthlyPrice) || monthlyPrice <= 0) return [];
+                            const configurationLabel = [meshCount ? `${meshCount} Mesh` : '', tv ? 'TV' : '', camera ? 'Camera' : ''].filter(Boolean).join(' + ') || 'Chỉ Internet';
+                            return [{ id: `${row.key}:${configuration}:${index}`, name: row.name, speed: row.speed,
+                                speedMbps: this.getInternetSpeedMbps(row.speed), meshCount, hasMesh: meshCount > 0, tv, camera, monthlyPrice, details,
+                                label: `${row.name} · ${row.speed} · ${configurationLabel}` }];
+                        });
+                    }));
+                },
+                selectedInternetComparison() {
+                    return this.internetComparisonOptions.find(option => option.id === this.activeInternetComparisonId) || this.internetComparisonOptions[0] || null;
+                },
+                internetComparisonGroups() {
+                    const selected = this.selectedInternetComparison;
+                    return [{ id: 'viettel', name: 'Viettel' }, { id: 'fpt', name: 'FPT' }].map(provider => ({ ...provider,
+                        plans: selected ? (this.internetComparisonCatalog?.plans || []).filter(plan => plan.provider === provider.id
+                            && (plan.region === this.activeInternetRegion || (!plan.region && this.includeInternetComparisonUnknownRegion))
+                            && this.getInternetComparisonSpeedTier(plan.speedMbps) === this.getInternetComparisonSpeedTier(selected.speedMbps)
+                            && plan.tv === selected.tv && plan.camera === selected.camera && plan.hasMesh === selected.hasMesh
+                            && (plan.meshCount === null || plan.meshCount === selected.meshCount))
+                            .sort((a, b) => Number(!a.region) - Number(!b.region) || a.monthlyPrice - b.monthlyPrice || a.name.localeCompare(b.name, 'vi')) : []
+                    }));
                 },
                 internetFilterCount() {
                     return Object.values(this.internetFilters).filter(value => value !== '').length;
@@ -2854,6 +2952,48 @@
                 await this.fetchData();
             },
             methods: {
+                openInternetComparison() {
+                    this.activeInternetComparisonId = this.selectedInternetComparison?.id || '';
+                    if (!this.$refs.internetComparisonDialog.open) this.$refs.internetComparisonDialog.showModal();
+                    this.$nextTick(() => this.$refs.internetComparisonSelect?.focus());
+                },
+                closeInternetComparison() {
+                    this.$refs.internetComparisonDialog.close();
+                    this.$refs.internetComparisonTrigger?.focus();
+                },
+                handleInternetComparisonBackdrop(event) {
+                    if (event.target !== this.$refs.internetComparisonDialog) return;
+                    const bounds = event.target.getBoundingClientRect();
+                    if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) this.closeInternetComparison();
+                },
+                getInternetComparisonSpeedTier(speed) {
+                    return speed >= 300 && speed <= 350 ? 300 : speed;
+                },
+                getInternetComparisonSpeedLabel(plan) {
+                    const speeds = (plan.details || '').match(/Download\/upload\s+(\d+\s*Gbps)\/(\d+\s*(?:Mbps|Gbps))/i);
+                    return speeds ? `${speeds[1]} ↓ · ${speeds[2]} ↑`
+                        : plan.speedMbps >= 1000 ? `${plan.speedMbps / 1000} Gbps` : `${plan.speedMbps} Mbps`;
+                },
+                getInternetComparisonComponents(plan) {
+                    const details = plan.details || '';
+                    const components = [];
+                    if (plan.hasMesh) components.push(plan.meshCount === null ? 'Mesh (?)' : `${plan.meshCount} Mesh`);
+                    if (plan.tv) components.push(details.match(/MyTV(?:\([^)]*\)|\s+(?:VIP|S[12]|Flexi))?/i)?.[0] || 'TV');
+                    if (plan.camera) {
+                        const days = details.match(/(\d+)\s*ngày/i)?.[1];
+                        components.push(days ? `Camera · Cloud ${days} ngày` : 'Camera');
+                    }
+                    if (/Family\s*Safe|GreenNet/i.test(details)) components.push('Family Safe / GreenNet');
+                    if (/Fsafe/i.test(details)) components.push('Fsafe');
+                    if (/Ngoại Hạng Anh/i.test(details)) components.push('Ngoại Hạng Anh');
+                    if (/Ultra Fast/i.test(details)) components.push('Ultra Fast');
+                    return components.length ? components : ['Chỉ Internet'];
+                },
+                getInternetComparisonDifference(plan) {
+                    if (!plan.region) return 'Chưa đối chiếu khu vực';
+                    const difference = plan.monthlyPrice - this.selectedInternetComparison.monthlyPrice;
+                    return difference === 0 ? 'Bằng giá VNPT' : `${difference < 0 ? 'Thấp hơn' : 'Cao hơn'} ${this.formatPrice(Math.abs(difference))}/tháng`;
+                },
                 async openAddressLookup() {
                     if (!this.$refs.addressDialog.open) this.$refs.addressDialog.showModal();
                     this.$nextTick(() => this.$refs.addressQueryInput.focus());
@@ -3104,8 +3244,15 @@
                 },
                 calculateMytvTotal(monthlyPrice) {
                     if (monthlyPrice === null) return null;
-                    const stbPrice = this.includeMytvStb ? this.mytvStbPrice : 0;
-                    return Math.round(Number(monthlyPrice) * this.selectedMytvTerm.paidMonths + stbPrice);
+                    const monthlyStbPrice = this.includeMytvStb ? this.mytvStbPrice : 0;
+                    return Math.round((Number(monthlyPrice) + monthlyStbPrice) * this.selectedMytvTerm.paidMonths);
+                },
+                getMytvHighlightParts(highlights) {
+                    return (highlights || '').split(/(\n)/).map(text => ({
+                        text,
+                        emphasized: !/^Không (?:có|gồm)/i.test(text.trim())
+                            && /VTVcab|SCTV|SPOTV|Galaxy|VOD không quảng cáo/i.test(text)
+                    }));
                 },
                 normalizeMytvSearch(value) {
                     return String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/[^a-z0-9]/g, '');

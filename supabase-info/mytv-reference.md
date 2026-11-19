@@ -47,11 +47,11 @@ Giá được lưu trong `monthlyPrice` của từng gói ở phần `specificat
 
 Theo yêu cầu cập nhật mới nhất, thanh tính giá nhanh MyTV có các kỳ 1 tháng, 6+2 tháng và 12+3 tháng. Kỳ 6+2 thanh toán 6 tháng, tặng 2 tháng, dùng 8 tháng; kỳ 12+3 thanh toán 12 tháng, tặng 3 tháng, dùng 15 tháng. Nhãn nút, tiêu đề giá và chú thích dùng cùng cấu hình. Với bốn gói 65.000đ: 6+2 = 390.000đ, 12+3 = 780.000đ. Gói S thường dùng giá tháng 20.000đ nên tương ứng 120.000đ và 240.000đ. S1/S2 giữ 30.000đ/tháng, tương ứng 180.000đ và 360.000đ.
 
-MyTV VIP dùng cùng bộ tính giá MyTV: 95.000đ, 570.000đ và 1.140.000đ cho các kỳ thanh toán 1/6/12 tháng. Khi chọn thêm một STB, các tổng lần lượt là 145.000đ, 620.000đ và 1.190.000đ; phí STB chỉ cộng một lần. Không tính thêm VAT vào giá đã gồm thuế.
+MyTV VIP dùng cùng bộ tính giá MyTV: 95.000đ, 570.000đ và 1.140.000đ cho các kỳ thanh toán 1/6/12 tháng. Khi chọn thêm một STB với phí 50.000đ/tháng, các tổng lần lượt là 145.000đ, 870.000đ và 1.740.000đ. Không tính thêm VAT vào giá đã gồm thuế.
 
 Kỳ MyTV được giữ khi tìm kênh hoặc chọn gói, đặt lại 1 tháng khi chọn lại dịch vụ. Phép tính MyTV tách biệt với kỳ giá và phí lắp đặt của Internet.
 
-Người dùng xác nhận TV không phải Smart TV cần thêm STB, giá 50.000đ mỗi thiết bị. Ô chọn "Thêm 1 STB (+50.000đ)" trong thanh tính giá nhanh mặc định tắt; khi bật, mọi giá gói có dữ liệu được cộng một lần 50.000đ cho một thiết bị (`giá tháng × số tháng thanh toán + 50000`). Không nhân giá STB theo kỳ gói hoặc số tháng được tặng. Ví dụ gói 65.000đ: 1 tháng kèm STB = 115.000đ, 6+2 tháng = 440.000đ, 12+3 tháng = 830.000đ. Gói S thường kèm STB lần lượt là 70.000đ, 170.000đ và 290.000đ. S1/S2 kèm STB giữ 80.000đ, 230.000đ và 410.000đ. Khi bỏ chọn, bảng trở về giá không kèm thiết bị; tiêu đề giá chuyển thành tổng tiền khi có STB.
+Người dùng đính chính ngày 2026-11-19: STB có phí 50.000đ mỗi tháng cho một thiết bị. Ô chọn "Thêm 1 STB (+50.000đ/tháng)" trong thanh tính giá nhanh mặc định tắt; khi bật, công thức là `(giá tháng + 50000) × số tháng thanh toán`. Phí STB tăng theo 1/6/12 tháng thanh toán tương ứng 50.000đ/300.000đ/600.000đ; hiện dùng cùng số tháng thanh toán với cước gói, không cộng riêng phí cho tháng tặng. Ví dụ gói 65.000đ: 1 tháng kèm STB = 115.000đ, 6+2 tháng = 690.000đ, 12+3 tháng = 1.380.000đ. Gói S thường kèm STB lần lượt là 70.000đ, 420.000đ và 840.000đ. S1/S2 kèm STB là 80.000đ, 480.000đ và 960.000đ. Khi bỏ chọn, bảng trở về giá không kèm thiết bị; tiêu đề giá chuyển thành tổng tiền khi có STB.
 
 Chưa thêm bản ghi MyTV vào bảng Supabase `plans`, chưa thay đổi schema, RLS hoặc dữ liệu online. Không ghép giá các combo Internet + MyTV thành giá gói MyTV riêng.
 
