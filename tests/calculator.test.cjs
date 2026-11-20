@@ -154,8 +154,16 @@ test('selecting prices reveals one shortcut without opening the calculator; outs
     state.selectCalculatorPrice(first);
     assert.equal(state.activeCalculatorPrice, first);
     assert.equal(dialog.open, false);
+    state.selectCalculatorPrice(first);
+    assert.equal(state.activeCalculatorPrice, null);
+    assert.equal(dialog.open, false);
+    state.selectCalculatorPrice(first);
+    assert.equal(state.activeCalculatorPrice, first);
     state.selectCalculatorPrice(second);
     assert.equal(state.activeCalculatorPrice, second);
+    state.selectCalculatorPrice(second);
+    assert.equal(state.activeCalculatorPrice, null);
+    state.selectCalculatorPrice(second);
     state.dismissCalculatorPrice();
     assert.equal(state.activeCalculatorPrice, null);
 });

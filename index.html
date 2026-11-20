@@ -2215,7 +2215,7 @@
                     },
                     template: `
                         <span v-if="available" class="kdol-price-amount" @focusout="handleFocusOut">
-                            <button ref="price" type="button" class="kdol-price-select" :aria-label="'Tính với giá ' + priceLabel" :aria-expanded="selected" title="Bấm để hiện máy tính" @click.stop.prevent="priceCalculator.selectCalculatorPrice($refs.price)"><slot></slot></button>
+                            <button ref="price" type="button" class="kdol-price-select" :aria-label="'Tính với giá ' + priceLabel" :aria-expanded="selected" :title="selected ? 'Bấm để ẩn máy tính' : 'Bấm để hiện máy tính'" @click.stop.prevent="priceCalculator.selectCalculatorPrice($refs.price)"><slot></slot></button>
                             <button v-if="selected" type="button" class="kdol-price-calculator" :aria-label="'Mở máy tính với ' + priceLabel" title="Tính với giá này" aria-haspopup="dialog" aria-controls="calculator-dialog" @click.stop.prevent="priceCalculator.openCalculatorFromPrice(value, $refs.price)">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M8 6h8v4H8zM8 14h1m3 0h1m3 0h0M8 18h1m3 0h1m3 0h0"/></svg>
                             </button>
@@ -3191,7 +3191,7 @@
                     return difference === 0 ? 'Bằng giá VNPT' : `${difference < 0 ? 'Thấp hơn' : 'Cao hơn'} ${this.formatPrice(Math.abs(difference))}/tháng`;
                 },
                 selectCalculatorPrice(target) {
-                    this.activeCalculatorPrice = target;
+                    this.activeCalculatorPrice = this.activeCalculatorPrice === target ? null : target;
                 },
                 dismissCalculatorPrice() {
                     this.activeCalculatorPrice = null;
