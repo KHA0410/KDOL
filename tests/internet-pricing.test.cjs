@@ -166,8 +166,8 @@ test('updated promotion source preserves all prices while correcting speeds and 
     const original = JSON.stringify(app.data.plans);
     await state.fetchData();
     const expected = [
-        ['noi', 'Home Slay_M', '300ULM Mbps', 'none', '1 Mesh hoặc MyTV(S1/S2)', [210000, 630000, 1260000, 2520000]],
-        ['noi', 'Home Slay_F', '300ULM Mbps', '1mesh', '1 Mesh · 1 Camera Indoor(1 ngày)', [215000, 645000, 1290000, 2580000]],
+        ['noi', 'Home Slay_M', '300ULM', 'none', '1 Mesh hoặc MyTV(S1/S2)', [210000, 630000, 1260000, 2520000]],
+        ['noi', 'Home Slay_F', '300ULM', '1mesh', '1 Mesh · 1 Camera Indoor(1 ngày)', [215000, 645000, 1290000, 2580000]],
         ['nt', 'Home 1_M', '300Mbps', '1mesh', '1 Mesh', [195000, 585000, 1170000, 2340000]],
         ['nt', 'HomeTV_B', '300Mbps', 'none', 'MyTV(S1/S2)', [195000, 585000, 1170000, 2340000]]
     ];

@@ -29,13 +29,13 @@
     <script src="econtract-data.js"></script>
     <script src="receipt-data.js"></script>
     <script src="hkd-data.js"></script>
-    <script src="internet-data.js?v=20261119-3"></script>
+    <script src="internet-data.js?v=20261120-1"></script>
     <script src="internet-comparison-data.js?v=20261119-1"></script>
     <script src="internet-business-data.js?v=20261117-4"></script>
     <script src="fiber-renewal-data.js?v=20261118-3"></script>
     <script src="address-regions.js?v=20261118-2"></script>
     <script src="address-search.js?v=20261118-4"></script>
-    <link rel="stylesheet" href="styles.css?v=20261119-7">
+    <link rel="stylesheet" href="styles.css?v=20261120-7">
 </head>
 <body class="bg-gray-100 h-screen flex flex-col font-sans">
     <div id="app" v-cloak class="flex flex-col h-full overflow-hidden">
@@ -43,10 +43,33 @@
             <h1 class="text-xl md:text-2xl font-bold tracking-wider flex items-center">
                 KDOL <span class="hidden md:inline text-sm font-normal opacity-80 pl-2 ml-2 border-l border-white/30">Công cụ tra cứu giá cước nhanh</span>
             </h1>
-            <button ref="addressTrigger" type="button" class="kdol-address-trigger" @click="openAddressLookup" aria-haspopup="dialog" aria-controls="address-dialog" aria-label="Tra cứu địa chỉ trước và sau sáp nhập" title="Tra cứu địa chỉ">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
-            </button>
+            <div class="kdol-header-actions">
+                <button ref="calculatorTrigger" type="button" class="kdol-header-trigger" @click="openCalculator" aria-haspopup="dialog" aria-controls="calculator-dialog" aria-label="Mở máy tính" title="Máy tính">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M8 6h8v4H8zM8 14h1m3 0h1m3 0h0M8 18h1m3 0h1m3 0h0"/></svg>
+                </button>
+                <button ref="addressTrigger" type="button" class="kdol-header-trigger" @click="openAddressLookup" aria-haspopup="dialog" aria-controls="address-dialog" aria-label="Tra cứu địa chỉ trước và sau sáp nhập" title="Tra cứu địa chỉ">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+                </button>
+            </div>
         </header>
+
+        <dialog ref="calculatorDialog" id="calculator-dialog" class="kdol-calculator-dialog" aria-labelledby="calculator-title" @cancel.prevent="closeCalculator" @click="handleCalculatorBackdrop" @keydown="handleCalculatorKey">
+            <div class="kdol-calculator-content">
+                <div class="kdol-calculator-heading">
+                    <h2 id="calculator-title">Máy tính</h2>
+                    <button type="button" class="kdol-calculator-close" @click="closeCalculator" aria-label="Đóng máy tính">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg>
+                    </button>
+                </div>
+                <div ref="calculatorScreen" class="kdol-calculator-screen" tabindex="0" aria-label="Màn hình máy tính">
+                    <p class="kdol-calculator-expression">{{ calculatorExpression }}</p>
+                    <output class="kdol-calculator-value" aria-live="polite" aria-atomic="true">{{ calculatorError || formatCalculatorNumber(calculatorEntry) }}</output>
+                </div>
+                <div class="kdol-calculator-keys">
+                    <button v-for="key in calculatorKeys" :key="key.value" type="button" :class="['kdol-calculator-key', key.kind ? 'kdol-calculator-key--' + key.kind : '']" :aria-label="key.label || key.text" @click="calculatorPress(key.value)">{{ key.text }}</button>
+                </div>
+            </div>
+        </dialog>
 
         <dialog ref="addressDialog" id="address-dialog" class="kdol-address-dialog" aria-labelledby="address-title" @cancel.prevent="closeAddressLookup" @click="handleAddressBackdrop">
             <div class="kdol-address-content">
@@ -108,10 +131,14 @@
                             </select>
                         </label>
                         <label class="kdol-comparison-field kdol-comparison-field--plan" for="comparison-plan">Gói VNPT
-                            <select ref="internetComparisonSelect" id="comparison-plan" :value="selectedInternetComparison?.id || ''" @change="activeInternetComparisonId = $event.target.value" class="kdol-select">
-                                <option v-for="option in internetComparisonOptions" :key="option.id" :value="option.id">{{ option.label }}</option>
+                            <select ref="internetComparisonSelect" id="comparison-plan" :value="selectedInternetComparisonPlan?.id || ''" @change="activeInternetComparisonId = $event.target.value" class="kdol-select">
+                                <option v-for="plan in internetComparisonPlans" :key="plan.name" :value="plan.id">{{ plan.name }}</option>
                             </select>
                         </label>
+                    </div>
+                    <div v-if="selectedInternetComparisonPlan?.variants.length > 1" class="kdol-comparison-variants" role="group" aria-label="Thành phần gói VNPT">
+                        <span>Thành phần</span>
+                        <button v-for="option in selectedInternetComparisonPlan.variants" :key="option.id" type="button" class="kdol-choice" :class="selectedInternetComparison?.id === option.id ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50'" :aria-pressed="selectedInternetComparison?.id === option.id" @click="activeInternetComparisonId = option.id">{{ option.configurationLabel }}</button>
                     </div>
                     <p v-if="!selectedInternetComparison" class="kdol-empty-state">Chưa có gói VNPT phù hợp. Hãy đổi khu vực hoặc bỏ bớt tiêu chí lọc.</p>
                     <template v-else>
@@ -1627,15 +1654,49 @@
                             </table>
                         </div>
                     </div>
+                    <details class="kdol-internet-notes" aria-labelledby="internet-trial-notes-title">
+                        <summary id="internet-trial-notes-title">Dùng thử và kết nối Internet</summary>
+                        <ul>
+                            <li><strong>Dùng thử:</strong> Áp dụng cho các gói cước có thành phần Home Internet, MyTV, Mesh. <strong>Không áp dụng cho gói có thành phần Camera.</strong></li>
+                            <li><strong>IP tĩnh:</strong> Gói cước không cấp IP tĩnh.</li>
+                        </ul>
+                    </details>
+                    <details class="kdol-internet-notes" aria-labelledby="internet-camera-mesh-notes-title">
+                        <summary id="internet-camera-mesh-notes-title">Camera Cloud và WiFi Mesh</summary>
+                        <ul>
+                            <li><strong>Camera Cloud:</strong> Lưu trữ <strong>1 ngày</strong>, hỗ trợ <strong>4 tài khoản truy cập đồng thời</strong>.</li>
+                            <li><strong>WiFi Mesh:</strong> Dịch vụ trong gói gồm <strong>1 thiết bị Mesh 6</strong> mua sắm tập trung (MSTT).</li>
+                        </ul>
+                    </details>
                     <details class="kdol-internet-notes" aria-labelledby="internet-mytv-notes-title">
                         <summary id="internet-mytv-notes-title">Lưu ý về MyTV trong gói tích hợp</summary>
                         <ol>
-                            <li><strong>Thiết bị:</strong> Mặc định gói tích hợp chỉ cung cấp <strong>MyTV App</strong>. Nếu khách hàng cần dùng đầu thu Set-top-box (STB), tính thêm <strong>22.000đ/STB/tháng</strong> (chi tiết theo Phụ lục 01).</li>
-                            <li><strong>Nội dung gói cước:</strong> Với <strong>HomeTV</strong>, khách hàng chọn 1 trong 4 gói: MyTV Flexi 1, MyTV Flexi 2, MyTV Film hoặc MyTV Film+. Với <strong>HomeTV Vip</strong>, sử dụng gói MyTV Vip.</li>
-                            <li><strong>Chuyển đổi nội dung:</strong> Thực hiện <strong>miễn phí trên màn hình EPG</strong>, tối đa <strong>1 lần/tháng/thuê bao</strong>. Các chiều được phép đổi: Flexi 1 ↔ Flexi 2; Nâng cao plus ↔ NC plus SCTV; <strong>Film → Film+</strong> (chỉ 1 chiều, không đổi ngược lại).</li>
-                            <li><strong>Lưu ý tại TP.HCM:</strong> Khách hàng phát triển mới gói tích hợp mặc định dùng <strong>MyTV Flexi 2</strong>. Khi có nhu cầu xem nội dung khác, hướng dẫn khách hàng tự đổi linh hoạt trên EPG giữa 4 gói đồng giá (Flexi 1, Flexi 2, Film, Film+) hoặc mua thêm gói add-on (VTVcab, SCTV, Tắt quảng cáo...).</li>
+                            <li><strong>Thiết bị:</strong> Mặc định <strong>MyTV App</strong>; thêm STB theo chính sách hiện hành: <strong>50.000đ/STB/tháng</strong> (Phụ lục 01).</li>
+                            <li><strong>Nội dung:</strong> <strong>HomeTV</strong> chọn 1 trong 4 gói MyTV: Flexi 1, Flexi 2, Film, Film+; <strong>HomeTV Vip</strong> dùng MyTV Vip.</li>
+                            <li><strong>Đổi gói trên EPG:</strong> <strong>Miễn phí, tối đa 1 lần/tháng/thuê bao</strong>. Flexi 1 ↔ Flexi 2; Nâng cao plus ↔ NC plus SCTV; <strong>Film → Film+</strong> (không đổi ngược).</li>
+                            <li><strong>TP.HCM:</strong> Thuê bao tích hợp mới mặc định <strong>MyTV Flexi 2</strong>. Hướng dẫn khách tự đổi trên EPG giữa 4 gói đồng giá nêu trên, hoặc mua add-on VTVcab, SCTV, Tắt quảng cáo...</li>
                         </ol>
                     </details>
+                    <details class="kdol-internet-notes" aria-labelledby="internet-addon-notes-title">
+                        <summary id="internet-addon-notes-title">Thiết bị bổ sung và thủ tục dịch vụ</summary>
+                        <ul>
+                            <li><strong>Mua thêm:</strong> Khách hàng có nhu cầu thêm thiết bị Mesh, Camera, STB hoặc dịch vụ GTGT (GreenNet, Family Safe...) áp dụng <strong>chính sách đơn lẻ theo quy định hiện hành</strong>.</li>
+                            <li><strong>Đăng ký, chuyển đổi và hủy gói:</strong> Các quy định về chuyển đổi gói cước, đăng ký gói, hủy gói, chính sách sản phẩm dịch vụ và đối tượng áp dụng thực hiện theo quy định hiện hành.</li>
+                        </ul>
+                    </details>
+                    <details class="kdol-internet-notes" aria-labelledby="internet-existing-notes-title">
+                        <summary id="internet-existing-notes-title">Thuê bao BRCĐ hiện hữu</summary>
+                        <p class="mb-2"><strong>Các trường hợp được tính là thuê bao BRCĐ hiện hữu:</strong></p>
+                        <ul>
+                            <li>Thuê bao BRCĐ tạm ngưng PSC, nay khôi phục lại.</li>
+                            <li>Thuê bao BRCĐ đã thanh lý/hủy, quay lại sử dụng dịch vụ trong vòng <strong>≤ 6 tháng kể từ ngày thanh lý/hủy</strong>: khôi phục mã thuê bao đã có, <strong>không thu cước đấu nối hòa mạng</strong>.</li>
+                            <li>Thuê bao có sẵn dịch vụ cố định IMS hoặc MyTV hiện hữu trên cáp quang; khách hàng chuyển đổi từ cáp đồng sang cáp quang.</li>
+                            <li>Thuê bao BRCĐ đang hoạt động, dịch chuyển/chuyển đổi vị trí lắp đặt.</li>
+                        </ul>
+                    </details>
+                    <p class="kdol-internet-reference">
+                        <a href="doi-tuong-khach-hang.html" target="_blank" rel="noopener noreferrer" aria-label="Tham khảo đối tượng khách hàng và kênh bán, mở trang tham khảo trong tab mới">Tham khảo: Đối tượng khách hàng và kênh bán</a>
+                    </p>
                     </template>
                     <template v-else-if="activeInternetTab === 'renewal'">
                         <h3 class="kdol-service-title">Gia hạn FiberVNN</h3>
@@ -2147,6 +2208,27 @@
                     addressError: '',
                     addressQuery: '',
                     addressLimit: 50,
+                    calculatorEntry: '0',
+                    calculatorAccumulator: null,
+                    calculatorOperator: null,
+                    calculatorWaiting: false,
+                    calculatorExpression: '',
+                    calculatorError: '',
+                    calculatorKeys: [
+                        { value: 'clear', text: 'AC', label: 'Xóa tất cả', kind: 'action' },
+                        { value: 'backspace', text: '⌫', label: 'Xóa một chữ số', kind: 'action' },
+                        { value: '%', text: '%', label: 'Phần trăm', kind: 'action' },
+                        { value: '/', text: '÷', label: 'Chia', kind: 'operator' },
+                        { value: '7', text: '7' }, { value: '8', text: '8' }, { value: '9', text: '9' },
+                        { value: '*', text: '×', label: 'Nhân', kind: 'operator' },
+                        { value: '4', text: '4' }, { value: '5', text: '5' }, { value: '6', text: '6' },
+                        { value: '-', text: '−', label: 'Trừ', kind: 'operator' },
+                        { value: '1', text: '1' }, { value: '2', text: '2' }, { value: '3', text: '3' },
+                        { value: '+', text: '+', label: 'Cộng', kind: 'operator' },
+                        { value: 'negate', text: '+/−', label: 'Đổi dấu', kind: 'action' },
+                        { value: '0', text: '0' }, { value: '.', text: ',', label: 'Dấu thập phân' },
+                        { value: '=', text: '=', label: 'Tính kết quả', kind: 'equals' }
+                    ],
                     categories: [],
                     
                     smartCaData: [],
@@ -2512,7 +2594,9 @@
                 internetComparisonOptions() {
                     return this.internetMatrixRows.flatMap(row => Object.entries(row.variants).flatMap(([configuration, plan]) => {
                         const note = plan.note || '';
-                        const alternatives = /\bMesh\b[^\n]*\s+hoặc\s+[^\n]*MyTV/i.test(note) ? note.split(/\s+hoặc\s+/i) : [note];
+                        const choices = note.split(/\s+hoặc\s+/i);
+                        const alternatives = choices.length > 1 && /\bMesh\b/i.test(choices[0]) && !/MyTV/i.test(choices[0])
+                            && choices.slice(1).some(choice => /MyTV/i.test(choice)) ? choices : [note];
                         return alternatives.flatMap((choice, index) => {
                             if (!this.matchesInternetFilters({ ...plan, note: choice }, row, configuration)) return [];
                             const mesh = choice.match(/\b0*(\d+)\s+(?:thiết bị\s+)?Mesh\b/i);
@@ -2526,9 +2610,20 @@
                             const configurationLabel = [meshCount ? `${meshCount} Mesh` : '', tv ? 'TV' : '', camera ? 'Camera' : ''].filter(Boolean).join(' + ') || 'Chỉ Internet';
                             return [{ id: `${row.key}:${configuration}:${index}`, name: row.name, speed: row.speed,
                                 speedMbps: this.getInternetSpeedMbps(row.speed), meshCount, hasMesh: meshCount > 0, tv, camera, monthlyPrice, details,
-                                label: `${row.name} · ${row.speed} · ${configurationLabel}` }];
+                                configurationLabel }];
                         });
                     }));
+                },
+                internetComparisonPlans() {
+                    const plans = new Map();
+                    for (const option of this.internetComparisonOptions) {
+                        if (!plans.has(option.name)) plans.set(option.name, { id: option.id, name: option.name, variants: [] });
+                        plans.get(option.name).variants.push(option);
+                    }
+                    return [...plans.values()];
+                },
+                selectedInternetComparisonPlan() {
+                    return this.internetComparisonPlans.find(plan => plan.name === this.selectedInternetComparison?.name) || null;
                 },
                 selectedInternetComparison() {
                     return this.internetComparisonOptions.find(option => option.id === this.activeInternetComparisonId) || this.internetComparisonOptions[0] || null;
@@ -3066,6 +3161,104 @@
                     if (!plan.region) return 'Chưa đối chiếu khu vực';
                     const difference = plan.monthlyPrice - this.selectedInternetComparison.monthlyPrice;
                     return difference === 0 ? 'Bằng giá VNPT' : `${difference < 0 ? 'Thấp hơn' : 'Cao hơn'} ${this.formatPrice(Math.abs(difference))}/tháng`;
+                },
+                openCalculator() {
+                    if (!this.$refs.calculatorDialog.open) this.$refs.calculatorDialog.showModal();
+                    this.$nextTick(() => this.$refs.calculatorScreen.focus());
+                },
+                closeCalculator() {
+                    this.$refs.calculatorDialog.close();
+                    this.$refs.calculatorTrigger.focus();
+                },
+                handleCalculatorBackdrop(event) {
+                    if (event.target !== this.$refs.calculatorDialog) return;
+                    const bounds = event.target.getBoundingClientRect();
+                    if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) this.closeCalculator();
+                },
+                handleCalculatorKey(event) {
+                    if (event.ctrlKey || event.metaKey || event.altKey) return;
+                    // Keep native keyboard activation on the close button.
+                    if (event.key === 'Enter' && event.target === this.$refs.calculatorDialog.querySelector('.kdol-calculator-close')) return;
+                    const aliases = { Enter: '=', Backspace: 'backspace', Delete: 'clear', ',': '.', x: '*', X: '*' };
+                    const key = aliases[event.key] || event.key;
+                    if (!/^[0-9.+*/%=-]$/.test(key) && !['backspace', 'clear'].includes(key)) return;
+                    event.preventDefault();
+                    this.calculatorPress(key);
+                },
+                formatCalculatorNumber(value) {
+                    const text = /e/i.test(String(value))
+                        ? Number(value).toLocaleString('en-US', { useGrouping: false, maximumSignificantDigits: 15 }) : String(value);
+                    const [integer, fraction] = text.split('.');
+                    const formatted = Number(integer).toLocaleString('vi-VN', { maximumSignificantDigits: 15 });
+                    return fraction === undefined ? formatted : `${formatted},${fraction}`;
+                },
+                resetCalculator() {
+                    this.calculatorEntry = '0';
+                    this.calculatorAccumulator = null;
+                    this.calculatorOperator = null;
+                    this.calculatorWaiting = false;
+                    this.calculatorExpression = '';
+                    this.calculatorError = '';
+                },
+                setCalculatorResult(value) {
+                    if (!Number.isFinite(value) || Math.abs(value) > Number.MAX_SAFE_INTEGER) {
+                        this.resetCalculator();
+                        this.calculatorError = Number.isFinite(value) ? 'Số quá lớn' : 'Không thể chia cho 0';
+                        return false;
+                    }
+                    // Remove floating-point noise without rounding prices to whole dong.
+                    this.calculatorEntry = Number(value.toPrecision(15)).toLocaleString('en-US', { useGrouping: false, maximumSignificantDigits: 15 });
+                    return true;
+                },
+                calculatorPress(key) {
+                    if (key === 'clear') { this.resetCalculator(); return; }
+                    if (this.calculatorError) this.resetCalculator();
+                    if (/^\d$/.test(key) || key === '.') {
+                        if (this.calculatorWaiting) {
+                            this.calculatorEntry = '0';
+                            this.calculatorWaiting = false;
+                            if (!this.calculatorOperator) this.calculatorExpression = '';
+                        }
+                        if (key === '.') {
+                            if (!this.calculatorEntry.includes('.')) this.calculatorEntry += '.';
+                        } else if (this.calculatorEntry.replace(/[-.]/g, '').length < 15) {
+                            this.calculatorEntry = this.calculatorEntry === '0' ? key
+                                : this.calculatorEntry === '-0' ? '-' + key : this.calculatorEntry + key;
+                        }
+                        return;
+                    }
+                    if (key === 'backspace') {
+                        if (this.calculatorWaiting) return;
+                        this.calculatorEntry = this.calculatorEntry.slice(0, -1);
+                        if (!this.calculatorEntry || this.calculatorEntry === '-') this.calculatorEntry = '0';
+                        return;
+                    }
+                    if (key === 'negate' || key === '%') {
+                        if (key === 'negate') {
+                            this.calculatorEntry = this.calculatorEntry.startsWith('-') ? this.calculatorEntry.slice(1) : '-' + this.calculatorEntry;
+                        } else {
+                            const base = ['+', '-'].includes(this.calculatorOperator) ? this.calculatorAccumulator : 1;
+                            if (!this.setCalculatorResult(base * Number(this.calculatorEntry) / 100)) return;
+                        }
+                        this.calculatorWaiting = false;
+                        if (!this.calculatorOperator) this.calculatorExpression = '';
+                        return;
+                    }
+                    if (!['+', '-', '*', '/', '='].includes(key)) return;
+                    const symbols = { '+': '+', '-': '−', '*': '×', '/': '÷' };
+                    const right = Number(this.calculatorEntry);
+                    if (this.calculatorOperator && (!this.calculatorWaiting || key === '=')) {
+                        const left = this.calculatorAccumulator;
+                        const operator = this.calculatorOperator;
+                        const result = operator === '+' ? left + right : operator === '-' ? left - right
+                            : operator === '*' ? left * right : right === 0 ? NaN : left / right;
+                        if (!this.setCalculatorResult(result)) return;
+                        this.calculatorExpression = `${this.formatCalculatorNumber(left)} ${symbols[operator]} ${this.formatCalculatorNumber(right)} =`;
+                    }
+                    this.calculatorOperator = key === '=' ? null : key;
+                    this.calculatorAccumulator = key === '=' ? null : Number(this.calculatorEntry);
+                    this.calculatorWaiting = true;
+                    if (key !== '=') this.calculatorExpression = `${this.formatCalculatorNumber(this.calculatorEntry)} ${symbols[key]}`;
                 },
                 async openAddressLookup() {
                     if (!this.$refs.addressDialog.open) this.$refs.addressDialog.showModal();

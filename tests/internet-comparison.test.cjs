@@ -136,6 +136,29 @@ test('alternative Mesh or MyTV benefits remain separate and respect existing fil
     assert.equal(JSON.stringify(state.internetData), original);
 });
 
+test('plan picker lists unique names while separate component choices preserve comparison variants', async () => {
+    const state = await loadInternet();
+    const names = Array.from(state.internetComparisonPlans, plan => plan.name);
+    assert.equal(names.length, new Set(names).size);
+    const home2 = state.internetComparisonPlans.find(plan => plan.name === 'Home 2');
+    state.activeInternetComparisonId = home2.id;
+    assert.equal(state.selectedInternetComparisonPlan.name, 'Home 2');
+    assert.deepEqual(Array.from(state.selectedInternetComparisonPlan.variants, option => option.meshCount).sort((a, b) => a - b), [0, 1, 2]);
+    state.activeInternetComparisonId = home2.variants.find(option => option.meshCount === 2).id;
+    assert.equal(state.selectedInternetComparison.meshCount, 2);
+    assert.equal(state.selectedInternetComparisonPlan.id, home2.id);
+    assert.deepEqual(sourceCells(provider(state, 'viettel')), ['E9']);
+    const slay = state.internetComparisonPlans.find(plan => plan.name === 'Home Slay_M');
+    assert.deepEqual(Array.from(slay.variants, option => option.configurationLabel), ['1 Mesh', 'TV']);
+    const sanh = state.internetComparisonPlans.find(plan => plan.name === 'Home Cam Sành');
+    assert.equal(sanh.variants.length, 1);
+    assert.equal(sanh.variants[0].meshCount, 1);
+    assert.ok(sanh.variants[0].camera && sanh.variants[0].tv);
+    assert.match(sanh.variants[0].details, /MyTV\(S1\/S2\)/);
+    state.internetFilters.mesh = '2';
+    assert.ok(state.internetComparisonPlans.every(plan => plan.variants.every(option => option.meshCount === 2)));
+});
+
 test('comparison price differences state their direction and modal restores trigger focus', async () => {
     const state = await loadInternet();
     select(state, 'Home Slay');

@@ -51,15 +51,15 @@
 
 @keyframes kdol-spin { to { transform: rotate(360deg); } }
 
-/* Tra cứu địa chỉ từ nút bên phải header. */
-.kdol-address-trigger {
+/* Công cụ bên phải header. */
+.kdol-header-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 0.5rem; margin-left: 1rem; }
+.kdol-header-trigger {
     display: inline-flex;
     flex: 0 0 auto;
     align-items: center;
     justify-content: center;
     width: 2.5rem;
     min-height: 2.5rem;
-    margin-left: 1rem;
     padding: 0.5rem;
     border: 1px solid rgb(255 255 255 / 0.4);
     border-radius: var(--kdol-radius-lg);
@@ -67,8 +67,42 @@
     background: rgb(255 255 255 / 0.1);
     cursor: pointer;
 }
-.kdol-address-trigger:hover { background: rgb(255 255 255 / 0.2); }
-.kdol-address-trigger:focus-visible { outline: 2px solid white; outline-offset: 3px; }
+.kdol-header-trigger:hover { background: rgb(255 255 255 / 0.2); }
+.kdol-header-trigger:focus-visible { outline: 2px solid white; outline-offset: 3px; }
+
+/* Máy tính giá nhanh. */
+.kdol-calculator-dialog {
+    width: min(22rem, calc(100vw - 1.5rem));
+    max-width: none;
+    max-height: calc(100dvh - 1.5rem);
+    margin: auto;
+    padding: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 1px solid var(--kdol-color-border);
+    border-radius: var(--kdol-radius-control);
+    background: var(--kdol-color-surface);
+    color: #1e293b;
+    box-shadow: var(--kdol-shadow);
+}
+.kdol-calculator-dialog::backdrop { background: rgb(15 23 42 / 0.55); }
+.kdol-calculator-content { padding: 1rem; }
+.kdol-calculator-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.75rem; }
+.kdol-calculator-heading h2 { color: var(--kdol-color-primary); font-size: 1.25rem; font-weight: 700; }
+.kdol-calculator-close { display: grid; flex: 0 0 auto; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: var(--kdol-radius-lg); background: var(--kdol-color-control); cursor: pointer; }
+.kdol-calculator-screen { padding: 0.75rem; border: 1px solid var(--kdol-color-border-light); border-radius: var(--kdol-radius-lg); background: var(--kdol-color-surface-muted); text-align: right; }
+.kdol-calculator-expression { min-height: 1.5rem; color: #64748b; font-size: 0.875rem; overflow-wrap: anywhere; }
+.kdol-calculator-value { display: block; min-height: 2.75rem; font-size: 1.75rem; line-height: 1.5; font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.kdol-calculator-keys { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.5rem; margin-top: 0.75rem; }
+.kdol-calculator-key { min-height: 3rem; border: 1px solid var(--kdol-color-border); border-radius: var(--kdol-radius-lg); background: var(--kdol-color-surface-muted); font-size: 1.125rem; font-weight: 600; cursor: pointer; }
+.kdol-calculator-key--action { background: var(--kdol-color-control); }
+.kdol-calculator-key--operator { background: var(--kdol-color-primary-light); color: var(--kdol-color-primary); }
+.kdol-calculator-key--equals { background: var(--kdol-color-primary); color: white; }
+.kdol-calculator-key:hover { filter: brightness(0.95); }
+.kdol-calculator-key:active { filter: brightness(0.9); }
+.kdol-calculator-dialog :is(button, [tabindex]):focus-visible { outline: 2px solid var(--kdol-color-primary); outline-offset: 2px; }
+
+/* Tra cứu địa chỉ. */
 .kdol-address-dialog {
     width: min(48rem, calc(100vw - 1.5rem));
     max-width: none;
@@ -612,6 +646,8 @@ input[type="range"]::-webkit-slider-thumb {
 .kdol-comparison-field { display: flex; flex: 1 1 9rem; flex-direction: column; gap: 0.375rem; min-width: 0; color: #334155; font-size: 0.875rem; font-weight: 600; }
 .kdol-comparison-field--plan { flex: 4 1 22rem; }
 .kdol-comparison-field .kdol-select { width: 100%; max-width: 100%; min-width: 0; font-size: 0.875rem; font-weight: 400; }
+.kdol-comparison-variants { display: flex; flex-wrap: wrap; align-items: center; gap: 0.375rem; margin-top: 0.75rem; font-size: 0.8125rem; }
+.kdol-comparison-variants > span { margin-right: 0.25rem; color: #475569; }
 .kdol-comparison-note { margin-top: 0.5rem; color: #475569; font-size: 0.8125rem; line-height: 1.5; }
 .kdol-comparison-table-wrap { margin-top: 1rem; }
 .kdol-comparison-table { width: 100%; min-width: 32rem; border-collapse: collapse; font-size: 0.875rem; line-height: 1.5; text-align: left; }
@@ -714,12 +750,18 @@ input[type="range"]::-webkit-slider-thumb {
 .kdol-internet-install-text { display: inline; white-space: nowrap; }
 .kdol-internet-footnote { margin-top: 0.5rem; }
 .kdol-internet-notes { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--kdol-color-border); color: #475569; font-size: 0.8125rem; line-height: 1.6; overflow-wrap: anywhere; }
+.kdol-internet-notes + .kdol-internet-notes { margin-top: 0.75rem; padding-top: 0.75rem; }
 .kdol-internet-notes summary { color: var(--kdol-color-primary); font-size: 0.875rem; font-weight: 700; cursor: pointer; }
 .kdol-internet-notes[open] summary { margin-bottom: 0.625rem; }
 .kdol-internet-notes summary:focus-visible { outline: 2px solid var(--kdol-color-primary); outline-offset: 3px; }
 .kdol-internet-notes ol { padding-left: 1.25rem; list-style: decimal; }
+.kdol-internet-notes ul { padding-left: 1.25rem; list-style: disc; }
 .kdol-internet-notes li + li { margin-top: 0.625rem; }
 .kdol-internet-notes strong { font-weight: 600; }
+.kdol-internet-reference { margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--kdol-color-border); font-size: 0.8125rem; line-height: 1.5; overflow-wrap: anywhere; }
+.kdol-internet-reference a { color: var(--kdol-color-primary); text-decoration: underline; text-underline-offset: 0.1875rem; }
+.kdol-internet-reference a:focus-visible { outline: 2px solid var(--kdol-color-primary); outline-offset: 3px; }
+.kdol-internet-reference span { display: block; margin-top: 0.25rem; color: #64748b; font-size: 0.75rem; }
 .kdol-internet-scroll-hint { margin-bottom: 0.75rem; color: #64748b; font-size: 0.75rem; line-height: 1.125rem; }
 .kdol-internet-section-title { margin-bottom: 0.75rem; color: var(--kdol-color-table-heading); font-size: 1rem; line-height: 1.5rem; font-weight: 700; }
 .kdol-internet-section-heading {
@@ -1037,6 +1079,49 @@ input[type="range"]::-webkit-slider-thumb {
 .kdol-toast-leave-active { transition: opacity var(--kdol-transition-duration) var(--kdol-transition-easing), transform var(--kdol-transition-duration) var(--kdol-transition-easing); }
 .kdol-toast-enter-from,
 .kdol-toast-leave-to { opacity: 0; transform: translateY(6px); }
+
+/* Trang tham khảo đối tượng khách hàng và kênh bán, đọc được không cần CDN. */
+.kdol-reference-page { margin: 0; background: var(--kdol-color-surface-muted); color: #1e293b; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 1rem; line-height: 1.6; }
+.kdol-reference-page *,
+.kdol-reference-page *::before,
+.kdol-reference-page *::after { box-sizing: border-box; }
+.kdol-reference-page [hidden] { display: none; }
+.kdol-reference-page a { color: var(--kdol-color-primary); text-underline-offset: 0.1875rem; }
+.kdol-reference-page :is(a, input, select):focus-visible { outline: 2px solid var(--kdol-color-primary); outline-offset: 3px; }
+.kdol-reference-container { width: min(70rem, calc(100% - 2rem)); margin-inline: auto; }
+.kdol-reference-header { padding: 0.875rem 0; background: var(--kdol-color-primary); }
+.kdol-reference-header > div { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1rem; }
+.kdol-reference-header a { color: white; font-size: 0.875rem; }
+.kdol-reference-header .kdol-reference-brand { font-size: 1.25rem; font-weight: 700; letter-spacing: 0.075em; text-decoration: none; }
+.kdol-reference-header a:focus-visible { outline-color: white; }
+.kdol-reference-skip { position: absolute; top: -5rem; left: 1rem; z-index: 20; padding: 0.5rem 1rem; background: var(--kdol-color-surface); border-radius: var(--kdol-radius-md); }
+.kdol-reference-skip:focus { top: 0.5rem; }
+.kdol-reference-main { padding-top: 2rem; padding-bottom: 2rem; }
+.kdol-reference-intro { max-width: 48rem; }
+.kdol-reference-badge { display: inline-block; padding: 0.25rem 0.625rem; border-radius: var(--kdol-radius-sm); background: var(--kdol-color-primary-light); color: var(--kdol-color-primary); font-size: 0.8125rem; font-weight: 600; }
+.kdol-reference-intro h1 { margin: 0.75rem 0; color: var(--kdol-color-table-heading); font-size: clamp(1.75rem, 4vw, 2.5rem); line-height: 1.2; letter-spacing: -0.025em; }
+.kdol-reference-intro p { margin: 0.625rem 0; color: #475569; }
+.kdol-reference-nav { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; margin: 1.75rem 0 1rem; font-size: 0.875rem; }
+.kdol-audience-tools { display: flex; flex-wrap: wrap; gap: 0.75rem 1rem; padding: 1rem; border: 1px solid var(--kdol-color-border); border-radius: var(--kdol-radius-lg); background: var(--kdol-color-surface); }
+.kdol-audience-tools label { display: flex; flex: 1 1 12rem; flex-direction: column; gap: 0.375rem; min-width: 0; font-size: 0.875rem; font-weight: 600; }
+.kdol-audience-tools label:first-child { flex: 3 1 22rem; }
+.kdol-audience-tools :is(input, select) { width: 100%; min-height: 2.75rem; padding: 0.625rem 0.75rem; border: 1px solid var(--kdol-color-table-border); border-radius: var(--kdol-radius-md); background: var(--kdol-color-surface); color: inherit; font: inherit; font-weight: 400; }
+.kdol-audience-tools p { flex-basis: 100%; margin: 0; color: #64748b; font-size: 0.8125rem; }
+.kdol-audience-section { margin-top: 2rem; scroll-margin-top: 1rem; }
+.kdol-audience-section-heading { margin-bottom: 1rem; }
+.kdol-audience-section-heading h2 { margin: 0; color: var(--kdol-color-primary); font-size: 1.125rem; line-height: 1.5; }
+.kdol-audience-section-heading p { margin: 0.375rem 0 0; color: #475569; font-size: 0.875rem; }
+.kdol-audience-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 27rem), 1fr)); gap: 1rem; }
+.kdol-audience-card { min-width: 0; padding: 1.25rem; border: 1px solid var(--kdol-color-border); border-radius: var(--kdol-radius-lg); background: var(--kdol-color-surface); overflow-wrap: anywhere; }
+.kdol-audience-card h3 { margin: 0; font-size: 1rem; line-height: 1.5; }
+.kdol-audience-card p { margin: 0.625rem 0 0; color: #475569; font-size: 1rem; }
+.kdol-audience-card dl { margin: 1rem 0 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--kdol-color-border); }
+.kdol-audience-card dt { color: #64748b; font-size: 0.8125rem; }
+.kdol-audience-card dd { margin: 0.25rem 0 0; color: var(--kdol-color-primary); font-size: 0.875rem; font-weight: 600; }
+.kdol-audience-card small { color: #64748b; font-size: 0.75rem; }
+.kdol-audience-empty { padding: 2rem 1rem; color: #475569; text-align: center; }
+.kdol-reference-footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--kdol-color-border); color: #64748b; font-size: 0.8125rem; }
+.kdol-reference-footer p { margin: 0 0 0.625rem; }
 
 @media (hover: hover) and (pointer: fine) {
     .kdol-nav-button:hover { background-color: var(--kdol-color-primary-light); }

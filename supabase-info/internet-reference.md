@@ -50,18 +50,32 @@ Tổng tiền dùng cùng công thức Internet hiện có: giá tháng × 1/3/6
 
 Theo nội dung người dùng yêu cầu ghi chú, cuối tab Internet gia đình (sau cả bảng Internet và Internet + Di động) có mục thu gọn mặc định `Lưu ý về MyTV trong gói tích hợp`; bấm tiêu đề để mở/đóng, giữ đầy đủ bốn lưu ý:
 
-1. Mặc định chỉ có MyTV App; dùng STB tính thêm 22.000đ/STB/tháng, chi tiết theo Phụ lục 01.
+Câu chữ trên giao diện được rút gọn theo yêu cầu, vẫn giữ chính sách mua thêm STB, phí/Phụ lục 01, các lựa chọn nội dung, giới hạn và chiều đổi gói, mặc định cho thuê bao mới tại TP.HCM cùng các lựa chọn add-on.
+
+1. Mặc định chỉ có MyTV App; dùng STB tính thêm 50.000đ/STB/tháng theo đính chính mới nhất của người dùng, chi tiết theo Phụ lục 01.
 2. HomeTV chọn 1 trong MyTV Flexi 1, Flexi 2, Film, Film+; HomeTV Vip dùng MyTV Vip.
 3. Đổi nội dung miễn phí trên EPG, tối đa 1 lần/tháng/thuê bao. Các chiều: Flexi 1 ↔ Flexi 2; Nâng cao plus ↔ NC plus SCTV; Film → Film+ chỉ một chiều.
 4. Khách hàng phát triển mới gói tích hợp tại TP.HCM mặc định MyTV Flexi 2; hướng dẫn tự đổi linh hoạt trên EPG giữa 4 gói đồng giá Flexi 1, Flexi 2, Film, Film+ hoặc mua add-on VTVcab, SCTV, Tắt quảng cáo...
 
-Mức 22.000đ trong ghi chú thuộc gói tích hợp. Yêu cầu lần này chỉ thêm nội dung chú thích, không thay bộ tính giá hoặc mức phí thuê STB của MyTV B2C/B2B riêng.
+Mức phí STB trong ghi chú gói tích hợp đã được người dùng đính chính thành 50.000đ/STB/tháng, đồng nhất với bộ tính MyTV B2C. Bảng MyTV B2B vẫn theo nguồn riêng: phí thuê STB 40.000đ/tháng chưa VAT.
+
+Ảnh chính sách người dùng bổ sung ngày 20/11/2026 được chia thành các mục thu gọn riêng dưới bảng giá Internet gia đình:
+
+- **Dùng thử và kết nối Internet:** Dùng thử các gói có Home Internet, MyTV, Mesh; không áp dụng gói có Camera. Gói không cấp IP tĩnh.
+- **Camera Cloud và WiFi Mesh:** Cloud lưu trữ 1 ngày, 4 tài khoản truy cập đồng thời; Mesh gồm 1 thiết bị Mesh 6 mua sắm tập trung (MSTT).
+- **Lưu ý về MyTV trong gói tích hợp:** Giữ đủ nội dung MyTV đã ghi chú; bổ sung quy định thành phần MyTV App và mua thêm STB theo chính sách hiện hành.
+- **Thiết bị bổ sung và thủ tục dịch vụ:** Mua thêm Mesh, Camera, STB hoặc GTGT (GreenNet, Family Safe...) theo chính sách đơn lẻ; chuyển đổi/đăng ký/hủy gói, chính sách sản phẩm dịch vụ và đối tượng áp dụng theo quy định hiện hành.
+- **Thuê bao BRCĐ hiện hữu:** BRCĐ tạm ngưng PSC rồi khôi phục; BRCĐ đã thanh lý/hủy quay lại trong ≤ 6 tháng kể từ ngày thanh lý/hủy, khôi phục mã thuê bao cũ và không thu cước đấu nối hòa mạng; thuê bao có sẵn IMS/MyTV trên cáp quang hoặc khách chuyển từ đồng sang quang; BRCĐ đang hoạt động dịch chuyển/chuyển đổi vị trí lắp đặt. Phần danh sách phụ lục tham chiếu đã bỏ theo yêu cầu người dùng.
+
+Các mục mặc định đóng, có thể mở độc lập. Đây là nội dung ghi chú theo yêu cầu; không sửa thành phần hoặc cách tính giá từng gói trong bảng.
+
+Dưới các ghi chú có liên kết `Tham khảo: Đối tượng khách hàng và kênh bán`. Liên kết mở trang riêng `doi-tuong-khach-hang.html` trong tab mới, gồm 19 nhóm khách hàng theo hai nhóm kênh bán, để hỗ trợ tư vấn. Trang có tìm kiếm không dấu và lọc kênh bán; nội dung vẫn đọc được khi không chạy JavaScript. Theo yêu cầu người dùng, giao diện chỉ ghi tính tham khảo, dùng nhãn `Gói tham khảo`, không hiển thị số trang, số văn bản, phụ lục hoặc thời điểm của nguồn; không liên kết hoặc lưu bản PDF/ảnh trích xuất trong tài nguyên website vì đây là văn bản nội bộ. Chỉ giữ nội dung tham khảo đã biên soạn. Chức năng này không thay đổi giá, quyền lợi hoặc điều kiện lọc gói đang có trong ứng dụng.
 
 ## Cập nhật bảng Home1_M / HomeTV_B / Home Slay_M / Home Slay_F
 
 Theo bảng mới người dùng yêu cầu cập nhật tốc độ và thành phần:
 
-- Home Slay_M và Home Slay_F ghi tốc độ `300ULM Mbps` thay cho `300Mbps`, áp dụng qua `planCorrections` vào dữ liệu hiển thị và tooltip. Bộ lọc/so sánh tiếp tục nhận diện tốc độ là 300 Mbps. Cột tích hợp bỏ phần tốc độ lặp lại.
+- Home Slay_M và Home Slay_F ghi tốc độ `300ULM` theo yêu cầu rút gọn mới nhất, áp dụng qua `planCorrections` vào dữ liệu hiển thị và tooltip. Bộ lọc/so sánh tiếp tục nhận diện tốc độ là 300 Mbps. Cột tích hợp bỏ phần tốc độ lặp lại.
 - HomeTV_B chỉ gồm MyTV S1/S2 (App), không còn lựa chọn Mesh. Cập nhật bộ lọc và cấu hình so sánh thông qua ghi chú đã đính chính; giá vẫn ở cột Mặc định.
 - Home1_M giữ 300 Mbps + 1 Mesh 6. Home Slay_M giữ lựa chọn 1 Mesh 6 **hoặc** MyTV S1/S2 App. Home Slay_F giữ 1 Mesh 6 + 1 Camera Indoor + Cloud 1 ngày.
 - Giá tháng lần lượt Home1_M 195.000đ, HomeTV_B 195.000đ, Home Slay_M 210.000đ, Home Slay_F 215.000đ. Các kỳ 3/6/12–13 tháng khớp bộ tính hiện tại; không đổi giá hoặc khu vực có gói. Không ghi đè dữ liệu nguồn Supabase/CSV.

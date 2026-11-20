@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Thông tin tham khảo về đối tượng khách hàng, nhu cầu và kênh bán để hỗ trợ tư vấn các gói dịch vụ BRCĐ.">
+    <title>Đối tượng khách hàng và kênh bán · KDOL</title>
+    <link rel="icon" type="image/svg+xml" href="assets/kdol-icon.svg">
+    <link rel="stylesheet" href="styles.css?v=20261120-5">
+</head>
+<body class="kdol-reference-page">
+    <a class="kdol-reference-skip" href="#reference-main">Đến nội dung</a>
+    <header class="kdol-reference-header">
+        <div class="kdol-reference-container">
+            <a class="kdol-reference-brand" href="index.html">KDOL</a>
+            <a href="index.html">Bảng giá dịch vụ</a>
+        </div>
+    </header>
+    <main id="reference-main" class="kdol-reference-container kdol-reference-main">
+        <div class="kdol-reference-intro">
+            <span class="kdol-reference-badge">Thông tin tham khảo</span>
+            <h1>Đối tượng khách hàng<br>và kênh bán</h1>
+            <p>Tra cứu nhóm khách hàng, nhu cầu và các gói tham khảo để hỗ trợ tư vấn.</p>
+        </div>
+
+        <nav class="kdol-reference-nav" aria-label="Nhóm kênh bán">
+            <a href="#channel-limited">Không gồm kênh ngoài</a>
+            <a href="#channel-inclusive">Có gồm kênh ngoài</a>
+        </nav>
+
+        <div id="audience-tools" class="kdol-audience-tools" hidden>
+            <label for="audience-query">Tìm nhóm khách hàng hoặc gói cước
+                <input id="audience-query" type="search" placeholder="Ví dụ: nhà nhiều tầng, camera, Home 3…" autocomplete="off" aria-controls="audience-content">
+            </label>
+            <label for="audience-channel">Kênh bán
+                <select id="audience-channel" aria-controls="audience-content">
+                    <option value="">Tất cả</option>
+                    <option value="limited">Không gồm kênh ngoài</option>
+                    <option value="inclusive">Có gồm kênh ngoài</option>
+                </select>
+            </label>
+            <p id="audience-count" role="status" aria-live="polite"></p>
+        </div>
+
+        <div id="audience-content">
+            <section id="channel-limited" class="kdol-audience-section" data-audience-section>
+                <div class="kdol-audience-section-heading">
+                    <h2>Kênh VNPT T/TP · Không gồm kênh ngoài</h2>
+                    <p>Không bao gồm kênh ngoài bán hàng trực tiếp và kênh ngoài hợp tác kinh doanh.</p>
+                </div>
+                <div class="kdol-audience-grid">
+                    <article class="kdol-audience-card" data-audience-card data-channel="limited">
+                        <h3>Hộ nghèo, hộ cận nghèo</h3>
+                        <p>Thuộc đối tượng an sinh xã hội, được hưởng chính sách viễn thông công ích do cơ quan quản lý nhà nước ban hành.</p>
+                        <dl><dt>Gói tham khảo</dt><dd>VTCI</dd></dl>
+                        <small>Internet đơn lẻ</small>
+                    </article>
+                    <article class="kdol-audience-card" data-audience-card data-channel="limited">
+                        <h3>Khách hàng thoát nghèo</h3>
+                        <p>Khách hàng thoát nghèo chuyển sang đóng cước sử dụng dịch vụ BRCĐ tại VNPT.</p>
+                        <dl><dt>Gói tham khảo</dt><dd>Home Hạnh phúc</dd></dl>
+                        <small>Internet đơn lẻ</small>
+                    </article>
+                    <article class="kdol-audience-card" data-audience-card data-channel="limited">
+                        <h3>Nhu cầu an ninh cơ bản</h3>
+                        <p>Người thuê nhà, hộ gia đình nhỏ, cửa hàng tạp hóa nhỏ; cần 1 camera trông xe hoặc cửa ra vào. Nhạy cảm về giá, chỉ cần lưu trữ ngắn ngày.</p>
+                        <dl><dt>Gói tham khảo</dt><dd>Home Cam Canh · Home Cam Sành · Home Cam Mật</dd></dl>
+                        <small>Internet + MyTV + Camera, theo từng gói</small>
+                    </article>
+                </div>
+            </section>
+
+            <section id="channel-inclusive" class="kdol-audience-section" data-audience-section>
+                <div class="kdol-audience-section-heading">
+                    <h2>Kênh VNPT T/TP · Có gồm kênh ngoài</h2>
+                    <p>Bao gồm kênh ngoài bán hàng trực tiếp và kênh ngoài hợp tác kinh doanh.</p>
+                </div>
+                <div class="kdol-audience-grid">
+                    <article class="kdol-audience-card" data-audience-card data-channel="inclusive">
+                        <h3>Khách hàng phổ thông, quan tâm giá</h3>
+                        <p>Khách hàng phổ thông đại chúng có nhu cầu so sánh về giá.</p>
+                        <dl><dt>Gói tham khảo</dt><dd>Home 1</dd></dl>
+                        <small>Internet đơn lẻ</small>
+                    </article>
+                    <article class="kdol-audience-card" data-audience-card data-channel="inclusive">
+                        <h3>Chỉ cần Internet, ưu tiên chất lượng</h3>
+                        <p>Khách hàng tiêu dùng cao, chỉ có nhu cầu Internet và tập trung vào chất lượng dịch vụ.</p>
+                        <dl><dt>Gói tham khảo</dt><dd>Home 2 · Home 3</dd></dl>
+                        <small>Internet đơn lẻ</small>
+                    </article>
+                    <article class="kdol-audience-card" data-audience-card data-channel="inclusive">
+                        <h3>Internet và truyền hình cơ bản</h3>
+                        <p>Sinh viên, công nhân, người độc thân; xem trên điện thoại, máy tính bảng hoặc Smart TV, chủ yếu tin tức và YouTube cơ bản.</p>
+                        <dl><dt>Gói tham khảo</dt><dd>Gói cước nền tảng + MyTV Mobile</dd></dl>
+                        <small>Internet và truyền hình cơ bản</small>
+                    </article>
+                    <article class="kdol-audience-card" data-audience-card data-channel="inclusive">
+                        <h3>Căn hộ nhỏ, nhà 1 tầng</h3>
+                        <p>Chung cư 1–2 phòng ngủ hoặc nhà ống 1 tầng, diện tích 50–80 m², có 1–2 vách ngăn bê tông nhẹ. Thường dùng 1 Smart TV và 3–5 smartphone.</p>
+                        <dl><dt>Gói tham khảo</dt><dd>Home 1 (Mesh) · HomeTV 1 (Mesh) · Home Cam 1 (Mesh)</dd></dl>
+                        <small>Nhóm cá nhân phổ thông</small>
+                    </article>
+                    <article class="kdol-audience-card" data-audience-card data-channel="inclusive">
+                        <h3>Nhà nhiều tầng, diện tích lớn, CCCO</h3>
+                        <p>Nhà ống 2–3 tầng hoặc chung cư trên 90 m², nhiều phòng, vách dày và góc khuất sóng. Dùng 2 Smart TV, 5–8 smartphone/máy tính; muốn phủ WiFi rộng, hạn chế đi dây LAN. Mức chi trả khá.</p>
+                        <dl><dt>Gói tham khảo</dt><dd>Home 1 (2 Mesh) · HomeTV 1 (2 Mesh) · Home Cam 1 (2 Mesh) · Home 2 (2 Mesh) · HomeTV 2 (2 Mesh) · Home Cam 2 (2 Mesh)</dd></dl>
+                        <small>Internet tích hợp</small>
+                    </article>
+                    <article class="kdol-audience-card" data-audience-card data-channel="inclusive">
+                        <h3>Gia đình có nhu cầu truyền hình</h3>
+                        <p>Gia đình 4–6 thành viên, có người già và trẻ em; dùng Smart TV hoặc TV thường cần đầu thu. Xem phim truyền hình, gameshow và tin tức hằng ngày.</p>
+                        <dl><dt>Gói tham khảo</dt><dd>HomeTV 1 + Pack Mesh/Cam</dd></dl>
+                        <small>Internet tích hợp</small>
+                    </article>
+                    <article class="kdol-audience-card" data-audience-card data-channel="inclusive">
+                        <h3>Giám sát trẻ em, người già, cửa hàng</h3>
+                        <p>Vợ chồng trẻ để con/người già ở nhà hoặc hộ kinh doanh nhỏ. Có nhu cầu giám sát từ xa, đàm thoại hai chiều, cảnh báo té ngã/tiếng khóc và lưu Cloud để bảo vệ dữ liệu. Mức chi trả khá.</p>
+                        <dl><dt>Gói tham khảo</dt><dd>Home Cam 2 (Mesh) · Home Cam 2 (2 Mesh) + Pack Cam/Mesh</dd></dl>
+                        <small>Mô tả nhu cầu của nhóm khách hàng</small>
+                    </article>
+                    <article class="kdol-audience-card" data-audience-card data-channel="inclusive">
+                        <h3>Streamer, nhà sáng tạo nội dung, game thủ</h3>
+                        <p>Phòng studio hoặc chung cư; livestream đa nền tảng, upload/download video 4K liên tục, chơi game máy chủ quốc tế và quan tâm độ trễ thấp. Dùng PC cấu hình cao, PS5 hoặc Xbox.</p>
+                        <dl><dt>Gói tham khảo</dt><dd>Home 2 · Home 3 + Pack Cam/Mesh</dd></dl>
+                        <small>Internet đơn lẻ</small>
+                    </article>
+                    <article class="kdol-audience-card" data-audience-card data-channel="inclusive">
+                        <h3>Làm việc từ xa, IT, bán hàng online</h3>
+                        <p>Có phòng làm việc riêng; cần mạng ổn định để livestream bán hàng, họp video nhiều người và truy cập Cloud/Server từ xa liên tục. Sẵn sàng đầu tư mạng phục vụ công việc.</p>
+                        <dl><dt>Gói tham khảo</dt><dd>Home 3 · Home 3 (Mesh/2 Mesh) · Home Cam 3 (Mesh/2 Mesh) + Pack Cam/Mesh</dd></dl>
+                        <small>WFH, SOHO</small>
+                    </article>
+                    <article class="kdol-audience-card" data-audience-card data-channel="inclusive">
+                        <h3>Gia đình cao cấp, nhà thông minh</h3>
+                        <p>Biệt thự, căn hộ rất rộng hoặc nhiều tầng, có sân vườn; trên 20 thiết bị IoT và Smart TV 4K/8K. Muốn WiFi phủ rộng, thẩm mỹ cao, hạn chế đi dây; mức chi trả cao/rất cao.</p>
+                        <dl><dt>Gói tham khảo</dt><dd>Home 3 · Home Mesh 3 (1/2 Mesh) · HomeTV 3 · Home X + Pack Cam/Mesh</dd></dl>
+                        <small>Smarthome</small>
+                    </article>
+                    <article class="kdol-audience-card" data-audience-card data-channel="inclusive">
+                        <h3>Nhu cầu nội dung cao cấp</h3>
+                        <p>Khách hàng trẻ, thu nhập cao, thích thể thao/Ngoại hạng Anh và phim bom tấn; dùng TV 4K/8K, xem trên nhiều màn hình.</p>
+                        <dl><dt>Gói tham khảo</dt><dd>HomeTV 1 (VIP) · HomeTV 2 (VIP) · HomeTV 3 (VIP)</dd></dl>
+                        <small>Nhu cầu truyền hình cao cấp</small>
+                    </article>
+                    <article class="kdol-audience-card" data-audience-card data-channel="inclusive">
+                        <h3>Quán cà phê, nhà hàng nhỏ, hộ F&amp;B</h3>
+                        <p>Không gian mở, đông khách; cung cấp WiFi để check-in, lướt web, khoảng 30–50 thiết bị đồng thời. Cần tốc độ cao và tối ưu chi phí so với kênh truyền doanh nghiệp.</p>
+                        <dl><dt>Gói tham khảo</dt><dd>Home Cam 2 (2 Mesh) · Home Cam 3 (Mesh/2 Mesh) · Home X</dd></dl>
+                        <small>Micro-SME</small>
+                    </article>
+                    <article class="kdol-audience-card" data-audience-card data-channel="inclusive">
+                        <h3>Cơ sở kinh doanh cần an ninh nhiều lớp</h3>
+                        <p>Nhà mặt phố, biệt thự liền kề hoặc cửa hàng tại gia; muốn nhiều camera độ nét cao để giám sát người thân, hàng hóa và xem từ xa. Quan tâm an toàn dữ liệu, rủi ro mất hoặc hỏng ổ cứng.</p>
+                        <dl><dt>Gói tham khảo</dt><dd>Home Cam 2 (2 Mesh) · Home Cam 3 (Mesh/2 Mesh)</dd></dl>
+                        <small>Internet tích hợp</small>
+                    </article>
+                    <article class="kdol-audience-card" data-audience-card data-channel="inclusive">
+                        <h3>Căn hộ dịch vụ, homestay, villa cho thuê</h3>
+                        <p>Nhiều phòng nhỏ, tường cách âm dày; muốn gói tốc độ cao để chia sẻ băng thông tới các phòng qua hệ thống Router/Switch. Mức chi trả khá.</p>
+                        <dl><dt>Gói tham khảo</dt><dd>Home Cam 2 (2 Mesh) · Home Cam 3 (Mesh/2 Mesh) · HomeTV 3 (Mesh/2 Mesh) · Home X</dd></dl>
+                        <small>Internet tích hợp</small>
+                    </article>
+                    <article class="kdol-audience-card" data-audience-card data-channel="inclusive">
+                        <h3>Người nước ngoài sinh sống tại Việt Nam</h3>
+                        <p>Chung cư cao cấp hoặc khu biệt thự; thường gọi video về nước, xem OTT quốc tế ở độ phân giải 4K. Mức chi trả cao, chú trọng chất lượng.</p>
+                        <dl><dt>Gói tham khảo</dt><dd>Home 3 · Home 3 (1/2 Mesh) · Home X + Pack Cam/Mesh</dd></dl>
+                        <small>Cộng đồng Expat</small>
+                    </article>
+                    <article class="kdol-audience-card" data-audience-card data-channel="inclusive">
+                        <h3>Gia đình cần Internet và liên lạc di động</h3>
+                        <p>Gia đình 4–6 thành viên, cần Internet cơ bản, ổn định, tối ưu chi phí; đồng thời có nhu cầu data, thoại và gọi nội nhóm giữa các thuê bao VinaPhone.</p>
+                        <dl><dt>Gói tham khảo</dt><dd>Home Sành 2</dd></dl>
+                        <small>Internet tích hợp</small>
+                    </article>
+                </div>
+            </section>
+        </div>
+        <p id="audience-empty" class="kdol-audience-empty" hidden>Không có nhóm phù hợp. Hãy thử từ khóa khác hoặc chọn tất cả kênh bán.</p>
+
+        <footer class="kdol-reference-footer">
+            <p>Thông tin mang tính tham khảo, giúp hỗ trợ tư vấn theo nhu cầu khách hàng.</p>
+        </footer>
+    </main>
+    <script>
+        (() => {
+            const query = document.getElementById('audience-query');
+            const channel = document.getElementById('audience-channel');
+            const cards = [...document.querySelectorAll('[data-audience-card]')];
+            const sections = [...document.querySelectorAll('[data-audience-section]')];
+            const normalize = value => value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/\s+/g, ' ').trim();
+            const contents = new Map(cards.map(card => [card, normalize(card.textContent)]));
+            const update = () => {
+                const search = normalize(query.value);
+                let count = 0;
+                for (const card of cards) {
+                    card.hidden = Boolean((channel.value && card.dataset.channel !== channel.value) || !contents.get(card).includes(search));
+                    if (!card.hidden) count++;
+                }
+                for (const section of sections) section.hidden = [...section.querySelectorAll('[data-audience-card]')].every(card => card.hidden);
+                document.getElementById('audience-count').textContent = `${count} nhóm khách hàng`;
+                document.getElementById('audience-empty').hidden = count > 0;
+            };
+            query.addEventListener('input', update);
+            channel.addEventListener('change', update);
+            for (const link of document.querySelectorAll('.kdol-reference-nav a')) {
+                link.addEventListener('click', () => {
+                    query.value = '';
+                    channel.value = '';
+                    update();
+                });
+            }
+            document.getElementById('audience-tools').hidden = false;
+            update();
+        })();
+    </script>
+</body>
+</html>

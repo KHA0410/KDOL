@@ -19,12 +19,12 @@ window.KDOL_INTERNET = {
         'Home Cam Canh': { note: '01 Camera Indoor và Cloud (1 ngày)' },
         'HomeTV VIP 3': { duration_text: 'HomeTV VIP 3 (1Gbps)' },
         'Home Slay_M': {
-            duration_text: 'Home Slay_M (300ULM Mbps)',
-            note: 'KM: 300ULM Mbps + 1 Mesh 6 hoặc 1 App MyTV'
+            duration_text: 'Home Slay_M (300ULM)',
+            note: 'KM: 300ULM + 1 Mesh 6 hoặc 1 App MyTV'
         },
         'Home Slay_F': {
-            duration_text: 'Home Slay_F (300ULM Mbps)',
-            note: 'KM: 300ULM Mbps + 1 Mesh 6 + 1 Camera Indoor + Cloud 1 ngày'
+            duration_text: 'Home Slay_F (300ULM)',
+            note: 'KM: 300ULM + 1 Mesh 6 + 1 Camera Indoor + Cloud 1 ngày'
         },
         'HomeTV_B': { note: 'KM: 300Mbps + MyTV S1 (App) hoặc MyTV S2 (App)' }
     },
