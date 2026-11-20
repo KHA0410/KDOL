@@ -11,6 +11,14 @@ function calculator() {
     return { state, press };
 }
 
+function attachDialog(state) {
+    const trigger = { isConnected: true, focused: false, focus() { this.focused = true; } };
+    const dialog = { open: false, showModal() { this.open = true; }, close() { this.open = false; } };
+    state.$refs = { calculatorDialog: dialog, calculatorTrigger: trigger, calculatorScreen: { focus() {} } };
+    state.$nextTick = fn => fn();
+    return { trigger, dialog };
+}
+
 test('calculator totals prices and follows pocket-calculator order for chained operations', () => {
     const { state, press } = calculator();
     assert.equal(press('209000*12+300000='), '2808000');
@@ -137,4 +145,107 @@ test('calculator dialog restores focus, preserves values on reopen and closes on
     assert.equal(triggerFocused, true);
     state.openCalculator();
     assert.equal(state.calculatorEntry, '180000');
+});
+
+test('selecting prices reveals one shortcut without opening the calculator; outside clicks dismiss it', () => {
+    const { state } = calculator();
+    const { dialog } = attachDialog(state);
+    const first = {}, second = {};
+    state.selectCalculatorPrice(first);
+    assert.equal(state.activeCalculatorPrice, first);
+    assert.equal(dialog.open, false);
+    state.selectCalculatorPrice(second);
+    assert.equal(state.activeCalculatorPrice, second);
+    state.dismissCalculatorPrice();
+    assert.equal(state.activeCalculatorPrice, null);
+});
+
+test('a price shortcut clears previous calculation and errors, then is ready for VAT or new digits', () => {
+    const { state, press } = calculator();
+    const { dialog } = attachDialog(state);
+    press('3/0=');
+    state.openCalculatorFromPrice(200000, {});
+    assert.equal(dialog.open, true);
+    assert.equal(state.calculatorError, '');
+    assert.equal(state.calculatorExpression, '');
+    assert.equal(state.calculatorEntry, '200');
+    assert.equal(state.calculatorInThousands, true);
+    assert.equal(press('+8%='), '216');
+    state.openCalculatorFromPrice(209000, {});
+    assert.equal(press('*12='), '2508');
+    state.openCalculatorFromPrice(209000, {});
+    assert.equal(press('7'), '7');
+});
+
+test('prefilled prices match displayed rounding and current Internet period and setup fees', () => {
+    const { state } = calculator();
+    attachDialog(state);
+    state.openCalculatorFromPrice(1000.6, {});
+    assert.equal(state.calculatorEntry, '1001');
+    state.internetMonths = 12;
+    state.includeInternetSetupFee = true;
+    state.includeInternetCameraSetupFee = false;
+    state.openCalculatorFromPrice(state.calculateInternetTotal(209000), {});
+    assert.equal(state.calculatorEntry, '2808');
+    assert.equal(state.calculatorInThousands, true);
+    state.internetMonths = 3;
+    state.includeInternetSetupFee = false;
+    state.openCalculatorFromPrice(state.calculateInternetTotal(209000), {});
+    assert.equal(state.calculatorEntry, '627');
+});
+
+test('price shortcuts remove exactly three trailing zeroes and retain fractional results in thousands', () => {
+    const { state, press } = calculator();
+    attachDialog(state);
+    state.openCalculatorFromPrice(1250000, {});
+    assert.equal(state.calculatorEntry, '1250');
+    assert.equal(state.formatCalculatorNumber(state.calculatorEntry), '1.250');
+    assert.equal(state.calculatorInThousands, true);
+    assert.equal(press('/3='), '416.666666666667');
+    state.openCalculatorFromPrice(1000000, {});
+    assert.equal(state.calculatorEntry, '1000');
+    state.openCalculatorFromPrice(-200000, {});
+    assert.equal(state.calculatorEntry, '-200');
+});
+
+test('prices without three trailing zeroes keep their full amount and reset the previous unit', () => {
+    const { state, press } = calculator();
+    attachDialog(state);
+    state.openCalculatorFromPrice(200000, {});
+    press(['clear']);
+    assert.equal(state.calculatorInThousands, true);
+    for (const value of [209500, 982, 1001, 0]) {
+        state.openCalculatorFromPrice(value, {});
+        assert.equal(state.calculatorEntry, String(value));
+        assert.equal(state.calculatorInThousands, false);
+    }
+    state.openCalculatorFromPrice(200000, {});
+    assert.equal(press('5'), '5');
+    assert.equal(state.calculatorInThousands, true);
+});
+
+test('unknown prices cannot open the calculator; zero is a valid price', () => {
+    const { state } = calculator();
+    const { dialog } = attachDialog(state);
+    for (const value of [null, undefined, NaN, Infinity, '200000', Number.MAX_SAFE_INTEGER + 1]) {
+        state.openCalculatorFromPrice(value, {});
+        assert.equal(dialog.open, false);
+    }
+    state.openCalculatorFromPrice(0, {});
+    assert.equal(dialog.open, true);
+    assert.equal(state.calculatorEntry, '0');
+});
+
+test('closing a price calculation restores focus to the price, or the header when its row was removed', () => {
+    const { state } = calculator();
+    const { trigger } = attachDialog(state);
+    const price = { isConnected: true, focused: false, focus() { this.focused = true; } };
+    state.openCalculatorFromPrice(200000, price);
+    state.closeCalculator();
+    assert.equal(price.focused, true);
+    assert.equal(trigger.focused, false);
+    state.openCalculatorFromPrice(200000, price);
+    price.isConnected = false;
+    state.closeCalculator();
+    assert.equal(trigger.focused, true);
 });

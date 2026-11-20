@@ -35,10 +35,10 @@
     <script src="fiber-renewal-data.js?v=20261118-3"></script>
     <script src="address-regions.js?v=20261118-2"></script>
     <script src="address-search.js?v=20261118-4"></script>
-    <link rel="stylesheet" href="styles.css?v=20261120-7">
+    <link rel="stylesheet" href="styles.css?v=20261120-8">
 </head>
 <body class="bg-gray-100 h-screen flex flex-col font-sans">
-    <div id="app" v-cloak class="flex flex-col h-full overflow-hidden">
+    <div id="app" v-cloak class="flex flex-col h-full overflow-hidden" @click="dismissCalculatorPrice">
         <header class="bg-vnpt-blue text-white shadow-md p-3 md:p-4 flex justify-between items-center z-10">
             <h1 class="text-xl md:text-2xl font-bold tracking-wider flex items-center">
                 KDOL <span class="hidden md:inline text-sm font-normal opacity-80 pl-2 ml-2 border-l border-white/30">Công cụ tra cứu giá cước nhanh</span>
@@ -56,7 +56,7 @@
         <dialog ref="calculatorDialog" id="calculator-dialog" class="kdol-calculator-dialog" aria-labelledby="calculator-title" @cancel.prevent="closeCalculator" @click="handleCalculatorBackdrop" @keydown="handleCalculatorKey">
             <div class="kdol-calculator-content">
                 <div class="kdol-calculator-heading">
-                    <h2 id="calculator-title">Máy tính</h2>
+                    <h2 id="calculator-title">Máy tính<span v-if="calculatorInThousands" class="text-sm font-normal"> · nghìn đồng</span></h2>
                     <button type="button" class="kdol-calculator-close" @click="closeCalculator" aria-label="Đóng máy tính">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg>
                     </button>
@@ -150,14 +150,14 @@
                                     <tr class="kdol-comparison-baseline">
                                         <th scope="row"><span class="kdol-comparison-provider">VNPT</span>{{ selectedInternetComparison.name }}<small>{{ selectedInternetComparison.speed }}</small></th>
                                         <td :title="selectedInternetComparison.details"><div class="kdol-comparison-components"><span v-for="component in getInternetComparisonComponents(selectedInternetComparison)" :key="component" class="kdol-comparison-component">{{ component }}</span></div></td>
-                                        <td class="kdol-comparison-price">{{ formatPrice(selectedInternetComparison.monthlyPrice) }}<small>Gói đang chọn</small></td>
+                                        <td class="kdol-comparison-price"><price-amount :value="selectedInternetComparison.monthlyPrice">{{ formatPrice(selectedInternetComparison.monthlyPrice) }}</price-amount><small>Gói đang chọn</small></td>
                                     </tr>
                                     <template v-for="group in internetComparisonGroups" :key="group.id">
                                         <tr v-if="!group.plans.length"><th scope="row">{{ group.name }}</th><td colspan="2" class="kdol-comparison-empty">Chưa có gói tương ứng.</td></tr>
                                         <tr v-for="plan in group.plans" :key="plan.id">
                                             <th scope="row"><span class="kdol-comparison-provider">{{ group.name }}</span>{{ plan.name }}<small>{{ getInternetComparisonSpeedLabel(plan) }}</small><small v-if="!plan.region" class="kdol-comparison-caveat">Chưa ghi khu vực</small></th>
                                             <td :title="plan.details"><div class="kdol-comparison-components"><span v-for="component in getInternetComparisonComponents(plan)" :key="component" class="kdol-comparison-component">{{ component }}</span></div></td>
-                                            <td class="kdol-comparison-price">{{ formatPrice(plan.monthlyPrice) }}<small :class="{ 'kdol-comparison-lower': plan.region && plan.monthlyPrice < selectedInternetComparison.monthlyPrice, 'kdol-comparison-higher': plan.region && plan.monthlyPrice > selectedInternetComparison.monthlyPrice }">{{ getInternetComparisonDifference(plan) }}</small></td>
+                                            <td class="kdol-comparison-price"><price-amount :value="plan.monthlyPrice">{{ formatPrice(plan.monthlyPrice) }}</price-amount><small :class="{ 'kdol-comparison-lower': plan.region && plan.monthlyPrice < selectedInternetComparison.monthlyPrice, 'kdol-comparison-higher': plan.region && plan.monthlyPrice > selectedInternetComparison.monthlyPrice }">{{ getInternetComparisonDifference(plan) }}</small></td>
                                         </tr>
                                     </template>
                                 </tbody>
@@ -331,8 +331,8 @@
                                             {{ plan.duration_text }} tháng
                                         </td>
                                         <td v-if="vnptCaTokenBasePrice > 0" class="whitespace-nowrap px-3 py-3 text-right">
-                                            <div v-if="vnptCaDiscount > 0" class="text-xs text-gray-400 line-through mb-0.5">{{ formatPrice(calculateVnptCaServicePrice(plan.price, 0)) }}</div>
-                                            <div class="text-sm font-semibold" :class="vnptCaDiscount > 0 ? 'text-orange-600' : 'text-gray-700'">{{ formatPrice(calculateVnptCaServicePrice(plan.price)) }}</div>
+                                            <div v-if="vnptCaDiscount > 0" class="text-xs text-gray-400 line-through mb-0.5"><price-amount :value="calculateVnptCaServicePrice(plan.price, 0)">{{ formatPrice(calculateVnptCaServicePrice(plan.price, 0)) }}</price-amount></div>
+                                            <div class="text-sm font-semibold" :class="vnptCaDiscount > 0 ? 'text-orange-600' : 'text-gray-700'"><price-amount :value="calculateVnptCaServicePrice(plan.price)">{{ formatPrice(calculateVnptCaServicePrice(plan.price)) }}</price-amount></div>
                                         </td>
                                         <td class="whitespace-nowrap px-3 py-3">
                                             <div class="flex items-center justify-end gap-3">
@@ -340,11 +340,11 @@
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                                                 </button>
                                                 <div class="text-right">
-                                                    <div v-if="vnptCaDiscount > 0" class="text-xs text-gray-400 line-through mb-0.5">{{ formatPrice(calculateVnptCaPrice(plan.price, 0)) }}</div>
+                                                    <div v-if="vnptCaDiscount > 0" class="text-xs text-gray-400 line-through mb-0.5"><price-amount :value="calculateVnptCaPrice(plan.price, 0)">{{ formatPrice(calculateVnptCaPrice(plan.price, 0)) }}</price-amount></div>
                                                     <div v-if="vnptCaTokenBasePrice > 0" class="text-xs text-vnpt-red font-medium mb-0.5" title="Đã gồm trong tổng tiền bên dưới; giá Token không áp dụng chiết khấu.">
-                                                        + Token: {{ formatPrice(vnptCaTokenPrice) }}
+                                                        + Token: <price-amount :value="vnptCaTokenPrice">{{ formatPrice(vnptCaTokenPrice) }}</price-amount>
                                                     </div>
-                                                    <div class="kdol-price" :class="vnptCaDiscount > 0 ? 'text-orange-600' : 'text-vnpt-blue'">{{ formatPrice(calculateVnptCaPrice(plan.price)) }}</div>
+                                                    <div class="kdol-price" :class="vnptCaDiscount > 0 ? 'text-orange-600' : 'text-vnpt-blue'"><price-amount :value="calculateVnptCaPrice(plan.price)">{{ formatPrice(calculateVnptCaPrice(plan.price)) }}</price-amount></div>
                                                 </div>
                                             </div>
                                         </td>
@@ -454,9 +454,9 @@
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                                                 </button>
                                                 <div class="text-right">
-                                                    <div v-if="getSmartCaDiscount(plan) > 0" class="text-xs text-gray-400 line-through mb-0.5">{{ formatPrice(calculateSmartCaOriginalPrice(plan)) }}</div>
+                                                    <div v-if="getSmartCaDiscount(plan) > 0" class="text-xs text-gray-400 line-through mb-0.5"><price-amount :value="calculateSmartCaOriginalPrice(plan)">{{ formatPrice(calculateSmartCaOriginalPrice(plan)) }}</price-amount></div>
                                                     <div class="kdol-price" :class="getSmartCaDiscount(plan) > 0 ? 'text-orange-600' : 'text-vnpt-blue'">
-                                                        {{ formatPrice(calculateFinalPrice(plan)) }}
+                                                        <price-amount :value="calculateFinalPrice(plan)">{{ formatPrice(calculateFinalPrice(plan)) }}</price-amount>
                                                     </div>
                                                     <div v-if="getSmartCaDiscount(plan) > 0" class="text-xs text-gray-600 mt-1" :title="getSmartCaDiscountReason(plan)">Giảm {{ getSmartCaDiscount(plan) }}%</div>
                                                 </div>
@@ -477,7 +477,7 @@
                                     <tr v-for="plan in smartCaUsagePlans" :key="plan.name" class="hover:bg-gray-50 transition-colors">
                                         <th scope="row" class="py-4 pl-4 pr-3 text-sm font-medium text-gray-900 text-left">
                                             {{ plan.name }}
-                                            <p v-if="plan.custom" class="text-xs text-gray-500 font-normal mt-1">{{ formatPrice(smartCaUsageCatalog.customUnitPrice) }}/lượt · VAT {{ smartCaUsageCatalog.includedVat }}%</p>
+                                            <p v-if="plan.custom" class="text-xs text-gray-500 font-normal mt-1"><price-amount :value="smartCaUsageCatalog.customUnitPrice">{{ formatPrice(smartCaUsageCatalog.customUnitPrice) }}</price-amount>/lượt · VAT {{ smartCaUsageCatalog.includedVat }}%</p>
                                         </th>
                                         <td class="px-3 py-3 text-right text-sm">
                                             <template v-if="plan.custom">
@@ -491,7 +491,7 @@
                                                 <button type="button" @click="executeSmartCaUsageCopy(plan)" class="kdol-copy-button" :aria-label="'Sao chép báo giá ' + plan.name" title="Sao chép báo giá">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                                                 </button>
-                                                <span class="kdol-price text-vnpt-blue">{{ formatPrice(calculateSmartCaUsagePrice(plan)) }}</span>
+                                                <span class="kdol-price text-vnpt-blue"><price-amount :value="calculateSmartCaUsagePrice(plan)">{{ formatPrice(calculateSmartCaUsagePrice(plan)) }}</price-amount></span>
                                             </div>
                                             <span v-else class="text-xs text-gray-500">Nhập số lượt nguyên từ 1.</span>
                                         </td>
@@ -586,10 +586,10 @@
                                     
                                     <td class="whitespace-nowrap px-3 py-3 text-right">
                                         <div class="text-sm text-gray-400 line-through mb-0.5" v-if="bhxhDiscount > 0">
-                                            {{ formatPrice(calculateBhxhServicePrice(plan.price, 0)) }}
+                                            <price-amount :value="calculateBhxhServicePrice(plan.price, 0)">{{ formatPrice(calculateBhxhServicePrice(plan.price, 0)) }}</price-amount>
                                         </div>
                                         <div class="text-sm font-semibold text-gray-700">
-                                            {{ formatPrice(calculateBhxhServicePrice(plan.price)) }}
+                                            <price-amount :value="calculateBhxhServicePrice(plan.price)">{{ formatPrice(calculateBhxhServicePrice(plan.price)) }}</price-amount>
                                         </div>
                                     </td>
 
@@ -600,10 +600,10 @@
                                             </button>
                                             <div class="text-right">
                                                 <div v-if="hasToken()" class="text-xs text-vnpt-red font-medium mb-0.5">
-                                                    + Token: {{ formatPrice(bhxhTokenPrice) }}
+                                                    + Token: <price-amount :value="bhxhTokenPrice">{{ formatPrice(bhxhTokenPrice) }}</price-amount>
                                                 </div>
                                                 <div class="kdol-price" :class="bhxhDiscount > 0 ? 'text-orange-600' : 'text-vnpt-blue'">
-                                                    {{ formatPrice(calculateBhxhTotal(plan.price)) }}
+                                                    <price-amount :value="calculateBhxhTotal(plan.price)">{{ formatPrice(calculateBhxhTotal(plan.price)) }}</price-amount>
                                                 </div>
                                             </div>
                                         </div>
@@ -752,8 +752,8 @@
                                             <div v-else class="text-xs text-gray-500 font-normal mt-1">{{ plan.note }}</div>
                                         </td>
                                         <td class="whitespace-nowrap px-3 py-3 text-right">
-                                            <div class="text-sm text-gray-400 line-through mb-0.5" v-if="getInvoiceDiscount(plan) > 0">{{ formatPrice(plan.price) }}</div>
-                                            <div class="text-sm font-semibold text-gray-700">{{ formatPrice(calculateInvoicePackagePrice(plan)) }}</div>
+                                            <div class="text-sm text-gray-400 line-through mb-0.5" v-if="getInvoiceDiscount(plan) > 0"><price-amount :value="plan.price">{{ formatPrice(plan.price) }}</price-amount></div>
+                                            <div class="text-sm font-semibold text-gray-700"><price-amount :value="calculateInvoicePackagePrice(plan)">{{ formatPrice(calculateInvoicePackagePrice(plan)) }}</price-amount></div>
                                         </td>
                                         <td class="whitespace-nowrap px-3 py-3">
                                             <div class="flex items-center justify-end gap-3">
@@ -762,11 +762,11 @@
                                                 </button>
                                                 <div class="text-right">
                                                     <div v-if="activeInvoiceType === 'moi' && activeInvoiceSetupStatus === 'thu'" class="text-xs text-vnpt-red font-medium mb-0.5">
-                                                        + Khởi tạo: {{ formatPrice(calculateInvoiceSetupFee()) }}
+                                                        + Khởi tạo: <price-amount :value="calculateInvoiceSetupFee()">{{ formatPrice(calculateInvoiceSetupFee()) }}</price-amount>
                                                     </div>
-                                                    <div v-if="invoiceDesignFee > 0" class="text-xs text-vnpt-red font-medium mb-0.5">+ Thiết kế mẫu: {{ formatPrice(invoiceDesignFee) }}</div>
+                                                    <div v-if="invoiceDesignFee > 0" class="text-xs text-vnpt-red font-medium mb-0.5">+ Thiết kế mẫu: <price-amount :value="invoiceDesignFee">{{ formatPrice(invoiceDesignFee) }}</price-amount></div>
                                                     <div class="kdol-price" :class="getInvoiceDiscount(plan) > 0 ? 'text-orange-600' : 'text-vnpt-blue'">
-                                                        {{ formatPrice(calculateInvoiceTotal(plan.price, plan)) }}
+                                                        <price-amount :value="calculateInvoiceTotal(plan.price, plan)">{{ formatPrice(calculateInvoiceTotal(plan.price, plan)) }}</price-amount>
                                                     </div>
                                                     <div v-if="isInvoiceDiscountPolicy && getInvoiceDiscount(plan) > 0" class="text-xs text-gray-600 mt-1">Giảm {{ getInvoiceDiscount(plan) }}%</div>
                                                 </div>
@@ -807,27 +807,27 @@
                                     <div class="flex justify-between mb-2">
                                         <span class="text-sm text-gray-600">Giá trị gói (Chưa VAT):</span>
                                         <span class="text-sm font-semibold" :class="invoiceMaxDiscount > 0 ? 'line-through text-gray-400' : 'text-gray-800'">
-                                            {{ formatPrice(invoiceMaxAmount * (activeInvoiceSubTab === 'invoice_new' ? 390 : 110)) }}
+                                            <price-amount :value="invoiceMaxAmount * (activeInvoiceSubTab === &#x27;invoice_new&#x27; ? 390 : 110)">{{ formatPrice(invoiceMaxAmount * (activeInvoiceSubTab === 'invoice_new' ? 390 : 110)) }}</price-amount>
                                         </span>
                                     </div>
                                     <div v-if="invoiceMaxDiscount > 0" class="flex justify-between mb-2">
                                         <span class="text-sm text-orange-600">Sau chiết khấu {{ invoiceMaxDiscount }}%:</span>
                                         <span class="text-sm font-semibold text-orange-600">
-                                            {{ formatPrice(invoiceMaxAmount * (activeInvoiceSubTab === 'invoice_new' ? 390 : 110) * (1 - invoiceMaxDiscount/100)) }}
+                                            <price-amount :value="invoiceMaxAmount * (activeInvoiceSubTab === &#x27;invoice_new&#x27; ? 390 : 110) * (1 - invoiceMaxDiscount/100)">{{ formatPrice(invoiceMaxAmount * (activeInvoiceSubTab === 'invoice_new' ? 390 : 110) * (1 - invoiceMaxDiscount/100)) }}</price-amount>
                                         </span>
                                     </div>
                                     <div v-if="activeInvoiceType === 'moi' && activeInvoiceSetupStatus === 'thu'" class="flex justify-between mb-2">
                                         <span class="text-sm text-vnpt-red">Phí khởi tạo (Đã VAT):</span>
-                                        <span class="text-sm font-semibold text-vnpt-red">{{ formatPrice(calculateInvoiceSetupFee()) }}</span>
+                                        <span class="text-sm font-semibold text-vnpt-red"><price-amount :value="calculateInvoiceSetupFee()">{{ formatPrice(calculateInvoiceSetupFee()) }}</price-amount></span>
                                     </div>
                                     <div v-if="invoiceDesignFee > 0" class="flex justify-between mb-2">
                                         <span class="text-sm text-vnpt-red">Thiết kế mẫu (đã VAT):</span>
-                                        <span class="text-sm font-semibold text-vnpt-red">{{ formatPrice(invoiceDesignFee) }}</span>
+                                        <span class="text-sm font-semibold text-vnpt-red"><price-amount :value="invoiceDesignFee">{{ formatPrice(invoiceDesignFee) }}</price-amount></span>
                                     </div>
                                     <div class="kdol-quote-total">
                                         <span class="font-bold text-gray-800">TỔNG (Đã VAT):</span>
                                         <span class="text-xl font-bold text-vnpt-blue">
-                                            {{ formatPrice(calculateInvoiceMaxTotal()) }}
+                                            <price-amount :value="calculateInvoiceMaxTotal()">{{ formatPrice(calculateInvoiceMaxTotal()) }}</price-amount>
                                         </span>
                                     </div>
                                 </div>
@@ -850,7 +850,7 @@
                                     </div>
 
                                     <div v-if="activeInbotType === 'moi'" class="flex flex-wrap items-center gap-1.5 ml-0 sm:ml-2">
-                                        <span class="text-xs font-semibold text-gray-700">Khởi tạo ({{ formatPrice(inbotSetupPrice) }}):</span>
+                                        <span class="text-xs font-semibold text-gray-700">Khởi tạo (<price-amount :value="inbotSetupPrice">{{ formatPrice(inbotSetupPrice) }}</price-amount>):</span>
                                         <div class="kdol-choice-group">
                                             <button type="button" @click="inbotSetupDiscountMode = 'none'" :aria-pressed="inbotSetupDiscountMode === 'none'" :class="['kdol-choice kdol-choice--compact', inbotSetupDiscountMode === 'none' ? 'bg-vnpt-blue text-white' : 'text-gray-500 hover:bg-gray-50']">Giá gốc</button>
                                             <button type="button" @click="inbotSetupDiscountMode === 'none' && (inbotSetupDiscountMode = 'auto')" :aria-pressed="inbotSetupDiscountMode !== 'none'" :class="['kdol-choice kdol-choice--compact', inbotSetupDiscountMode !== 'none' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50']">Áp dụng chiết khấu</button>
@@ -915,8 +915,8 @@
                                             <div class="text-xs text-gray-500 font-normal mt-1">{{ plan.note }}</div>
                                         </td>
                                         <td class="whitespace-nowrap px-3 py-3 text-right">
-                                            <div class="text-sm text-gray-400 line-through mb-0.5" v-if="getInbotDiscount(plan) > 0">{{ formatPrice(plan.price) }}</div>
-                                            <div class="text-sm font-semibold text-gray-700">{{ formatPrice(calculateInbotPackagePrice(plan)) }}</div>
+                                            <div class="text-sm text-gray-400 line-through mb-0.5" v-if="getInbotDiscount(plan) > 0"><price-amount :value="plan.price">{{ formatPrice(plan.price) }}</price-amount></div>
+                                            <div class="text-sm font-semibold text-gray-700"><price-amount :value="calculateInbotPackagePrice(plan)">{{ formatPrice(calculateInbotPackagePrice(plan)) }}</price-amount></div>
                                         </td>
                                         <td class="whitespace-nowrap px-3 py-3">
                                             <div class="flex items-center justify-end gap-3">
@@ -925,10 +925,10 @@
                                                 </button>
                                                 <div class="text-right">
                                                     <div v-if="activeInbotType === 'moi'" class="text-xs text-vnpt-red font-medium mb-0.5">
-                                                        Khởi tạo: {{ formatPrice(calculateInbotSetupFee(plan)) }}<span v-if="getInbotSetupDiscount(plan) > 0"> (giảm {{ getInbotSetupDiscount(plan) }}%)</span>
+                                                        Khởi tạo: <price-amount :value="calculateInbotSetupFee(plan)">{{ formatPrice(calculateInbotSetupFee(plan)) }}</price-amount><span v-if="getInbotSetupDiscount(plan) > 0"> (giảm {{ getInbotSetupDiscount(plan) }}%)</span>
                                                     </div>
                                                     <div class="kdol-price" :class="getInbotDiscount(plan) > 0 || getInbotSetupDiscount(plan) > 0 ? 'text-orange-600' : 'text-vnpt-blue'">
-                                                        {{ formatPrice(calculateInbotTotal(plan)) }}
+                                                        <price-amount :value="calculateInbotTotal(plan)">{{ formatPrice(calculateInbotTotal(plan)) }}</price-amount>
                                                     </div>
                                                     <div v-if="getInbotDiscount(plan) > 0" class="text-xs text-gray-600 mt-1">Giảm {{ getInbotDiscount(plan) }}% giá gói</div>
                                                 </div>
@@ -955,19 +955,19 @@
                                 <div class="kdol-quote-result">
                                     <div class="flex justify-between mb-2">
                                         <span class="text-sm text-gray-600">Giá trị gói (Chưa VAT):</span>
-                                        <span class="text-sm font-semibold" :class="getInbotDiscount(inbotMaxPlan) > 0 ? 'line-through text-gray-400' : 'text-gray-800'">{{ formatPrice(inbotMaxPlan.price) }}</span>
+                                        <span class="text-sm font-semibold" :class="getInbotDiscount(inbotMaxPlan) > 0 ? 'line-through text-gray-400' : 'text-gray-800'"><price-amount :value="inbotMaxPlan.price">{{ formatPrice(inbotMaxPlan.price) }}</price-amount></span>
                                     </div>
                                     <div v-if="getInbotDiscount(inbotMaxPlan) > 0" class="flex justify-between mb-2">
                                         <span class="text-sm text-orange-600">Sau chiết khấu {{ getInbotDiscount(inbotMaxPlan) }}%:</span>
-                                        <span class="text-sm font-semibold text-orange-600">{{ formatPrice(calculateInbotPackagePrice(inbotMaxPlan)) }}</span>
+                                        <span class="text-sm font-semibold text-orange-600"><price-amount :value="calculateInbotPackagePrice(inbotMaxPlan)">{{ formatPrice(calculateInbotPackagePrice(inbotMaxPlan)) }}</price-amount></span>
                                     </div>
                                     <div v-if="activeInbotType === 'moi'" class="flex justify-between mb-2">
                                         <span class="text-sm text-vnpt-red">Phí khởi tạo (đã VAT)<span v-if="getInbotSetupDiscount(inbotMaxPlan) > 0"> · giảm {{ getInbotSetupDiscount(inbotMaxPlan) }}%</span>:</span>
-                                        <span class="text-sm font-semibold text-vnpt-red">{{ formatPrice(calculateInbotSetupFee(inbotMaxPlan)) }}</span>
+                                        <span class="text-sm font-semibold text-vnpt-red"><price-amount :value="calculateInbotSetupFee(inbotMaxPlan)">{{ formatPrice(calculateInbotSetupFee(inbotMaxPlan)) }}</price-amount></span>
                                     </div>
                                     <div class="kdol-quote-total">
                                         <span class="font-bold text-gray-800">TỔNG THANH TOÁN:</span>
-                                        <span class="text-xl font-bold text-vnpt-blue">{{ formatPrice(calculateInbotTotal(inbotMaxPlan)) }}</span>
+                                        <span class="text-xl font-bold text-vnpt-blue"><price-amount :value="calculateInbotTotal(inbotMaxPlan)">{{ formatPrice(calculateInbotTotal(inbotMaxPlan)) }}</price-amount></span>
                                     </div>
                                 </div>
                                 <div class="mt-4 text-right">
@@ -1002,7 +1002,7 @@
                                     <button type="button" @click="posDiscountMode === 'none' && (posDiscountMode = 'auto')" :aria-pressed="posDiscountMode !== 'none'" :class="['kdol-choice', posDiscountMode !== 'none' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50']">Áp dụng chiết khấu</button>
                                 </div>
                             </div>
-                            <p class="text-xs text-gray-600">Cước duy trì {{ formatPrice(posMaintenancePrice) }}/lần, chưa VAT.</p>
+                            <p class="text-xs text-gray-600">Cước duy trì <price-amount :value="posMaintenancePrice">{{ formatPrice(posMaintenancePrice) }}</price-amount>/lần, chưa VAT.</p>
                             <p v-if="posDiscountMode === 'auto'" class="text-xs text-gray-600">Tự giảm giá gói và duy trì theo điều kiện từng gói.</p>
                             <p v-if="posDiscountMode === 'custom'" class="text-xs text-gray-600">Chọn giảm gói {{ discountPosPackage }}%, duy trì {{ discountPosMaintenance }}%; tự giới hạn theo điều kiện.</p>
                             <p v-if="posDiscountMode !== 'none' && selectedPosCondition.id !== 'quantity'" class="text-xs font-medium text-vnpt-blue">{{ selectedPosCondition.label }}</p>
@@ -1039,19 +1039,19 @@
                                             <div class="text-xs text-gray-500 font-normal mt-1">{{ plan.note }}</div>
                                         </td>
                                         <td class="whitespace-nowrap px-3 py-3 text-right">
-                                            <div v-if="getPosPackageDiscount(plan) > 0" class="text-sm text-gray-400 line-through mb-0.5">{{ formatPrice(plan.price) }}</div>
-                                            <div class="text-sm font-semibold text-gray-700">{{ formatPrice(calculatePosPackagePrice(plan)) }}</div>
+                                            <div v-if="getPosPackageDiscount(plan) > 0" class="text-sm text-gray-400 line-through mb-0.5"><price-amount :value="plan.price">{{ formatPrice(plan.price) }}</price-amount></div>
+                                            <div class="text-sm font-semibold text-gray-700"><price-amount :value="calculatePosPackagePrice(plan)">{{ formatPrice(calculatePosPackagePrice(plan)) }}</price-amount></div>
                                             <div v-if="getPosPackageDiscount(plan) > 0" class="text-xs text-gray-500 mt-1">Giảm {{ getPosPackageDiscount(plan) }}%</div>
                                         </td>
                                         <td class="px-3 py-3 text-right">
-                                            <div class="text-xs text-gray-500 mb-0.5">Duy trì: {{ formatPrice(calculatePosMaintenanceFee(plan)) }}<span v-if="getPosMaintenanceDiscount(plan) > 0"> (giảm {{ getPosMaintenanceDiscount(plan) }}%)</span></div>
-                                            <div v-if="posSetupPrice !== null && posSetupPrice > 0" class="text-xs text-vnpt-red mb-0.5">Khởi tạo: {{ formatPrice(posSetupFee) }}</div>
+                                            <div class="text-xs text-gray-500 mb-0.5">Duy trì: <price-amount :value="calculatePosMaintenanceFee(plan)">{{ formatPrice(calculatePosMaintenanceFee(plan)) }}</price-amount><span v-if="getPosMaintenanceDiscount(plan) > 0"> (giảm {{ getPosMaintenanceDiscount(plan) }}%)</span></div>
+                                            <div v-if="posSetupPrice !== null && posSetupPrice > 0" class="text-xs text-vnpt-red mb-0.5">Khởi tạo: <price-amount :value="posSetupFee">{{ formatPrice(posSetupFee) }}</price-amount></div>
                                             <div class="flex items-center justify-end gap-3">
                                                 <button type="button" @click="executePosCopy(plan)" :disabled="calculatePosTotal(plan) === null" class="kdol-copy-button disabled:opacity-40 disabled:cursor-not-allowed" title="Sao chép báo giá đầy đủ">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 002 2z" /></svg>
                                                 </button>
                                                 <span v-if="calculatePosTotal(plan) === null" class="text-xs text-gray-500">Chưa nhập phí khởi tạo</span>
-                                                <span v-else class="kdol-price" :class="getPosPackageDiscount(plan) > 0 || getPosMaintenanceDiscount(plan) > 0 ? 'text-orange-600' : 'text-vnpt-blue'">{{ formatPrice(calculatePosTotal(plan)) }}</span>
+                                                <span v-else class="kdol-price" :class="getPosPackageDiscount(plan) > 0 || getPosMaintenanceDiscount(plan) > 0 ? 'text-orange-600' : 'text-vnpt-blue'"><price-amount :value="calculatePosTotal(plan)">{{ formatPrice(calculatePosTotal(plan)) }}</price-amount></span>
                                             </div>
                                         </td>
                                     </tr>
@@ -1073,20 +1073,20 @@
                             <div v-if="posMaxPlan" class="kdol-quote-result">
                                 <div class="flex justify-between mb-2">
                                     <span class="text-sm text-gray-600">Giá gói sau giảm {{ getPosPackageDiscount(posMaxPlan) }}% (chưa VAT):</span>
-                                    <span class="text-sm font-semibold">{{ formatPrice(calculatePosPackagePrice(posMaxPlan)) }}</span>
+                                    <span class="text-sm font-semibold"><price-amount :value="calculatePosPackagePrice(posMaxPlan)">{{ formatPrice(calculatePosPackagePrice(posMaxPlan)) }}</price-amount></span>
                                 </div>
                                 <div class="flex justify-between mb-2">
                                     <span class="text-sm text-gray-600">Duy trì (đã VAT)<span v-if="getPosMaintenanceDiscount(posMaxPlan) > 0"> · giảm {{ getPosMaintenanceDiscount(posMaxPlan) }}%</span>:</span>
-                                    <span class="text-sm font-semibold">{{ formatPrice(calculatePosMaintenanceFee(posMaxPlan)) }}</span>
+                                    <span class="text-sm font-semibold"><price-amount :value="calculatePosMaintenanceFee(posMaxPlan)">{{ formatPrice(calculatePosMaintenanceFee(posMaxPlan)) }}</price-amount></span>
                                 </div>
                                 <div v-if="posRegistrationType === 'moi' && posSetupFee !== null" class="flex justify-between mb-2">
                                     <span class="text-sm text-gray-600">Khởi tạo (đã VAT):</span>
-                                    <span class="text-sm font-semibold">{{ formatPrice(posSetupFee) }}</span>
+                                    <span class="text-sm font-semibold"><price-amount :value="posSetupFee">{{ formatPrice(posSetupFee) }}</price-amount></span>
                                 </div>
                                 <div class="kdol-quote-total">
                                     <span class="font-bold text-gray-800">TỔNG (đã VAT):</span>
                                     <span v-if="calculatePosTotal(posMaxPlan) === null" class="text-xs text-gray-500">Chưa nhập phí khởi tạo</span>
-                                    <span v-else class="text-xl font-bold text-vnpt-blue">{{ formatPrice(calculatePosTotal(posMaxPlan)) }}</span>
+                                    <span v-else class="text-xl font-bold text-vnpt-blue"><price-amount :value="calculatePosTotal(posMaxPlan)">{{ formatPrice(calculatePosTotal(posMaxPlan)) }}</price-amount></span>
                                 </div>
                                 <div class="mt-4 text-right">
                                     <button type="button" @click="executePosMaxCopy()" :disabled="calculatePosTotal(posMaxPlan) === null" class="kdol-primary-button w-full md:w-auto disabled:opacity-40 disabled:cursor-not-allowed">Copy Báo Giá MTT Max</button>
@@ -1107,7 +1107,7 @@
                         <div class="kdol-config-panel">
                             <div class="flex flex-wrap items-start justify-between gap-3">
                                 <div v-if="isEcontractPlatform" class="text-sm text-gray-700">
-                                    <p v-if="econtractRegistrationType === 'moi'" class="font-semibold">{{ activeEcontractGroup === 'econtract_onprem' ? 'Cước triển khai' : 'Cước khởi tạo' }}: {{ formatPrice(econtractSetupBase) }} <span class="font-normal text-xs">(chưa VAT)</span></p>
+                                    <p v-if="econtractRegistrationType === 'moi'" class="font-semibold">{{ activeEcontractGroup === 'econtract_onprem' ? 'Cước triển khai' : 'Cước khởi tạo' }}: <price-amount :value="econtractSetupBase">{{ formatPrice(econtractSetupBase) }}</price-amount> <span class="font-normal text-xs">(chưa VAT)</span></p>
                                     <p v-else class="text-xs">Gia hạn: không thu phí {{ activeEcontractGroup === 'econtract_onprem' ? 'triển khai ban đầu' : 'khởi tạo' }}.</p>
                                     <p v-if="activeEcontractGroup === 'econtract_onprem'" class="text-xs text-gray-500 mt-1">Cước sử dụng bằng 50% SaaS, chưa kèm lưu trữ; chưa gồm chi phí/tối ưu hệ thống khác theo yêu cầu.</p>
                                 </div>
@@ -1180,7 +1180,7 @@
                                                     <input id="econtract-private-sms-price" type="number" min="0" step="1" inputmode="numeric" v-model="econtractPrivateSmsPrice" class="kdol-select" placeholder="Nhập đơn giá thực tế/tin">
                                                 </template>
                                             </div>
-                                            <p v-if="addonSmsCount > 0 && econtractAddonSubtotals.sms !== null" class="kdol-addon-subtotal" aria-live="polite"><span>Thành tiền</span><strong>{{ formatPrice(econtractAddonSubtotals.sms) }}</strong></p>
+                                            <p v-if="addonSmsCount > 0 && econtractAddonSubtotals.sms !== null" class="kdol-addon-subtotal" aria-live="polite"><span>Thành tiền</span><strong><price-amount :value="econtractAddonSubtotals.sms">{{ formatPrice(econtractAddonSubtotals.sms) }}</price-amount></strong></p>
                                         </div>
                                         <div class="kdol-addon-item">
                                             <div class="kdol-addon-row">
@@ -1191,7 +1191,7 @@
                                                 </div>
                                             </div>
                                             <p v-if="addonEkycCount > 0" class="kdol-addon-caption mt-2">Tính cả lượt ký thành công và không thành công.</p>
-                                            <p v-if="addonEkycCount > 0 && econtractAddonSubtotals.ekyc !== null" class="kdol-addon-subtotal" aria-live="polite"><span>Thành tiền</span><strong>{{ formatPrice(econtractAddonSubtotals.ekyc) }}</strong></p>
+                                            <p v-if="addonEkycCount > 0 && econtractAddonSubtotals.ekyc !== null" class="kdol-addon-subtotal" aria-live="polite"><span>Thành tiền</span><strong><price-amount :value="econtractAddonSubtotals.ekyc">{{ formatPrice(econtractAddonSubtotals.ekyc) }}</price-amount></strong></p>
                                         </div>
                                         <div class="kdol-addon-item">
                                             <div class="kdol-addon-row kdol-addon-row--tsa">
@@ -1215,7 +1215,7 @@
                                                         <input id="econtract-tsa-discount" type="range" min="0" :max="tsaDiscountLimit" step="5" v-model.number="discountTsa" class="kdol-discount-slider">
                                                     </div>
                                                 </details>
-                                                <p v-if="econtractTsaAddonPlan && econtractAddonSubtotals.tsa !== null" class="kdol-addon-subtotal" aria-live="polite"><span>Thành tiền<span v-if="tsaDiscount > 0"> sau CK {{ tsaDiscount }}%</span></span><strong>{{ formatPrice(econtractAddonSubtotals.tsa) }}</strong></p>
+                                                <p v-if="econtractTsaAddonPlan && econtractAddonSubtotals.tsa !== null" class="kdol-addon-subtotal" aria-live="polite"><span>Thành tiền<span v-if="tsaDiscount > 0"> sau CK {{ tsaDiscount }}%</span></span><strong><price-amount :value="econtractAddonSubtotals.tsa">{{ formatPrice(econtractAddonSubtotals.tsa) }}</price-amount></strong></p>
                                             </div>
                                         </div>
                                         <div class="kdol-addon-item">
@@ -1226,7 +1226,7 @@
                                                     <span>gói</span>
                                                 </div>
                                             </div>
-                                            <p v-if="addonStorageCount > 0 && econtractAddonSubtotals.storage !== null" class="kdol-addon-subtotal" aria-live="polite"><span>Thành tiền</span><strong>{{ formatPrice(econtractAddonSubtotals.storage) }}</strong></p>
+                                            <p v-if="addonStorageCount > 0 && econtractAddonSubtotals.storage !== null" class="kdol-addon-subtotal" aria-live="polite"><span>Thành tiền</span><strong><price-amount :value="econtractAddonSubtotals.storage">{{ formatPrice(econtractAddonSubtotals.storage) }}</price-amount></strong></p>
                                         </div>
                                     </div>
                                     <details class="kdol-addon-info mt-2">
@@ -1240,7 +1240,7 @@
                                         </div>
                                     </details>
                                 </details>
-                                <p v-if="totalEcontractAddonNoVat > 0" class="kdol-addon-total">Tổng add-on: <strong>{{ formatPrice(totalEcontractAddonNoVat) }}</strong> <span>(chưa VAT)</span></p>
+                                <p v-if="totalEcontractAddonNoVat > 0" class="kdol-addon-total">Tổng add-on: <strong><price-amount :value="totalEcontractAddonNoVat">{{ formatPrice(totalEcontractAddonNoVat) }}</price-amount></strong> <span>(chưa VAT)</span></p>
                                 <p v-if="econtractTsaAddonPlan" class="text-xs text-gray-600">{{ econtractTsaAddonPlan.duration_text }} · Giảm TSA {{ tsaDiscount }}% (tối đa {{ tsaDiscountLimit }}%).</p>
                                 <p v-if="econtractAddonError || totalEcontractAddonNoVat === null" class="text-xs text-vnpt-red" role="status">{{ econtractAddonError || 'Kiểm tra lại số lượng và giá trị add-on.' }}</p>
                             </template>
@@ -1274,21 +1274,21 @@
                                         </td>
                                         <td class="whitespace-nowrap px-3 py-3 text-right">
                                             <template v-if="plan.price !== null">
-                                            <div v-if="getEcontractServiceDiscount(plan) > 0" class="text-xs text-gray-400 line-through">{{ formatPrice(plan.price) }}</div>
-                                            <div class="text-sm font-semibold text-gray-700">{{ formatPrice(calculateEcontractPackagePrice(plan)) }}</div>
+                                            <div v-if="getEcontractServiceDiscount(plan) > 0" class="text-xs text-gray-400 line-through"><price-amount :value="plan.price">{{ formatPrice(plan.price) }}</price-amount></div>
+                                            <div class="text-sm font-semibold text-gray-700"><price-amount :value="calculateEcontractPackagePrice(plan)">{{ formatPrice(calculateEcontractPackagePrice(plan)) }}</price-amount></div>
                                             <div v-if="getEcontractServiceDiscount(plan) > 0" class="text-xs text-gray-500">Giảm {{ getEcontractServiceDiscount(plan) }}%</div>
                                             </template>
                                             <span v-else class="text-xs text-gray-400">—</span>
                                         </td>
                                         <td class="px-3 py-3 text-right">
-                                            <div v-if="isEcontractPlatform && econtractRegistrationType === 'moi'" class="text-xs text-vnpt-red mb-1">{{ activeEcontractGroup === 'econtract_onprem' ? 'Triển khai' : 'Khởi tạo' }}: {{ formatPrice(calculateEcontractSetupFee(plan)) }}<span v-if="getEcontractSetupDiscount(plan) > 0"> (giảm {{ getEcontractSetupDiscount(plan) }}%)</span></div>
-                                            <div v-if="isEcontractPlatform && totalEcontractAddonNoVat > 0" class="text-xs text-green-700 mb-1">Add-on: {{ formatPrice(totalEcontractAddonWithVat) }}</div>
+                                            <div v-if="isEcontractPlatform && econtractRegistrationType === 'moi'" class="text-xs text-vnpt-red mb-1">{{ activeEcontractGroup === 'econtract_onprem' ? 'Triển khai' : 'Khởi tạo' }}: <price-amount :value="calculateEcontractSetupFee(plan)">{{ formatPrice(calculateEcontractSetupFee(plan)) }}</price-amount><span v-if="getEcontractSetupDiscount(plan) > 0"> (giảm {{ getEcontractSetupDiscount(plan) }}%)</span></div>
+                                            <div v-if="isEcontractPlatform && totalEcontractAddonNoVat > 0" class="text-xs text-green-700 mb-1">Add-on: <price-amount :value="totalEcontractAddonWithVat">{{ formatPrice(totalEcontractAddonWithVat) }}</price-amount></div>
                                             <div class="flex items-center justify-end gap-3">
                                                 <button type="button" @click="executeEcontractCopy(plan)" :disabled="calculateEcontractTotal(plan) === null" class="kdol-copy-button disabled:opacity-40 disabled:cursor-not-allowed" title="Sao chép báo giá">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 002 2z" /></svg>
                                                 </button>
                                                 <span v-if="calculateEcontractTotal(plan) === null" class="text-xs text-gray-500">{{ plan.tsaType ? 'Nhập số lượt hợp lệ' : 'Kiểm tra add-on' }}</span>
-                                                <span v-else class="kdol-price" :class="getEcontractServiceDiscount(plan) > 0 || getEcontractSetupDiscount(plan) > 0 ? 'text-orange-600' : 'text-vnpt-blue'">{{ formatPrice(calculateEcontractTotal(plan)) }}</span>
+                                                <span v-else class="kdol-price" :class="getEcontractServiceDiscount(plan) > 0 || getEcontractSetupDiscount(plan) > 0 ? 'text-orange-600' : 'text-vnpt-blue'"><price-amount :value="calculateEcontractTotal(plan)">{{ formatPrice(calculateEcontractTotal(plan)) }}</price-amount></span>
                                             </div>
                                         </td>
                                     </tr>
@@ -1300,7 +1300,7 @@
                             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-3">
                                 <div>
                                     <h3 class="text-lg font-bold text-gray-800">Emax · Từ 10.000 hợp đồng</h3>
-                                    <p class="text-sm text-gray-500">{{ formatPrice(econtractCatalog.emaxUnitPrice * (activeEcontractGroup === 'econtract_onprem' ? econtractCatalog.onpremUsagePercent / 100 : 1)) }}/HĐ, chưa VAT · {{ activeEcontractGroup === 'econtract_onprem' ? 'Không kèm lưu trữ' : '5 MB lưu trữ/HĐ' }}</p>
+                                    <p class="text-sm text-gray-500"><price-amount :value="econtractCatalog.emaxUnitPrice * (activeEcontractGroup === &#x27;econtract_onprem&#x27; ? econtractCatalog.onpremUsagePercent / 100 : 1)">{{ formatPrice(econtractCatalog.emaxUnitPrice * (activeEcontractGroup === 'econtract_onprem' ? econtractCatalog.onpremUsagePercent / 100 : 1)) }}</price-amount>/HĐ, chưa VAT · {{ activeEcontractGroup === 'econtract_onprem' ? 'Không kèm lưu trữ' : '5 MB lưu trữ/HĐ' }}</p>
                                 </div>
                                 <div class="w-full md:w-auto">
                                     <label for="econtract-emax-quantity" class="sr-only">Số hợp đồng Emax, từ 10.000</label>
@@ -1308,13 +1308,13 @@
                                 </div>
                             </div>
                             <div v-if="econtractEmaxPlan" class="kdol-quote-result">
-                                <div class="flex justify-between mb-2"><span class="text-sm text-gray-600">Dịch vụ sau giảm {{ getEcontractServiceDiscount(econtractEmaxPlan) }}% (chưa VAT):</span><span class="text-sm font-semibold">{{ formatPrice(calculateEcontractPackagePrice(econtractEmaxPlan)) }}</span></div>
-                                <div v-if="econtractRegistrationType === 'moi'" class="flex justify-between mb-2"><span class="text-sm text-gray-600">{{ activeEcontractGroup === 'econtract_onprem' ? 'Triển khai' : 'Khởi tạo' }} (đã VAT):</span><span class="text-sm font-semibold">{{ formatPrice(calculateEcontractSetupFee(econtractEmaxPlan)) }}</span></div>
-                                <div v-if="totalEcontractAddonNoVat > 0" class="flex justify-between mb-2"><span class="text-sm text-gray-600">Add-on (đã VAT):</span><span class="text-sm font-semibold">{{ formatPrice(totalEcontractAddonWithVat) }}</span></div>
+                                <div class="flex justify-between mb-2"><span class="text-sm text-gray-600">Dịch vụ sau giảm {{ getEcontractServiceDiscount(econtractEmaxPlan) }}% (chưa VAT):</span><span class="text-sm font-semibold"><price-amount :value="calculateEcontractPackagePrice(econtractEmaxPlan)">{{ formatPrice(calculateEcontractPackagePrice(econtractEmaxPlan)) }}</price-amount></span></div>
+                                <div v-if="econtractRegistrationType === 'moi'" class="flex justify-between mb-2"><span class="text-sm text-gray-600">{{ activeEcontractGroup === 'econtract_onprem' ? 'Triển khai' : 'Khởi tạo' }} (đã VAT):</span><span class="text-sm font-semibold"><price-amount :value="calculateEcontractSetupFee(econtractEmaxPlan)">{{ formatPrice(calculateEcontractSetupFee(econtractEmaxPlan)) }}</price-amount></span></div>
+                                <div v-if="totalEcontractAddonNoVat > 0" class="flex justify-between mb-2"><span class="text-sm text-gray-600">Add-on (đã VAT):</span><span class="text-sm font-semibold"><price-amount :value="totalEcontractAddonWithVat">{{ formatPrice(totalEcontractAddonWithVat) }}</price-amount></span></div>
                                 <div class="kdol-quote-total">
                                     <span class="font-bold text-gray-800">TỔNG (đã VAT):</span>
                                     <span v-if="calculateEcontractEmaxTotal() === null" class="text-xs text-gray-500">Kiểm tra add-on</span>
-                                    <span v-else class="text-xl font-bold text-vnpt-blue">{{ formatPrice(calculateEcontractEmaxTotal()) }}</span>
+                                    <span v-else class="text-xl font-bold text-vnpt-blue"><price-amount :value="calculateEcontractEmaxTotal()">{{ formatPrice(calculateEcontractEmaxTotal()) }}</price-amount></span>
                                 </div>
                                 <div class="mt-4 text-right"><button type="button" @click="executeEcontractEmaxCopy()" :disabled="calculateEcontractEmaxTotal() === null" class="kdol-primary-button w-full md:w-auto disabled:opacity-40 disabled:cursor-not-allowed">Copy Báo Giá Emax</button></div>
                             </div>
@@ -1387,15 +1387,15 @@
                                             </details>
                                         </th>
                                         <td class="px-3 py-3 text-right whitespace-nowrap">
-                                            <div v-if="getHkdDiscount(plan) > 0" class="text-xs text-gray-400 line-through">{{ formatPrice(plan.price) }}</div>
-                                            <div class="text-sm font-semibold text-gray-700">{{ formatPrice(plan.group === 'free' ? plan.referencePrice : calculateHkdPackagePrice(plan)) }}</div>
+                                            <div v-if="getHkdDiscount(plan) > 0" class="text-xs text-gray-400 line-through"><price-amount :value="plan.price">{{ formatPrice(plan.price) }}</price-amount></div>
+                                            <div class="text-sm font-semibold text-gray-700"><price-amount :value="plan.group === &#x27;free&#x27; ? plan.referencePrice : calculateHkdPackagePrice(plan)">{{ formatPrice(plan.group === 'free' ? plan.referencePrice : calculateHkdPackagePrice(plan)) }}</price-amount></div>
                                         </td>
                                         <td class="px-3 py-3 text-right">
                                             <div class="flex items-center justify-end gap-3">
                                                 <button type="button" @click="executeHkdCopy(plan)" class="kdol-copy-button" :title="'Sao chép báo giá ' + plan.name">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                                                 </button>
-                                                <span class="kdol-price" :class="getHkdDiscount(plan) > 0 ? 'text-orange-600' : 'text-vnpt-blue'">{{ plan.group === 'free' ? 'Miễn phí' : formatPrice(calculateHkdTotal(plan)) }}</span>
+                                                <span class="kdol-price" :class="getHkdDiscount(plan) > 0 ? 'text-orange-600' : 'text-vnpt-blue'"><price-amount :value="plan.group === 'free' ? 0 : calculateHkdTotal(plan)">{{ plan.group === 'free' ? 'Miễn phí' : formatPrice(calculateHkdTotal(plan)) }}</price-amount></span>
                                             </div>
                                             <p v-if="getHkdDiscount(plan) > 0" class="text-xs text-gray-500 mt-1">Giảm {{ getHkdDiscount(plan) }}%</p>
                                         </td>
@@ -1428,7 +1428,7 @@
                                     <button type="button" @click="vatRate = 8" :class="['kdol-choice', vatRate === 8 ? 'bg-green-600 text-white' : 'text-gray-500 hover:bg-gray-50']">VAT 8%</button>
                                 </div>
                             </div>
-                            <p v-if="!receiptHasSoftware" class="text-xs text-vnpt-red">Khởi tạo: {{ formatPrice(receiptSetupBase) }} (chưa VAT).</p>
+                            <p v-if="!receiptHasSoftware" class="text-xs text-vnpt-red">Khởi tạo: <price-amount :value="receiptSetupBase">{{ formatPrice(receiptSetupBase) }}</price-amount> (chưa VAT).</p>
                             <p class="text-xs text-gray-600">Lưu trữ {{ receiptCatalog.storageYears }} năm từ ngày phát hành biên lai.</p>
                             <div class="flex items-center justify-between gap-2">
                                 <label for="receipt-discount" class="text-sm font-semibold text-gray-700">Chiết khấu dịch vụ:</label>
@@ -1450,23 +1450,23 @@
                                     <tr v-for="plan in receiptTablePlans" :key="plan.name" class="hover:bg-gray-50 transition-colors">
                                         <th scope="row" class="py-4 pl-4 pr-3 text-sm font-medium text-gray-900 text-left">
                                             {{ plan.name }}
-                                            <p class="text-xs text-gray-500 font-normal mt-1">{{ plan.custom ? formatPrice(receiptCatalog.customUnitPrice) + '/biên lai' : new Intl.NumberFormat('vi-VN').format(plan.quantity) + ' biên lai' }}</p>
+                                            <p class="text-xs text-gray-500 font-normal mt-1"><template v-if="plan.custom"><price-amount :value="receiptCatalog.customUnitPrice">{{ formatPrice(receiptCatalog.customUnitPrice) }}</price-amount>/biên lai</template><template v-else>{{ new Intl.NumberFormat('vi-VN').format(plan.quantity) }} biên lai</template></p>
                                             <template v-if="plan.custom">
                                                 <label for="receipt-custom-quantity" class="sr-only">Số biên lai, trên 10.000</label>
                                                 <input id="receipt-custom-quantity" type="number" :min="receiptCatalog.customMinimum" step="1" inputmode="numeric" v-model.number="receiptCustomAmount" class="kdol-select mt-2 w-full sm:w-44" placeholder="Nhập số biên lai" :aria-invalid="receiptCustomAmount !== '' && plan.price === null" aria-describedby="receipt-custom-note">
                                                 <p id="receipt-custom-note" v-if="receiptCustomAmount !== '' && plan.price === null" class="text-xs text-vnpt-red font-normal mt-1" role="status">Nhập số nguyên trên 10.000.</p>
                                             </template>
                                         </th>
-                                        <td class="whitespace-nowrap px-3 py-3 text-sm text-right text-gray-700">{{ plan.price === null ? '—' : formatPrice(plan.price) }}</td>
+                                        <td class="whitespace-nowrap px-3 py-3 text-sm text-right text-gray-700"><price-amount :value="plan.price">{{ plan.price === null ? '—' : formatPrice(plan.price) }}</price-amount></td>
                                         <td class="px-3 py-3 text-right">
                                             <template v-if="calculateReceiptTotal(plan) !== null">
-                                                <div v-if="receiptDiscount > 0" class="text-xs text-gray-400 line-through mb-0.5">{{ formatPrice(calculateReceiptTotal(plan, 0)) }}</div>
-                                                <div v-if="!receiptHasSoftware" class="text-xs text-vnpt-red mb-0.5">+ Khởi tạo: {{ formatPrice(receiptSetupFee) }}</div>
+                                                <div v-if="receiptDiscount > 0" class="text-xs text-gray-400 line-through mb-0.5"><price-amount :value="calculateReceiptTotal(plan, 0)">{{ formatPrice(calculateReceiptTotal(plan, 0)) }}</price-amount></div>
+                                                <div v-if="!receiptHasSoftware" class="text-xs text-vnpt-red mb-0.5">+ Khởi tạo: <price-amount :value="receiptSetupFee">{{ formatPrice(receiptSetupFee) }}</price-amount></div>
                                                 <div class="flex items-center justify-end gap-3">
                                                     <button type="button" @click="executeReceiptCopy(plan)" class="kdol-copy-button" title="Sao chép báo giá" :aria-label="'Sao chép báo giá ' + plan.name">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                                                     </button>
-                                                    <span class="kdol-price" :class="receiptDiscount > 0 ? 'text-orange-600' : 'text-vnpt-blue'">{{ formatPrice(calculateReceiptTotal(plan)) }}</span>
+                                                    <span class="kdol-price" :class="receiptDiscount > 0 ? 'text-orange-600' : 'text-vnpt-blue'"><price-amount :value="calculateReceiptTotal(plan)">{{ formatPrice(calculateReceiptTotal(plan)) }}</price-amount></span>
                                                 </div>
                                                 <p v-if="receiptDiscount > 0" class="text-xs text-gray-500 mt-1">Giảm {{ receiptDiscount }}% phí dịch vụ</p>
                                             </template>
@@ -1605,7 +1605,7 @@
                                             <span v-if="row.variants[configuration.id]" class="kdol-internet-price"
                                                 :data-plan-id="row.variants[configuration.id].id"
                                                 :title="row.variants[configuration.id].note || ''">
-                                                {{ formatInternetAmount(row.variants[configuration.id].price, row.hasCamera) }}
+                                                <price-amount :value="calculateInternetTotal(row.variants[configuration.id].price, row.hasCamera)">{{ formatInternetAmount(row.variants[configuration.id].price, row.hasCamera) }}</price-amount>
                                             </span>
                                             <span v-else class="kdol-internet-unavailable" :aria-label="internetFilterCount ? 'Không có cấu hình phù hợp với bộ lọc' : 'Chưa có giá cho cấu hình này'">—</span>
                                         </td>
@@ -1646,7 +1646,7 @@
                                         <td class="kdol-internet-benefits" :title="row.plan.note">{{ row.benefits }}</td>
                                         <td class="kdol-internet-price-cell">
                                             <span class="kdol-internet-price" :data-plan-id="row.plan.id" :title="row.plan.note">
-                                                {{ formatInternetAmount(row.plan.price) }}
+                                                <price-amount :value="calculateInternetTotal(row.plan.price)">{{ formatInternetAmount(row.plan.price) }}</price-amount>
                                             </span>
                                         </td>
                                     </tr>
@@ -1752,7 +1752,7 @@
                                                 </details>
                                             </th>
                                             <td class="kdol-renewal-price">
-                                                <strong v-if="getFiberRenewalPrice(plan) !== null" class="kdol-price text-vnpt-blue">{{ formatPrice(getFiberRenewalPrice(plan)) }}</strong>
+                                                <strong v-if="getFiberRenewalPrice(plan) !== null" class="kdol-price text-vnpt-blue"><price-amount :value="getFiberRenewalPrice(plan)">{{ formatPrice(getFiberRenewalPrice(plan)) }}</price-amount></strong>
                                                 <span v-else class="text-xs text-gray-500">Không có giá</span>
                                             </td>
                                         </tr>
@@ -1895,12 +1895,12 @@
                                         </td>
                                         <td class="kdol-business-price">
                                             <template v-if="calculateBusinessInternetTotal(plan) !== null">
-                                                <small>{{ formatPrice(getBusinessInternetBase(plan)) }} chưa VAT · {{ getBusinessInternetTermLabel(plan) }}</small>
+                                                <small><price-amount :value="getBusinessInternetBase(plan)">{{ formatPrice(getBusinessInternetBase(plan)) }}</price-amount> chưa VAT · {{ getBusinessInternetTermLabel(plan) }}</small>
                                                 <div class="flex items-center justify-end gap-2">
                                                     <button type="button" @click="executeBusinessInternetCopy(plan)" :disabled="plan.discontinued" class="kdol-copy-button disabled:opacity-40 disabled:cursor-not-allowed" :title="plan.discontinued ? 'Gói đã dừng cung cấp' : 'Sao chép báo giá ' + plan.name">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                                                     </button>
-                                                    <strong class="kdol-price text-vnpt-blue">{{ formatPrice(calculateBusinessInternetTotal(plan)) }}</strong>
+                                                    <strong class="kdol-price text-vnpt-blue"><price-amount :value="calculateBusinessInternetTotal(plan)">{{ formatPrice(calculateBusinessInternetTotal(plan)) }}</price-amount></strong>
                                                 </div>
                                                 <small v-if="plan.currentPriceOnly">Áp dụng giá hiện hành</small>
                                             </template>
@@ -1949,14 +1949,14 @@
                                         </tr>
                                         <tr v-for="row in group.rows" :key="row.id">
                                             <th scope="row" class="kdol-camera-package">{{ row.name }}<span class="kdol-camera-description">{{ row.description }}</span></th>
-                                            <td>{{ formatPrice(row.price) }}</td>
-                                            <td :class="{ 'kdol-camera-free': row.installationFee === 0 }">{{ row.installationFee === 0 ? 'Miễn phí' : formatPrice(row.installationFee) }}</td>
-                                            <td class="kdol-camera-total">{{ formatPrice(row.total) }}</td>
+                                            <td><price-amount :value="row.price">{{ formatPrice(row.price) }}</price-amount></td>
+                                            <td :class="{ 'kdol-camera-free': row.installationFee === 0 }"><price-amount :value="row.installationFee">{{ row.installationFee === 0 ? 'Miễn phí' : formatPrice(row.installationFee) }}</price-amount></td>
+                                            <td class="kdol-camera-total"><price-amount :value="row.total">{{ formatPrice(row.total) }}</price-amount></td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
-                            <p class="kdol-camera-note mt-3">Giá cước đã gồm VAT. Phí lắp: {{ formatPrice(cameraCatalog.installation.indoor) }}/Cam IN, {{ formatPrice(cameraCatalog.installation.outdoor) }}/Cam OUT; chỉ thu một lần. Miễn phí lắp khi chọn 6 tháng hoặc 12–13 tháng.</p>
+                            <p class="kdol-camera-note mt-3">Giá cước đã gồm VAT. Phí lắp: <price-amount :value="cameraCatalog.installation.indoor">{{ formatPrice(cameraCatalog.installation.indoor) }}</price-amount>/Cam IN, <price-amount :value="cameraCatalog.installation.outdoor">{{ formatPrice(cameraCatalog.installation.outdoor) }}</price-amount>/Cam OUT; chỉ thu một lần. Miễn phí lắp khi chọn 6 tháng hoặc 12–13 tháng.</p>
                         </div>
 
                         <div v-else>
@@ -1968,7 +1968,7 @@
                                     <tbody>
                                         <tr v-for="device in cameraCatalog.purchases" :key="device.id">
                                             <th scope="row" class="kdol-camera-package">{{ device.name }}<span class="kdol-camera-description">{{ device.description }}</span></th>
-                                            <td class="kdol-camera-total">{{ formatPrice(device.price) }}</td>
+                                            <td class="kdol-camera-total"><price-amount :value="device.price">{{ formatPrice(device.price) }}</price-amount></td>
                                             <td class="kdol-camera-free">Miễn phí</td>
                                         </tr>
                                     </tbody>
@@ -2021,7 +2021,7 @@
                                         <tr v-for="plan in meshQuoteRows" :key="plan.id" :class="{ 'kdol-mesh-row--restricted': plan.restricted }">
                                             <th scope="row" :title="plan.restricted ? meshCatalog.eligibility : undefined">{{ plan.name }}</th>
                                             <td>{{ plan.quantity }}</td>
-                                            <td class="kdol-mesh-price">{{ formatPrice(plan.price) }}</td>
+                                            <td class="kdol-mesh-price"><price-amount :value="plan.price">{{ formatPrice(plan.price) }}</price-amount></td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -2031,7 +2031,7 @@
 
                         <div v-else class="kdol-mesh-purchase">
                             <h3 class="kdol-internet-section-title">Mua {{ meshCatalog.deviceName }}</h3>
-                            <p class="kdol-mesh-unit-price">{{ formatPrice(meshCatalog.devicePrice) }}<span>/thiết bị</span></p>
+                            <p class="kdol-mesh-unit-price"><price-amount :value="meshCatalog.devicePrice">{{ formatPrice(meshCatalog.devicePrice) }}</price-amount><span>/thiết bị</span></p>
                             <div class="kdol-mesh-purchase-calculator">
                                 <div>
                                     <label for="mesh-purchase-quantity" class="block text-sm font-semibold text-gray-800 mb-2">Số thiết bị</label>
@@ -2039,7 +2039,7 @@
                                 </div>
                                 <div>
                                     <p class="kdol-mesh-note">Tổng mua thiết bị</p>
-                                    <p class="kdol-mesh-total" aria-live="polite">{{ meshPurchaseTotal === null ? '—' : formatPrice(meshPurchaseTotal) }}</p>
+                                    <p class="kdol-mesh-total" aria-live="polite"><price-amount :value="meshPurchaseTotal">{{ meshPurchaseTotal === null ? '—' : formatPrice(meshPurchaseTotal) }}</price-amount></p>
                                 </div>
                             </div>
                             <p id="mesh-purchase-error" v-if="meshPurchaseTotal === null" class="kdol-mesh-error" role="alert">Nhập số thiết bị là số nguyên từ 1 trở lên.</p>
@@ -2072,7 +2072,7 @@
                                     <tbody>
                                         <tr v-for="plan in stbQuoteRows" :key="plan.id">
                                             <th scope="row">{{ plan.name }}</th>
-                                            <td class="kdol-stb-price"><span v-if="plan.price !== null">{{ formatPrice(plan.price) }}</span><span v-else class="kdol-stb-unavailable">Chưa có giá</span></td>
+                                            <td class="kdol-stb-price"><span v-if="plan.price !== null"><price-amount :value="plan.price">{{ formatPrice(plan.price) }}</price-amount></span><span v-else class="kdol-stb-unavailable">Chưa có giá</span></td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -2088,13 +2088,13 @@
                                     <tbody>
                                         <tr v-for="plan in stbCatalog.b2b.plans" :key="plan.id">
                                             <th scope="row">{{ plan.name }}</th>
-                                            <td class="kdol-stb-price">{{ formatPrice(plan.monthlyWithoutStb) }}</td>
-                                            <td class="kdol-stb-price">{{ formatPrice(plan.monthlyWithStb) }}</td>
+                                            <td class="kdol-stb-price"><price-amount :value="plan.monthlyWithoutStb">{{ formatPrice(plan.monthlyWithoutStb) }}</price-amount></td>
+                                            <td class="kdol-stb-price"><price-amount :value="plan.monthlyWithStb">{{ formatPrice(plan.monthlyWithStb) }}</price-amount></td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
-                            <p class="kdol-stb-note mt-3">Giá đã kèm STB bao gồm phí thuê thiết bị {{ formatPrice(stbCatalog.b2b.monthlyStbRental) }}/thuê bao/phòng/STB/tháng, chưa VAT.</p>
+                            <p class="kdol-stb-note mt-3">Giá đã kèm STB bao gồm phí thuê thiết bị <price-amount :value="stbCatalog.b2b.monthlyStbRental">{{ formatPrice(stbCatalog.b2b.monthlyStbRental) }}</price-amount>/thuê bao/phòng/STB/tháng, chưa VAT.</p>
                         </template>
                     </template>
                     <p v-else class="kdol-empty-state">Chưa có bảng giá Set-top-box.</p>
@@ -2142,7 +2142,7 @@
                                     </th>
                                     <td>{{ pkg.channelCount }}</td>
                                     <td class="kdol-mytv-highlights"><span v-for="(part, index) in getMytvHighlightParts(pkg.highlights)" :key="index" :class="{ 'kdol-mytv-highlight': part.emphasized }">{{ part.text }}</span></td>
-                                    <td class="kdol-mytv-price"><span v-if="pkg.monthlyPrice !== null">{{ formatPrice(calculateMytvTotal(pkg.monthlyPrice)) }}</span></td>
+                                    <td class="kdol-mytv-price"><span v-if="pkg.monthlyPrice !== null"><price-amount :value="calculateMytvTotal(pkg.monthlyPrice)">{{ formatPrice(calculateMytvTotal(pkg.monthlyPrice)) }}</price-amount></span></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -2199,6 +2199,31 @@
         const { createApp } = Vue;
 
         createApp({
+            components: {
+                PriceAmount: {
+                    props: { value: Number },
+                    inject: ['priceCalculator'],
+                    computed: {
+                        available() { return Number.isFinite(this.value) && Number.isSafeInteger(Math.round(this.value)); },
+                        selected() { return this.priceCalculator.activeCalculatorPrice === this.$refs.price; },
+                        priceLabel() { return this.priceCalculator.formatPrice(this.value); }
+                    },
+                    methods: {
+                        handleFocusOut(event) {
+                            if (!event.currentTarget.contains(event.relatedTarget)) this.priceCalculator.dismissCalculatorPrice();
+                        }
+                    },
+                    template: `
+                        <span v-if="available" class="kdol-price-amount" @focusout="handleFocusOut">
+                            <button ref="price" type="button" class="kdol-price-select" :aria-label="'Tính với giá ' + priceLabel" :aria-expanded="selected" title="Bấm để hiện máy tính" @click.stop.prevent="priceCalculator.selectCalculatorPrice($refs.price)"><slot></slot></button>
+                            <button v-if="selected" type="button" class="kdol-price-calculator" :aria-label="'Mở máy tính với ' + priceLabel" title="Tính với giá này" aria-haspopup="dialog" aria-controls="calculator-dialog" @click.stop.prevent="priceCalculator.openCalculatorFromPrice(value, $refs.price)">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M8 6h8v4H8zM8 14h1m3 0h1m3 0h0M8 18h1m3 0h1m3 0h0"/></svg>
+                            </button>
+                        </span>
+                        <span v-else><slot></slot></span>`
+                }
+            },
+            provide() { return { priceCalculator: this }; },
             data() {
                 return {
                     isLoading: true,
@@ -2209,11 +2234,14 @@
                     addressQuery: '',
                     addressLimit: 50,
                     calculatorEntry: '0',
+                    calculatorInThousands: false,
                     calculatorAccumulator: null,
                     calculatorOperator: null,
                     calculatorWaiting: false,
                     calculatorExpression: '',
                     calculatorError: '',
+                    activeCalculatorPrice: null,
+                    calculatorReturnTarget: null,
                     calculatorKeys: [
                         { value: 'clear', text: 'AC', label: 'Xóa tất cả', kind: 'action' },
                         { value: 'backspace', text: '⌫', label: 'Xóa một chữ số', kind: 'action' },
@@ -3162,13 +3190,33 @@
                     const difference = plan.monthlyPrice - this.selectedInternetComparison.monthlyPrice;
                     return difference === 0 ? 'Bằng giá VNPT' : `${difference < 0 ? 'Thấp hơn' : 'Cao hơn'} ${this.formatPrice(Math.abs(difference))}/tháng`;
                 },
+                selectCalculatorPrice(target) {
+                    this.activeCalculatorPrice = target;
+                },
+                dismissCalculatorPrice() {
+                    this.activeCalculatorPrice = null;
+                },
+                openCalculatorFromPrice(value, target) {
+                    if (!Number.isFinite(value) || !Number.isSafeInteger(Math.round(value))) return;
+                    this.resetCalculator();
+                    const price = Math.round(value);
+                    this.calculatorInThousands = price !== 0 && price % 1000 === 0;
+                    this.setCalculatorResult(this.calculatorInThousands ? price / 1000 : price);
+                    this.calculatorWaiting = true;
+                    this.openCalculator();
+                    this.calculatorReturnTarget = target;
+                    this.dismissCalculatorPrice();
+                },
                 openCalculator() {
+                    this.calculatorReturnTarget = this.$refs.calculatorTrigger;
                     if (!this.$refs.calculatorDialog.open) this.$refs.calculatorDialog.showModal();
                     this.$nextTick(() => this.$refs.calculatorScreen.focus());
                 },
                 closeCalculator() {
                     this.$refs.calculatorDialog.close();
-                    this.$refs.calculatorTrigger.focus();
+                    const target = this.calculatorReturnTarget?.isConnected ? this.calculatorReturnTarget : this.$refs.calculatorTrigger;
+                    target.focus();
+                    this.calculatorReturnTarget = null;
                 },
                 handleCalculatorBackdrop(event) {
                     if (event.target !== this.$refs.calculatorDialog) return;

@@ -70,6 +70,13 @@
 .kdol-header-trigger:hover { background: rgb(255 255 255 / 0.2); }
 .kdol-header-trigger:focus-visible { outline: 2px solid white; outline-offset: 3px; }
 
+/* Chọn giá để mở máy tính. */
+.kdol-price-amount { display: inline-flex; align-items: baseline; gap: 0.25rem; white-space: nowrap; text-decoration: inherit; }
+.kdol-price-select { display: inline; margin: 0; padding: 0; border: 0; border-radius: var(--kdol-radius-sm); background: transparent; color: inherit; font: inherit; text-align: inherit; text-decoration: inherit; cursor: pointer; }
+.kdol-price-calculator { display: inline-flex; flex: 0 0 auto; align-self: center; align-items: center; justify-content: center; width: 1.75rem; height: 1.75rem; padding: 0.25rem; border: 1px solid var(--kdol-color-border-light); border-radius: var(--kdol-radius-md); background: var(--kdol-color-primary-light); color: var(--kdol-color-primary); cursor: pointer; }
+.kdol-price-calculator:hover { background: var(--kdol-color-control); }
+.kdol-price-amount button:focus-visible { outline: 2px solid var(--kdol-color-primary); outline-offset: 2px; }
+
 /* Máy tính giá nhanh. */
 .kdol-calculator-dialog {
     width: min(22rem, calc(100vw - 1.5rem));
