@@ -63,7 +63,7 @@
                 </div>
                 <div ref="calculatorScreen" class="kdol-calculator-screen" tabindex="0" aria-label="Màn hình máy tính">
                     <p class="kdol-calculator-expression">{{ calculatorExpression }}</p>
-                    <output class="kdol-calculator-value" aria-live="polite" aria-atomic="true">{{ calculatorError || formatCalculatorNumber(calculatorEntry) }}</output>
+                    <output class="kdol-calculator-value" aria-live="polite" aria-atomic="true">{{ calculatorError || calculatorDisplay() }}</output>
                 </div>
                 <div class="kdol-calculator-keys">
                     <button v-for="key in calculatorKeys" :key="key.value" type="button" :class="['kdol-calculator-key', key.kind ? 'kdol-calculator-key--' + key.kind : '']" :aria-label="key.label || key.text" @click="calculatorPress(key.value)">{{ key.text }}</button>
@@ -2235,8 +2235,8 @@
                     addressLimit: 50,
                     calculatorEntry: '0',
                     calculatorInThousands: false,
-                    calculatorAccumulator: null,
-                    calculatorOperator: null,
+                    calculatorTokens: [],
+                    calculatorPercentInput: null,
                     calculatorWaiting: false,
                     calculatorExpression: '',
                     calculatorError: '',
@@ -3242,11 +3242,45 @@
                 },
                 resetCalculator() {
                     this.calculatorEntry = '0';
-                    this.calculatorAccumulator = null;
-                    this.calculatorOperator = null;
+                    this.calculatorTokens = [];
+                    this.calculatorPercentInput = null;
                     this.calculatorWaiting = false;
                     this.calculatorExpression = '';
                     this.calculatorError = '';
+                },
+                calculatorToken() {
+                    return { value: this.calculatorEntry, percent: this.calculatorPercentInput };
+                },
+                formatCalculatorTokens(tokens) {
+                    const symbols = { '+': '+', '-': '−', '*': '×', '/': '÷' };
+                    return tokens.map(token => typeof token === 'string' ? symbols[token]
+                        : this.formatCalculatorNumber(token.percent ?? token.value) + (token.percent !== null ? '%' : '')).join(' ');
+                },
+                calculatorDisplay() {
+                    const tokens = [...this.calculatorTokens];
+                    if (!this.calculatorWaiting || !tokens.length) tokens.push(this.calculatorToken());
+                    return this.formatCalculatorTokens(tokens);
+                },
+                evaluateCalculatorTokens(tokens) {
+                    const checked = value => {
+                        if (!Number.isFinite(value) || Math.abs(value) > Number.MAX_SAFE_INTEGER) throw new Error('Số quá lớn');
+                        return value;
+                    };
+                    // Evaluate multiplication/division first, then addition/subtraction. Never execute input as code.
+                    let total = 0, term = Number(tokens[0].value), sign = 1;
+                    for (let i = 1; i < tokens.length; i += 2) {
+                        const operator = tokens[i], right = Number(tokens[i + 1].value);
+                        if (operator === '*') term = checked(term * right);
+                        else if (operator === '/') {
+                            if (right === 0) throw new Error('Không thể chia cho 0');
+                            term = checked(term / right);
+                        } else {
+                            total = checked(total + sign * term);
+                            term = right;
+                            sign = operator === '+' ? 1 : -1;
+                        }
+                    }
+                    return checked(total + sign * term);
                 },
                 setCalculatorResult(value) {
                     if (!Number.isFinite(value) || Math.abs(value) > Number.MAX_SAFE_INTEGER) {
@@ -3262,11 +3296,12 @@
                     if (key === 'clear') { this.resetCalculator(); return; }
                     if (this.calculatorError) this.resetCalculator();
                     if (/^\d$/.test(key) || key === '.') {
-                        if (this.calculatorWaiting) {
+                        if (this.calculatorWaiting || this.calculatorPercentInput !== null) {
                             this.calculatorEntry = '0';
                             this.calculatorWaiting = false;
-                            if (!this.calculatorOperator) this.calculatorExpression = '';
+                            this.calculatorPercentInput = null;
                         }
+                        this.calculatorExpression = '';
                         if (key === '.') {
                             if (!this.calculatorEntry.includes('.')) this.calculatorEntry += '.';
                         } else if (this.calculatorEntry.replace(/[-.]/g, '').length < 15) {
@@ -3276,37 +3311,69 @@
                         return;
                     }
                     if (key === 'backspace') {
+                        if (this.calculatorPercentInput !== null) {
+                            this.calculatorEntry = this.calculatorPercentInput;
+                            this.calculatorPercentInput = null;
+                            return;
+                        }
+                        if (this.calculatorWaiting && this.calculatorTokens.length) {
+                            this.calculatorTokens.pop();
+                            const previous = this.calculatorTokens.pop();
+                            this.calculatorEntry = previous.value;
+                            this.calculatorPercentInput = previous.percent;
+                            this.calculatorWaiting = false;
+                            return;
+                        }
                         if (this.calculatorWaiting) return;
                         this.calculatorEntry = this.calculatorEntry.slice(0, -1);
-                        if (!this.calculatorEntry || this.calculatorEntry === '-') this.calculatorEntry = '0';
+                        if (!this.calculatorEntry || this.calculatorEntry === '-') {
+                            this.calculatorEntry = '0';
+                            this.calculatorWaiting = this.calculatorTokens.length > 0;
+                        }
                         return;
                     }
                     if (key === 'negate' || key === '%') {
+                        if (this.calculatorWaiting && this.calculatorTokens.length) this.calculatorEntry = '0';
                         if (key === 'negate') {
                             this.calculatorEntry = this.calculatorEntry.startsWith('-') ? this.calculatorEntry.slice(1) : '-' + this.calculatorEntry;
+                            if (this.calculatorPercentInput !== null) this.calculatorPercentInput = this.calculatorPercentInput.startsWith('-') ? this.calculatorPercentInput.slice(1) : '-' + this.calculatorPercentInput;
                         } else {
-                            const base = ['+', '-'].includes(this.calculatorOperator) ? this.calculatorAccumulator : 1;
-                            if (!this.setCalculatorResult(base * Number(this.calculatorEntry) / 100)) return;
+                            const percentInput = this.calculatorEntry;
+                            try {
+                                const base = ['+', '-'].includes(this.calculatorTokens.at(-1))
+                                    ? this.evaluateCalculatorTokens(this.calculatorTokens.slice(0, -1)) : 1;
+                                if (!this.setCalculatorResult(base * Number(percentInput) / 100)) return;
+                                this.calculatorPercentInput = percentInput;
+                            } catch (error) {
+                                this.resetCalculator();
+                                this.calculatorError = error.message;
+                                return;
+                            }
                         }
                         this.calculatorWaiting = false;
-                        if (!this.calculatorOperator) this.calculatorExpression = '';
+                        this.calculatorExpression = '';
                         return;
                     }
                     if (!['+', '-', '*', '/', '='].includes(key)) return;
-                    const symbols = { '+': '+', '-': '−', '*': '×', '/': '÷' };
-                    const right = Number(this.calculatorEntry);
-                    if (this.calculatorOperator && (!this.calculatorWaiting || key === '=')) {
-                        const left = this.calculatorAccumulator;
-                        const operator = this.calculatorOperator;
-                        const result = operator === '+' ? left + right : operator === '-' ? left - right
-                            : operator === '*' ? left * right : right === 0 ? NaN : left / right;
-                        if (!this.setCalculatorResult(result)) return;
-                        this.calculatorExpression = `${this.formatCalculatorNumber(left)} ${symbols[operator]} ${this.formatCalculatorNumber(right)} =`;
+                    if (key === '=') {
+                        if (this.calculatorWaiting && (this.calculatorTokens.length || this.calculatorExpression)) return;
+                        const tokens = [...this.calculatorTokens, this.calculatorToken()];
+                        try {
+                            if (!this.setCalculatorResult(this.evaluateCalculatorTokens(tokens))) return;
+                        } catch (error) {
+                            this.resetCalculator();
+                            this.calculatorError = error.message;
+                            return;
+                        }
+                        this.calculatorExpression = this.formatCalculatorTokens(tokens) + ' =';
+                        this.calculatorTokens = [];
+                    } else {
+                        if (this.calculatorWaiting && this.calculatorTokens.length) this.calculatorTokens[this.calculatorTokens.length - 1] = key;
+                        else this.calculatorTokens.push(this.calculatorToken(), key);
+                        this.calculatorExpression = '';
                     }
-                    this.calculatorOperator = key === '=' ? null : key;
-                    this.calculatorAccumulator = key === '=' ? null : Number(this.calculatorEntry);
+                    this.calculatorPercentInput = null;
                     this.calculatorWaiting = true;
-                    if (key !== '=') this.calculatorExpression = `${this.formatCalculatorNumber(this.calculatorEntry)} ${symbols[key]}`;
                 },
                 async openAddressLookup() {
                     if (!this.$refs.addressDialog.open) this.$refs.addressDialog.showModal();

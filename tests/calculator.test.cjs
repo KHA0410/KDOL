@@ -19,12 +19,94 @@ function attachDialog(state) {
     return { trigger, dialog };
 }
 
-test('calculator totals prices and follows pocket-calculator order for chained operations', () => {
+test('calculator totals prices and follows multiplication/division precedence in expressions', () => {
     const { state, press } = calculator();
     assert.equal(press('209000*12+300000='), '2808000');
     assert.equal(state.formatCalculatorNumber(state.calculatorEntry), '2.808.000');
     press(['clear']);
-    assert.equal(press('2+3*4='), '20');
+    assert.equal(press('2+3*4='), '14');
+});
+
+test('typing 12+12-2 preserves the whole expression until equals is pressed', () => {
+    const { state, press } = calculator();
+    press('12+12');
+    assert.equal(state.calculatorDisplay(), '12 + 12');
+    assert.equal(state.calculatorExpression, '');
+    press('-');
+    assert.equal(state.calculatorDisplay(), '12 + 12 −');
+    assert.equal(state.calculatorEntry, '12');
+    press('2');
+    assert.equal(state.calculatorDisplay(), '12 + 12 − 2');
+    assert.equal(state.calculatorExpression, '');
+    assert.equal(press('='), '22');
+    assert.equal(state.calculatorDisplay(), '22');
+    assert.equal(state.calculatorExpression, '12 + 12 − 2 =');
+});
+
+test('mixed expressions can continue across many operations without early calculation', () => {
+    const { state, press } = calculator();
+    press('12+12-2*3/2+5');
+    assert.equal(state.calculatorDisplay(), '12 + 12 − 2 × 3 ÷ 2 + 5');
+    assert.equal(press('='), '26');
+    press(['clear']);
+    press('1/0+3');
+    assert.equal(state.calculatorError, '');
+    assert.equal(state.calculatorDisplay(), '1 ÷ 0 + 3');
+    press('=');
+    assert.equal(state.calculatorError, 'Không thể chia cho 0');
+});
+
+test('Backspace edits numbers and operators throughout a pending expression', () => {
+    const { state, press } = calculator();
+    press('12+34-');
+    press(['backspace']);
+    assert.equal(state.calculatorDisplay(), '12 + 34');
+    press(['backspace']);
+    assert.equal(state.calculatorDisplay(), '12 + 3');
+    press(['backspace']);
+    assert.equal(state.calculatorDisplay(), '12 +');
+    press(['backspace']);
+    assert.equal(state.calculatorDisplay(), '12');
+    assert.equal(press('-2='), '10');
+});
+
+test('equals waits for a missing operand and changing an operator preserves earlier terms', () => {
+    const { state, press } = calculator();
+    press('12+');
+    press('=');
+    assert.equal(state.calculatorDisplay(), '12 +');
+    assert.equal(state.calculatorExpression, '');
+    assert.equal(press('2='), '14');
+    press(['clear']);
+    press('12+12-*2');
+    assert.equal(state.calculatorDisplay(), '12 + 12 × 2');
+    assert.equal(press('='), '36');
+});
+
+test('percentage expressions stay visible and support continuing or undoing the percentage', () => {
+    const { state, press } = calculator();
+    press('200000-10%');
+    assert.equal(state.calculatorDisplay(), '200.000 − 10%');
+    assert.equal(press('+30000='), '210000');
+    press(['clear']);
+    assert.equal(press('200+100+10%='), '330');
+    press(['clear']);
+    assert.equal(press('200+100*10%='), '210');
+    press(['clear']);
+    press('200-10%');
+    press(['backspace']);
+    assert.equal(state.calculatorDisplay(), '200 − 10');
+    assert.equal(press('='), '190');
+});
+
+test('a shortened prefilled price supports a complete expression before calculating', () => {
+    const { state, press } = calculator();
+    attachDialog(state);
+    state.openCalculatorFromPrice(209000, {});
+    press('+12-2');
+    assert.equal(state.calculatorDisplay(), '209 + 12 − 2');
+    assert.equal(press('='), '219');
+    assert.equal(state.calculatorInThousands, true);
 });
 
 test('calculator applies percentage discounts and VAT relative to the current price', () => {
@@ -92,8 +174,8 @@ test('calculator rejects unsafe amounts and limits entered digits', () => {
     assert.equal(state.calculatorError, 'Số quá lớn');
     press(['clear']);
     assert.equal(state.calculatorError, '');
-    assert.equal(state.calculatorAccumulator, null);
-    assert.equal(state.calculatorOperator, null);
+    assert.equal(state.calculatorTokens.length, 0);
+    assert.equal(state.calculatorPercentInput, null);
     assert.equal(state.calculatorEntry, '0');
 });
 
